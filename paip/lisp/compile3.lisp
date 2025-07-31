@@ -293,35 +293,48 @@
 
 ;;; ==============================
 
-(set-dispatch-macro-character #\# #\t
-  #'(lambda (&rest ignore) t)
-  *scheme-readtable*)
+(set-dispatch-macro-character
+ #\# #\t
+ #'(lambda (&rest ignore)
+     (declare (ignore ignore))
+     t)
+ *scheme-readtable*)
 
-(set-dispatch-macro-character #\# #\f
-  #'(lambda (&rest ignore) nil)
-  *scheme-readtable*)
+(set-dispatch-macro-character
+ #\# #\f
+ #'(lambda (&rest ignore)
+     (declare (ignore ignore))
+     nil)
+ *scheme-readtable*)
 
-(set-dispatch-macro-character #\# #\d
-  ;; In both Common Lisp and Scheme,
-  ;; #x, #o and #b are hexidecimal, octal, and binary,
-  ;; e.g. #xff = #o377 = #b11111111 = 255
-  ;; In Scheme only, #d255 is decimal 255.
-  #'(lambda (stream &rest ignore)
-      (let ((*read-base* 10)) (scheme-read stream)))
-  *scheme-readtable*)
+(set-dispatch-macro-character
+ #\# #\d
+ ;; In both Common Lisp and Scheme,
+ ;; #x, #o and #b are hexidecimal, octal, and binary,
+ ;; e.g. #xff = #o377 = #b11111111 = 255
+ ;; In Scheme only, #d255 is decimal 255.
+ #'(lambda (stream &rest ignore)
+     (declare (ignore ignore))
+     (let ((*read-base* 10)) (scheme-read stream)))
+ *scheme-readtable*)
 
-(set-macro-character #\`
-  #'(lambda (s ignore) (list 'quasiquote (scheme-read s)))
-  nil *scheme-readtable*)
+(set-macro-character
+ #\`
+ #'(lambda (s ignore)
+     (declare (ignore ignore))
+     (list 'quasiquote (scheme-read s)))
+ nil *scheme-readtable*)
 
-(set-macro-character #\,
-   #'(lambda (stream ignore)
-       (let ((ch (read-char stream)))
-         (if (char= ch #\@)
-             (list 'unquote-splicing (read stream))
-             (progn (unread-char ch stream)
-                    (list 'unquote (read stream))))))
-   nil *scheme-readtable*)
+(set-macro-character
+ #\,
+ #'(lambda (stream ignore)
+     (declare (ignore ignore))
+     (let ((ch (read-char stream)))
+       (if (char= ch #\@)
+           (list 'unquote-splicing (read stream))
+           (progn (unread-char ch stream)
+                  (list 'unquote (read stream))))))
+ nil *scheme-readtable*)
 
 ;;; ==============================
 

@@ -176,7 +176,7 @@
           (push (funcall (opcode instr)) stack))
 
          ;; Unary operations:
-         ((CAR CDR CADR NOT LIST1 COMPILER DISPLAY WRITE RANDOM)
+         ((CAR CDR CADR NOT LIST1 COMPILER DISPLAY WRITE RANDOM SCHEME-LOAD)
           (push (funcall (opcode instr) (pop stack)) stack))
 
          ;; Binary operations:
@@ -234,7 +234,7 @@
 
 (defun collect-top-level-expressions (file-path)
   "Collect all the top-level expressions from a file and return them as a list."
-  (let ((*readtable* *scheme-readtable*))
+
     (let ((text (uiop:read-file-string file-path))
 	  (form)
 	  (pos 0))
@@ -243,20 +243,27 @@
 	   (multiple-value-setq (form pos)
 	     (read-from-string text nil nil :start pos))
 	until (null form)
-	collect form))))
+	collect form)))
 
-(define scheme-load-files (files)
+(defun scheme-load-file (file)
   "If files is a string load that file. Otherwise iterate over files."
-
-
   (let (result)
     (dolist (exp (collect-top-level-expressions file) result)
       (setf result (machine (compiler `(exit ,exp)))))))
 
-(defun load-go (file)
-  (init-scheme-comp)
-  (scheme-load-file file))
+;; initialize the scheme environment and load a file.
 
+(defun load-go-alt (file)
+  (init-scheme-comp)
+  (let ((*readtable* *scheme-readtable*))
+    (scheme-load file)))
+
+
+(defun load-go (filename)
+  (init-scheme-comp)
+  (with-open-file (*scheme-current-load-file-stream* filename :direction :input)
+    (let ((*readtable* *scheme-readtable*))
+      (scheme-load-file *scheme-current-load-file-stream*))))
 ;;;; Peephole Optimizer
 
 
@@ -370,6 +377,8 @@
 
 ;;; ==============================
 
+;; Format: (<scheme symbol> <# of args> <cl function> <????> <????>)
+
 (defparameter *primitive-fns*
   '((+ 2 + true) (- 2 - true) (* 2 * true) (/ 2 / true)
     (< 2 <) (> 2 >) (<= 2 <=) (>= 2 >=) (/= 2 /=) (= 2 =)
@@ -380,8 +389,8 @@
     (read 0 scheme-read nil t) (eof-object? 1 eof-object?) ;***
     (write 1 write nil t) (display 1 display nil t)
     (newline 0 newline nil t) (compiler 1 compiler t)
-    (name! 2 name! true t) (random 1 random true nil)))
-
+    (name! 2 name! true t) (random 1 random true nil)
+    (load 1 scheme-load nil t)))
 
 ;;; ==============================
 
@@ -421,6 +430,55 @@
         (t (list 'cons left right))))
 
 ;;; ==============================
+
+
+(defparameter *scheme-current-load-file-stream* nil)
+
+;; (defun filename-only-p (filename)
+;;   (and (string= (directory-namestring filename) "")
+;;        *scheme-current-load-file-pathname*
+;;        (file-exsts-p
+;;        (multiple-value-bind
+;; 	     (unix-pathname-type-flag directory-path file-namestring file-namestring-flag)
+;;        (file-exsts-p (make-pathname :directory "/mnt/sometext" :name "afilename" :type "txt"))))))
+
+(defun print-load-variables ()
+  (format t "*scheme-current-load-directory*: ~s~%*scheme-current-load-file-pathname*: ~s~%*scheme-current-load-file-stream*: ~s~%"
+	  *scheme-current-load-directory*
+	  *scheme-current-load-file-pathname*
+	  *scheme-current-load-file-stream*))
+
+(defun scheme-load (filename)
+  (unless (and (uiop:absolute-pathname-p filename)
+	       (probe-file filename))
+    (setf filename
+	  (merge-pathnames
+	   (directory-namestring *scheme-current-load-file-stream*)
+	   filename))
+    (unless (probe-file filename)
+      (error "Unable to find file ~S" filename)))
+  (with-open-file (*scheme-current-load-file-stream* filename :direction :input)
+    (declare (special *scheme-current-load-file-stream*))
+    (scheme-load-file *scheme-current-load-file-stream*)))
+
+
+(defun scheme-load-old (filename)
+  (unless (and (uiop:absolute-pathname-p filename)
+	       (probe-file filename))
+    (setf filename
+	  (merge-pathnames
+	   (directory-namestring *scheme-current-load-file-stream*)
+	   filename))
+    (unless (probe-file filename)
+      (error "Unable to find file ~S" filename)))
+  (with-open-file (*scheme-current-load-file-stream* filename :direction :input)
+    (declare (special *scheme-current-load-file-stream*))
+    (loop
+      for form = (read *scheme-current-load-file-stream* nil :eof)
+      until (eq form :eof)
+      collect (convert-numbers form))))
+
+
 
 (defun scheme-read (&optional (stream *standard-input*))
   (let ((*readtable* *scheme-readtable*))

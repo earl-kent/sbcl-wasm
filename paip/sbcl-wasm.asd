@@ -1,16 +1,13 @@
 
-(defpackage #:sbcl-wasm
-  (:shadow :defconstant)
-  (:use #:cl))
 
-(in-package #:sbcl-wasm)
 
 (asdf:defsystem #:sbcl-wasm
-  :depends-on (iterate)
+  :depends-on (:iterate :uiop)
   :components
   ((:module "lisp"
     :components
-    ((:file sbcl-wasm-auxfns)
+    ((:file sbcl-wasm-packages)
+     (:file sbcl-wasm-auxfns)
      (:file sbcl-wasm-interp1)
      (:file sbcl-wasm-compile1)
      (:file sbcl-wasm-compile2)

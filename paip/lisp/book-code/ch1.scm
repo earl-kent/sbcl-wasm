@@ -14,13 +14,43 @@
 
 ;; interpreter examples
 
-;: 486
+(load "scheme-utils.scm")
 
-;: (+ 137 349)
-;: (- 1000 334)
-;: (* 5 99)
-;: (/ 10 5)
-;: (+ 2.7 10)
+(define *tests* '())
+
+(define (print-tests)
+  (display *tests*)
+  (newline))
+
+(define (eval exp)
+  ((compiler exp)))
+
+(define (assert test text)
+  (if (not (eval test))
+      (set!  *tests* (cons (list "failed: " test text) *tests*))))
+
+
+(assert '(= 487 486) "(= 486 486) = failed")
+
+(print-tests)
+
+
+
+(display (+ 137 349))
+
+
+
+;;: (- 1000 334)
+
+
+(define (test-sub-1000)
+  (assert (= (- 1000 334) 666)
+	  "(= (- 1000 334) 666)"))
+
+
+;;: (* 5 99)
+;;: (/ 10 5)
+;;: (+ 2.7 10)
 
 ;: (+ 21 35 12 7)
 ;: (* 25 4 12)
@@ -109,11 +139,11 @@
 
 ;: (and (> x 5) (< x 10))
 
-(define (>= x y)
-  (or (> x y) (= x y)))
+;; (define (>= x y)
+;;   (or (> x y) (= x y)))
 
-(define (>= x y)
-  (not (< x y)))
+;; (define (>= x y)
+;;   (not (< x y)))
 
 
 ;;EXERCISE 1.1
@@ -212,7 +242,7 @@
 
 (define (square x) (* x x))
 
-(define (square x) 
+(define (square x)
   (exp (double (log x))))
 
 (define (double x) (+ x x))
@@ -291,15 +321,15 @@
 
 
 ;;EXERCISE 1.9
-(define (+ a b)
-  (if (= a 0)
-      b
-      (inc (+ (dec a) b))))
+;; (define (+ a b)
+;;   (if (= a 0)
+;;       b
+;;       (inc (+ (dec a) b))))
 
-(define (+ a b)
-  (if (= a 0)
-      b
-      (+ (dec a) (inc b))))
+;; (define (+ a b)
+;;   (if (= a 0)
+;;       b
+;;       (+ (dec a) (inc b))))
 
 ;;EXERCISE 1.10
 (define (A x y)
@@ -400,7 +430,7 @@
       product
       (expt-iter b
                 (- counter 1)
-                (* b product)))) 
+                (* b product))))
 
 ;; Logarithmic iteration
 (define (fast-expt b n)
@@ -413,10 +443,10 @@
 
 
 ;;EXERCISE 1.17
-(define (* a b)
-  (if (= b 0)
-      0
-      (+ a (* a (- b 1)))))
+;; (define (* a b)
+;;   (if (= b 0)
+;;       0
+;;       (+ a (* a (- b 1)))))
 
 ;;EXERCISE 1.19
 (define (fib n)
@@ -473,7 +503,7 @@
                     m))
         (else
          (remainder (* base (expmod base (- exp 1) m))
-                    m))))        
+                    m))))
 
 (define (fermat-test n)
   (define (try-it a)
@@ -613,7 +643,7 @@
     (+ (* x (square a))
        (* y b)
        (* a b)))
-  (f-helper (+ 1 (* x y)) 
+  (f-helper (+ 1 (* x y))
             (- 1 y)))
 
 (define (f x y)
@@ -786,6 +816,11 @@
                             1.0))
 
 
+;; (display (sqrt 2))
+
+
+
+
 ;;EXERCISE 1.40
 ;: (newtons-method (cubic a b c) 1)
 
@@ -800,4 +835,3 @@
 
 ;;EXERCISE 1.43
 ;: ((repeated square 2) 5)
-

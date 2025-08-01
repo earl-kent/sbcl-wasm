@@ -434,14 +434,6 @@
 
 (defparameter *scheme-current-load-file-stream* nil)
 
-;; (defun filename-only-p (filename)
-;;   (and (string= (directory-namestring filename) "")
-;;        *scheme-current-load-file-pathname*
-;;        (file-exsts-p
-;;        (multiple-value-bind
-;; 	     (unix-pathname-type-flag directory-path file-namestring file-namestring-flag)
-;;        (file-exsts-p (make-pathname :directory "/mnt/sometext" :name "afilename" :type "txt"))))))
-
 (defun print-load-variables ()
   (format t "*scheme-current-load-directory*: ~s~%*scheme-current-load-file-pathname*: ~s~%*scheme-current-load-file-stream*: ~s~%"
 	  *scheme-current-load-directory*

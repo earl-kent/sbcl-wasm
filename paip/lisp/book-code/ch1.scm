@@ -14,21 +14,8 @@
 
 ;; interpreter examples
 
+(load "unit-test.scm")
 (load "scheme-utils.scm")
-
-(define *tests* '())
-
-(define (print-tests)
-  (display *tests*)
-  (newline))
-
-(define (eval exp)
-  ((compiler exp)))
-
-(define (assert test text)
-  (if (not (eval test))
-      (set!  *tests* (cons (list "failed: " test text) *tests*))))
-
 
 (assert '(= 487 486) "(= 486 486) = failed")
 

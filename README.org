@@ -1,0 +1,94 @@
+
+
+
+
+
+
+* sbcl-wasm Project
+  This is a project to create a WASM backend for SBCL. WASM as it
+  exists seems not to be powerful enough to support SBCL as a host
+  compiled directly to it in the same way that you would compile to
+  x86-64, this is especially true with issues around the
+  interconnected issues of garbage collection, virtual memory, control
+  stack and signal handling.
+
+  To work around issue of WASM not being powerful enough, we'll reach
+  back in time to when CMUCL compiled to a microcoded virtual machine,
+  the PERQ. Informed by this we will have the following deliverables:
+  
+** An emulated VM with custom instruction set
+
+   The instruction set has the following (competing design goals). It
+   will be a later phase goal to optimize it for performance, but to
+   the extent that #2 is achieved, it should be possible to reach near
+   native WASM performance, wile augmenting WASM sufficiently to
+   handle garbage collect.
+
+   1) Be as close to SBCL primitives as possible
+      
+   2) Be as close to WASM as possible
+
+   3) require as little change from PERQ as possible.
+  
+** Tasks
+
+   From the above design objectives, the following task fall out
+   naturally:
+
+*** Misc admin
+
+*** Phase One: Compile Spice Lisp from Rutger's lap code
+
+     Lap code can be found here:
+     rutgers-top-clisp/upsala/*.lap
+
+**** Clean up directory structure
+
+     Move sbcl-wasm specific code to its own directory
+
+**** Consolidate/refactor sbcl-wasm-* files
+
+     Definitions in the following files should be refactored into
+     different, better named files: sbcl-wasm-compile1.lisp
+     sbcl-wasm-compile2.lisp, sbcl-wasm-compile3.lisp
+     sbcl-wasm-env-access.lisp
+
+**** Separate scheme primitives from vm instruction set primitives
+
+    Also, make scheme primitives a parameter for the virtual machine.
+
+**** Create set of Common Lisp primitives
+    Should corespond to the 'macro' codes of the laid out in: Internal
+    Design of CMU Common Lisp on the IBM RT PC: doc/cmucl-rt.pdf
+
+
+**** Create a partial implimentation of CL using lisp 500 boot strap
+      paip/lisp/init500-lisp-boot.lisp
+    
+
+**** Modify virtual machine to conform to the the perq microde for CL.
+
+      Ensure that both Scheme and primitive lisp run.
+
+*** Phase Two: Build version of SBCL compiling to VM.
+
+    Steps: first to earliest CMUCL, latest CMUCL, earliest SBCL,
+    latest SBCL
+
+*** Run on WASM
+
+ 
+**** Design and run new byte code for VM
+
+     The major challenges of this is supporting the interelated issues
+     of SBCL's memory management expectations, interupts and garbage
+     collection.
+
+**** Port VM to WASM
+
+**** Cross compile SBCL to WASM
+
+**** Provide modern libraries to SBCL, espectially ports and io
+
+     Initial target will be node, so we'll be able to use WASM
+     javascript interop to access the network and fs.

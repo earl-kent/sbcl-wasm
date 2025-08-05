@@ -1,0 +1,18 @@
+
+
+
+
+from:
+
+mit-scheme-7.7.1-src.zip:
+https://groups.csail.mit.edu/mac/ftpdir/mit-scheme/7.7/7.7.1/
+
+all-book-code.zip:
+https://mitp-content-server.mit.edu/books/content/sectbyfn/books_pres_0/6515/sicp.zip/code/index.html
+
+
+
+
+to run tests
+
+(load-go "/home/rett/dev/cmu-perq/sbcl-wasm.git/paip/lisp/book-code/ch1.scm")

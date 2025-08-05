@@ -183,6 +183,12 @@
       `(define ,(first name)
          (lambda ,(rest name) . ,body))))
 
+
+(def-scheme-macro defmacro (name &rest body)
+  `(define ,(first name)
+       ((lambda ,(rest name) . ,body))))
+
+
 (def-scheme-macro delay (computation)
   `(lambda () ,computation))
 

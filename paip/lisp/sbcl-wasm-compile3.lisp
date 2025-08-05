@@ -435,9 +435,7 @@
 (defparameter *scheme-current-load-file-stream* nil)
 
 (defun print-load-variables ()
-  (format t "*scheme-current-load-directory*: ~s~%*scheme-current-load-file-pathname*: ~s~%*scheme-current-load-file-stream*: ~s~%"
-	  *scheme-current-load-directory*
-	  *scheme-current-load-file-pathname*
+  (format t "*scheme-current-load-file-stream*: ~s~%"
 	  *scheme-current-load-file-stream*))
 
 (defun scheme-load (filename)

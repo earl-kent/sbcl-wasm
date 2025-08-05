@@ -17,23 +17,14 @@
 (load "unit-test.scm")
 (load "scheme-utils.scm")
 
-(assert '(= 487 486) "(= 486 486) = failed")
-
-(print-tests)
+(setup-tests)
 
 
+(assert '(= 486 486))
 
-(display (+ 137 349))
+(assert '(= (+ 137 349) 486))
 
-
-
-;;: (- 1000 334)
-
-
-(define (test-sub-1000)
-  (assert (= (- 1000 334) 666)
-	  "(= (- 1000 334) 666)"))
-
+(assert '(= (- 1000 334) 666))
 
 ;;: (* 5 99)
 ;;: (/ 10 5)
@@ -822,3 +813,5 @@
 
 ;;EXERCISE 1.43
 ;: ((repeated square 2) 5)
+
+(print-tests)

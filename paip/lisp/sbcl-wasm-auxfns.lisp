@@ -2,7 +2,7 @@
 
 (in-package :sbcl-wasm)
 
-(eval-when (eval compile load)
+(eval-when (:compile-toplevel :load-toplevel :execute)
   #+sbcl
   (progn
     (sb-ext:unlock-package '#:common-lisp)
@@ -30,3 +30,8 @@
 (defun starts-with (list x)
   "Is x a list whose first element is x?"
   (and (consp list) (eql (first list) x)))
+
+(defun mappend (fn list)
+  "Append the results of calling fn on each element of list.
+   Like mapcon, but uses append instead of nconc."
+  (apply #'append (mapcar fn list)))

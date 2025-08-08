@@ -8,21 +8,27 @@
   This is a project to create a WASM backend for SBCL. WASM as it
   exists seems not to be powerful enough to support SBCL as a host
   compiled directly to it in the same way that you would compile to
-  x86-64, this is especially true with issues around the
+  the x86-64 instruction set on, say, Ubuntu. This is due to the
   interconnected issues of garbage collection, virtual memory, control
   stack and signal handling.
 
-  To work around issue of WASM not being powerful enough, we'll reach
-  back in time to when CMUCL compiled to a microcoded virtual machine,
-  the PERQ. Informed by this we will have the following deliverables:
+  To work around these issues, we'll reach back in time to when CMUCL
+  compiled to a microcoded machine (project Spice), the PERQ. The PERQ
+  was then abstracted as a virtual machine and that was used to port
+  to various architectures. Since Spice lisp did run on a virtual
+  machine, it shouldn't be hard to create an emulator for it in CL and
+  compile and load Spice lisp onto it. We should then be able to
+  create an SBCL port using the pathway: Spice lisp -> CMUCL -> SBCL.
   
 ** An emulated VM with custom instruction set
 
-   The instruction set has the following (competing design goals). It
+   Once we have (Spice) lisp running on vm, it should be an easy task
+   to mody the underlying instruction set of the VM. The modified
+   instruction set has the following (competing design goals): (it
    will be a later phase goal to optimize it for performance, but to
    the extent that #2 is achieved, it should be possible to reach near
    native WASM performance, wile augmenting WASM sufficiently to
-   handle garbage collect.
+   handle garbage collect)
 
    1) Be as close to SBCL primitives as possible
       

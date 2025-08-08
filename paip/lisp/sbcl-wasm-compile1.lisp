@@ -108,14 +108,6 @@
         (gen 'LSET (first p) (second p) ";" var)
         (gen 'GSET var))))
 
-;;; ==============================
-
-(def-scheme-macro define (name &rest body)
-  (if (atom name)
-      `(name! (set! ,name . ,body) ',name)
-      (scheme-macro-expand
-         `(define ,(first name)
-            (lambda ,(rest name) . ,body)))))
 
 (defun name! (fn name)
   "Set the name field of fn, if it is an un-named fn."

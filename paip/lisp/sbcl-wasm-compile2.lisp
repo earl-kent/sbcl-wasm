@@ -196,10 +196,10 @@
 (defun init-scheme-comp ()
   "Initialize the primitive functions."
   (dolist (prim *primitive-fns*)
-     (setf (get (prim-symbol prim) 'global-val)
-           (new-fn :env nil :name (prim-symbol prim)
-                   :code (seq (gen 'PRIM (prim-symbol prim))
-                              (gen 'RETURN))))))
+    (set-global-var! (prim-symbol prim)
+		     (new-fn :env nil :name (prim-symbol prim)
+			     :code (seq (gen 'PRIM (prim-symbol prim))
+					(gen 'RETURN))))))
 
 ;;; ==============================
 

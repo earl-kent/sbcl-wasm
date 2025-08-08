@@ -14,9 +14,9 @@
 
 (in-package :sbcl-wasm)
 
-(declaim (ftype (function (length labels) t) (setf fn-code)))
-(declaim (ftype (function (fn) t) fn-code))
-(declaim (ftype (function (fn) t) fn-p))
+;; (declaim (ftype (function (length labels) t) (setf fn-code)))
+;; (declaim (ftype (function (fn) t) fn-code))
+;; (declaim (ftype (function (fn) t) fn-p))
 
 
 (defun opcode (instr) (if (label-p instr) :label (first instr)))
@@ -112,8 +112,8 @@
                        stack))
          (LSET   (setf (elt (elt env (arg1 instr)) (arg2 instr))
                        (top stack)))
-         (GVAR   (push (get (arg1 instr) 'global-val) stack))
-         (GSET   (setf (get (arg1 instr) 'global-val) (top stack)))
+         (GVAR   (push (get-global-var (arg1 instr)) stack))
+         (GSET   (set-global-var! (arg1 instr) (top stack)))
          (POP    (pop stack))
          (CONST  (push (arg1 instr) stack))
 
@@ -199,34 +199,8 @@
          ((HALT) (RETURN (top stack)))
          (otherwise (error "Unknown opcode: ~a" instr))))))
 
-(defun init-scheme-comp ()
-  "Initialize values (including call/cc) for the Scheme compiler."
-  (set-global-var! 'exit
-    (new-fn :name 'exit :args '(val) :code '((HALT))))
-  (set-global-var! 'call/cc
-    (new-fn :name 'call/cc :args '(f)
-            :code '((ARGS 1) (CC) (LVAR 0 0 ";" f)
-		    (CALLJ 1)))) ; *** Bug fix, gat, 11/9/92
-  (dolist (prim *primitive-fns*)
-     (setf (get (prim-symbol prim) 'global-val)
-           (new-fn :env nil :name (prim-symbol prim)
-                   :code (seq (gen 'PRIM (prim-symbol prim))
-                              (gen 'RETURN))))))
 
 ;;; ==============================
-
-(defconstant scheme-top-level
-  '(begin (define (scheme)
-            (newline)
-            (display "=> ")
-            (write ((compiler (read))))
-            (scheme))
-          (scheme)))
-
-(defun scheme ()
-  "A compiled Scheme read-eval-print loop"
-  (init-scheme-comp)
-  (machine (compiler scheme-top-level)))
 
 (defun comp-go (exp)
   "Compile and execute the expression."
@@ -245,25 +219,6 @@
 	until (null form)
 	collect form)))
 
-(defun scheme-load-file (file)
-  "If files is a string load that file. Otherwise iterate over files."
-  (let (result)
-    (dolist (exp (collect-top-level-expressions file) result)
-      (setf result (machine (compiler `(exit ,exp)))))))
-
-;; initialize the scheme environment and load a file.
-
-(defun load-go-alt (file)
-  (init-scheme-comp)
-  (let ((*readtable* *scheme-readtable*))
-    (scheme-load file)))
-
-
-(defun load-go (filename)
-  (init-scheme-comp)
-  (with-open-file (*scheme-current-load-file-stream* filename :direction :input)
-    (let ((*readtable* *scheme-readtable*))
-      (scheme-load-file *scheme-current-load-file-stream*))))
 ;;;; Peephole Optimizer
 
 
@@ -318,79 +273,26 @@
   `(dolist (op ',opcodes)
      (put-optimizer op #'(lambda ,args .,body))))
 
-;;;; Now for some additions and answers to exercises:
 
-;;; ==============================
-
-(defconstant eof "EoF")
-(defun eof-object? (x) (eq x eof))
-(defvar *scheme-readtable* (copy-readtable))
-
-(defun scheme-read (&optional (stream *standard-input*))
-  (let ((*readtable* *scheme-readtable*))
-    (read stream nil eof)))
-
-;;; ==============================
-
-(set-dispatch-macro-character
- #\# #\t
- #'(lambda (&rest ignore)
-     (declare (ignore ignore))
-     t)
- *scheme-readtable*)
-
-(set-dispatch-macro-character
- #\# #\f
- #'(lambda (&rest ignore)
-     (declare (ignore ignore))
-     nil)
- *scheme-readtable*)
-
-(set-dispatch-macro-character
- #\# #\d
- ;; In both Common Lisp and Scheme,
- ;; #x, #o and #b are hexidecimal, octal, and binary,
- ;; e.g. #xff = #o377 = #b11111111 = 255
- ;; In Scheme only, #d255 is decimal 255.
- #'(lambda (stream &rest ignore)
-     (declare (ignore ignore))
-     (let ((*read-base* 10)) (scheme-read stream)))
- *scheme-readtable*)
-
-(set-macro-character
- #\`
- #'(lambda (s ignore)
-     (declare (ignore ignore))
-     (list 'quasiquote (scheme-read s)))
- nil *scheme-readtable*)
-
-(set-macro-character
- #\,
- #'(lambda (stream ignore)
-     (declare (ignore ignore))
-     (let ((ch (read-char stream)))
-       (if (char= ch #\@)
-           (list 'unquote-splicing (read stream))
-           (progn (unread-char ch stream)
-                  (list 'unquote (read stream))))))
- nil *scheme-readtable*)
-
-;;; ==============================
-
-;; Format: (<scheme symbol> <# of args> <cl function> <????> <????>)
-
-(defparameter *primitive-fns*
-  '((+ 2 + true) (- 2 - true) (* 2 * true) (/ 2 / true)
-    (< 2 <) (> 2 >) (<= 2 <=) (>= 2 >=) (/= 2 /=) (= 2 =)
-    (eq? 2 eq) (equal? 2 equal) (eqv? 2 eql)
-    (not 1 not) (null? 1 not)
-    (car 1 car) (cdr 1 cdr)  (cadr 1 cadr) (cons 2 cons true)
-    (list 1 list1 true) (list 2 list2 true) (list 3 list3 true)
-    (read 0 scheme-read nil t) (eof-object? 1 eof-object?) ;***
-    (write 1 write nil t) (display 1 display nil t)
-    (newline 0 newline nil t) (compiler 1 compiler t)
-    (name! 2 name! true t) (random 1 random true nil)
-    (load 1 scheme-load nil t)))
+(defparameter *shared-primitive-fns*
+  '((+ 2 + true)
+    (- 2 - true)
+    (* 2 * true)
+    (/ 2 / true)
+    (< 2 <)
+    (> 2 >)
+    (<= 2 <=)
+    (>= 2 >=)
+    (/= 2 /=)
+    (= 2 =)
+    (not 1 not)
+    (car 1 car)
+    (cdr 1 cdr)
+    (cadr 1 cadr)
+    (cons 2 cons true)
+    (list 1 list1 true)
+    (list 2 list2 true)
+    (list 3 list3 true)))
 
 ;;; ==============================
 
@@ -428,74 +330,3 @@
         ((starts-with right 'list)
          (list* 'list left (rest right)))
         (t (list 'cons left right))))
-
-;;; ==============================
-
-
-(defparameter *scheme-current-load-file-stream* nil)
-
-(defun print-load-variables ()
-  (format t "*scheme-current-load-file-stream*: ~s~%"
-	  *scheme-current-load-file-stream*))
-
-(defun scheme-load (filename)
-  (unless (and (uiop:absolute-pathname-p filename)
-	       (probe-file filename))
-    (setf filename
-	  (merge-pathnames
-	   (directory-namestring *scheme-current-load-file-stream*)
-	   filename))
-    (unless (probe-file filename)
-      (error "Unable to find file ~S" filename)))
-  (with-open-file (*scheme-current-load-file-stream* filename :direction :input)
-    (declare (special *scheme-current-load-file-stream*))
-    (scheme-load-file *scheme-current-load-file-stream*)))
-
-
-(defun scheme-load-old (filename)
-  (unless (and (uiop:absolute-pathname-p filename)
-	       (probe-file filename))
-    (setf filename
-	  (merge-pathnames
-	   (directory-namestring *scheme-current-load-file-stream*)
-	   filename))
-    (unless (probe-file filename)
-      (error "Unable to find file ~S" filename)))
-  (with-open-file (*scheme-current-load-file-stream* filename :direction :input)
-    (declare (special *scheme-current-load-file-stream*))
-    (loop
-      for form = (read *scheme-current-load-file-stream* nil :eof)
-      until (eq form :eof)
-      collect (convert-numbers form))))
-
-
-
-(defun scheme-read (&optional (stream *standard-input*))
-  (let ((*readtable* *scheme-readtable*))
-    (convert-numbers (read stream nil eof))))
-
-(defun convert-numbers (x)
-  "Replace symbols that look like Scheme numbers with their values."
-  ;; Don't copy structure, make changes in place.
-  (typecase x
-    (cons   (setf (car x) (convert-numbers (car x)))
-            (setf (cdr x) (convert-numbers (cdr x)))
-	    x) ; *** Bug fix, gat, 11/9/92
-    (symbol (or (convert-number x) x))
-    (vector (dotimes (i (length x))
-              (setf (aref x i) (convert-numbers (aref x i))))
-	    x) ; *** Bug fix, gat, 11/9/92
-    (t x)))
-
-(defun convert-number (symbol)
-  "If str looks like a complex number, return the number."
-  (let* ((str (symbol-name symbol))
-         (pos (position-if #'sign-p str))
-         (end (- (length str) 1)))
-    (when (and pos (char-equal (char str end) #\i))
-      (let ((re (read-from-string str nil nil :start 0 :end pos))
-            (im (read-from-string str nil nil :start pos :end end)))
-        (when (and (numberp re) (numberp im))
-          (complex re im))))))
-
-(defun sign-p (char) (find char "+-"))

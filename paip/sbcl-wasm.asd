@@ -4,7 +4,7 @@
 (asdf:defsystem #:sbcl-wasm
   :depends-on (:iterate :uiop)
   :components
-  ((:module "lisp"
+  ((:module "sbcl-wasm"
     :components
     ((:file sbcl-wasm-packages)
      (:file sbcl-wasm-auxfns)

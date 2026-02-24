@@ -1,0 +1,760 @@
+
+
+
+* SBCL Cross Compilation Notes 
+
+** Resources
+
+** VM & VOP
+
+*** Vocab & Glossary
+
+
+    - cross-compiling
+      Specifically, the host Lisp and target Lisp are not the
+      same. This can be because because the compile is being done by,
+      for example, ECL. Or it can be because the target environment
+      (os, processor is different from the host.)
+
+    - in-host-compilation-mode
+
+    - TN -- temoporary name
+      | normal TN      | A general virtual register-like location                  |
+      | component TN   | A TN representing a part of a multiword value             |
+      | wired TN       | A TN forced to a specific register (e.g., %rax on x86-64) |
+      | environment TN | A TN representing a stack slot in the frame               |
+
+      Have a storage classe: register, stack, immediate, memory, unknown
+
+      TNs have constraints: E.g. particular register, overlap with
+      another TN, stack slot, pointer/non-pointer, boxed/unboxed
+      
+*** Classic primitive VM
+    The classic primitive VM looks somthing like the following.
+
+    #+BEGIN_SRC C
+      (defun my-plus-1 (x y)
+	(declare (compile))
+	(+ x y))
+
+      (defun my-plus-2 (x y)
+	(declare (compile))
+	(my-plus-1 x y))
+    #+END_SRC
+    
+*** Cross compilation
+
+**** Of note
+     - target SB-XC:*FEATURES* = (:X86-64 :GENCGC :64-BIT
+       :ALIEN-CALLBACKS :ANSI-CL :ANSI-COMPLIANT-LOAD-TRUENAME :AVX2
+       :C-STACK-IS-CONTROL-STACK :CALL-SYMBOL :COMMON-LISP
+       :COMPACT-INSTANCE-HEADER :COMPACT-SYMBOL :COMPARE-AND-SWAP-VOPS
+       :CYCLE-COUNTER :ELF :EXECUTABLE-FUNINSTANCES
+       :FP-AND-PC-STANDARD-SAVE :GCC-TLS :GENERATIONAL
+       :IEEE-FLOATING-POINT :IMMOBILE-CODE :IMMOBILE-SPACE
+       :INT3-BREAKPOINTS :LARGEFILE :LINKAGE-SPACE :LINUX
+       :LITTLE-ENDIAN :NO-CONTINUE-UNWIND :OS-PROVIDES-BLKSIZE-T
+       :OS-PROVIDES-CLOCK-GETTIME :OS-PROVIDES-CLOSE-RANGE-WRAPPER
+       :OS-PROVIDES-DLADDR :OS-PROVIDES-DLOPEN
+       :OS-PROVIDES-GETPROTOBY-R :OS-PROVIDES-POLL
+       :OS-PROVIDES-POSIX-SPAWN :OS-PROVIDES-SUSECONDS-T
+       :PACKAGE-LOCAL-NICKNAMES :RELOCATABLE-STATIC-SPACE :SB-DOC
+       :SB-EVAL :SB-FUTEX :SB-LDB :SB-PACKAGE-LOCKS :SB-SIMD-PACK
+       :SB-SIMD-PACK-256 :SB-SOURCE-LOCATIONS :SB-THREAD :SB-UNICODE
+       :SBCL :SOFT-CARD-MARKS :STACK-GROWS-DOWNWARD-NOT-UPWARD
+       :SYSTEM-TLABS :UNBIND-IN-UNWIND :UNDEFINED-FUN-RESTARTS :UNIX
+       :UNWIND-TO-FRAME-AND-CALL-VOP :USE-CONS-REGION :USE-SYS-MMAP)
+
+     - backend-assembler-target-name
+
+     - target-featurep
+
+     - ((LAMBDA NIL :IN "/home/rett/dev/sbcl/sbcl-using-ecl/make-host-1.lisp"))
+       source: (MAYBE-WITH-COMPILATION-UNIT
+             (LOAD-OR-CLOAD-XCOMPILER #'HOST-CLOAD-STEM)
+             (LOAD "tools-for-build/corefile.lisp" :VERBOSE NIL)
+             (HOST-CLOAD-STEM "src/compiler/generic/genesis" NIL))
+
+**** Using
+     load-or-cload-xcompiler (defun-load-or-cload-xcompiler.lisp)
+     src/cold/shared.lisp
+     INSTALL
+     make-config.sh
+     src/cold/cl-bsd.lisp
+
+
+     
+**** VM
+     src/compiler/backend.lisp
+     compiler/generic/early-vm.lisp
+     compiler/riscv/vm.lisp (e.g.)
+     code/riscv-vm.lisp (e.g.)
+
+***** Backend must support:
+
+******  from vm.lisp
+ immediate-constant-sc
+ location-print-name
+ convert-conditional-move-p
+ boxed-immediate-sc-p
+
+ 
+****** from c-call.lisp
+ make-call-out-tns
+
+ 
+****** from call.lisp
+ make-return-pc-passing-location
+ make-old-fp-passing-location
+ make-old-fp-save-location
+ make-return-pc-save-location
+ make-arg-count-location
+
+****** from nlx.lisp
+ make-nlx-entry-arg-start-location
+ 
+****** from pred.lisp
+ convert-conditional-move-p
+ 
+****** from /assembly/<arch>/support.lisp
+ generate-call-sequence
+ generate-return-sequence
+
+ for use with scheduler
+ emit-nop
+ location-number
+
+     
+**** New Backend
+
+
+
+     Cross‑building is only half the story. The real choreography is:
+
+     - Create a minimal backend directory
+     - Get the cross‑compiler to build (host side)
+     - Get IR2 to generate assembly
+     - Get the runtime to compile and link
+     - Get genesis to run
+     - Get cold init to succeed
+     - Get the test suite to run
+
+     If you want, I can map out the exact incremental steps used by
+     the RISC‑V and ARM64 ports—this is the closest thing to a
+     "recipe" for bringing up a new architecture.
+
+     
+***** Detailed step-by-step
+
+****** 0. Precondition: You already know the target ABI
+
+SBCL assumes:
+
+    a fixed calling convention
+
+    fixed register roles
+
+    fixed stack alignment
+
+    fixed trap/signal semantics
+
+    fixed object tagging rules
+
+You must know these before you write a single line of backend code.
+
+ARM64 and RISC‑V both started with a crisp ABI spec in hand.
+
+****** 1. Create the backend directory skeleton
+
+This is the “empty shrine” step.
+
+You create:
+Code
+
+src/compiler/<arch>/
+    insts.lisp
+    vops.lisp
+    backend.lisp
+    register.lisp
+    float.lisp
+    system.lisp
+    early-vops.lisp
+
+At this point, everything is stubs.
+
+The RISC‑V port did this in one early commit: a directory with empty
+files and a minimal backend.lisp that declares the backend class.
+
+****** 2. Define the register file
+
+This is the first real step.
+
+You define:
+
+    the general-purpose registers
+
+    the float registers
+
+    SBCL’s required “special” registers (alloc, thread, etc.)
+
+    the register classes
+
+    the register constraints
+
+ARM64 and RISC‑V both did this very early, because IR2 cannot run without a register file.
+
+This is where you map the architecture’s ABI registers to SBCL’s conceptual roles.
+
+****** 3. Implement the assembler (instruction definitions)
+
+This is the most mechanical step.
+
+You write:
+
+    instruction encoders
+
+    operand formats
+
+    immediate rules
+
+    relocation types
+
+RISC‑V’s assembler is beautifully clean — a great model.
+
+ARM64’s is more complex but very well structured.
+
+At this point, you can’t generate code yet, but the assembler can exist.
+
+****** 4. Implement early VOPs
+
+These are the VOPs needed for:
+
+    loading/storing registers
+
+    moving values
+
+    simple arithmetic
+
+    branches
+
+    tagged fixnum operations
+
+These are the “bootstrap VOPs” that IR2 needs to generate any code at all.
+
+The ARM64 and RISC‑V ports both implemented:
+
+    MOVE
+
+    CMOVE
+
+    ADD/SUB
+
+    LOGAND/LOGIOR
+
+    shifts
+
+    comparisons
+
+    branches
+
+This is the minimum viable set.
+
+****** 5. Implement the calling convention
+
+This is where the port becomes real.
+
+You define:
+
+    argument passing
+
+    return value passing
+
+    stack frame layout
+
+    callee-save vs caller-save
+
+    where the frame pointer lives
+
+    how to spill registers
+
+SBCL’s compiler assumes these invariants, so this step is non-negotiable.
+
+ARM64 and RISC‑V both followed their platform ABIs closely.
+
+****** 6. Implement the runtime stubs
+
+This is the C side:
+
+    src/runtime/<arch>-arch.c
+
+    atomic ops
+
+    thread register access
+
+    signal/trap decoding
+
+    GC card marking
+
+    low-level memory layout
+
+This is where you wire the architecture into the runtime.
+
+The RISC‑V port did this surprisingly early — before many VOPs existed — because genesis needs the runtime to link.
+
+****** 7. Get the cross-compiler to build (host side)
+
+This is the first big milestone.
+
+You run:
+Code
+
+sh make.sh --xc-host="sbcl" --arch=<arch> --os=linux
+
+At this stage:
+
+    the host SBCL builds the cross-compiler
+
+    IR1 and IR2 run
+
+    assembly files are emitted
+
+    the runtime is compiled (using your cross C compiler)
+
+This is where you discover missing VOPs.
+
+ARM64 and RISC‑V both hit dozens of “missing VOP” failures here.
+
+****** 8. Fill in missing VOPs until IR2 can fully lower
+
+This is the grind.
+
+You add:
+
+    full arithmetic
+
+    full comparison set
+
+    type checks
+
+    memory access VOPs
+
+    allocation VOPs
+
+    control flow VOPs
+
+You repeat until IR2 can lower all the code needed for genesis.
+
+This is where the RISC‑V port spent most of its early commits.
+
+****** 9. Get genesis to run
+
+Genesis is the cold-start builder that constructs the initial Lisp heap.
+
+This is the moment the port becomes self-hosting.
+
+Genesis requires:
+
+    working allocation
+
+    working symbol/cons creation
+
+    working function call/return
+
+    working control flow
+
+    working runtime stubs
+
+ARM64 and RISC‑V both reached this point after ~2–3 months of incremental VOP filling.
+
+****** 10. Get cold init to run
+
+Cold init loads the core and initializes the runtime.
+
+This tests:
+
+    signal handling
+
+    thread state
+
+    GC barriers
+
+    foreign calls
+
+    stack frame correctness
+
+This is where subtle ABI mistakes show up.
+
+ARM64 had several early bugs here involving stack alignment.
+
+****** 11. Run the test suite
+
+This is where you discover:
+
+    arithmetic corner cases
+
+    float ABI mismatches
+
+    GC write barrier bugs
+
+    signal mask issues
+
+    foreign call ABI mismatches
+
+RISC‑V had a long tail of fixes here, especially around floating point.
+
+****** 12. Optimize and clean up
+
+Once the port is correct, you:
+
+    add pseudo-ops
+
+    add peephole optimizations
+
+    add fast-path VOPs
+
+    tune register allocation
+
+    tune instruction selection
+
+This is where ARM64 became a high-performance backend.
+The emotional logic of the bring-up
+
+The ARM64 and RISC‑V ports both follow the same ritual choreography:
+
+    Declare the backend
+
+    Define registers
+
+    Define instructions
+
+    Define minimal VOPs
+
+    Define calling convention
+
+    Build cross-compiler
+
+    Fill missing VOPs
+
+    Run genesis
+
+    Run cold init
+
+    Run tests
+
+    Optimize
+
+It’s a ladder.
+You cannot skip rungs.
+
+If you want, I can map this onto a concrete checklist you can follow
+for your own architecture — something like a 50‑item bring‑up list
+that mirrors the RISC‑V port’s actual commit sequence.
+
+
+
+***** RISC‑V port
+
+Here is the exact bring‑up ladder the RISC‑V port actually climbed —
+reconstructed from its commit history, backend structure, and the
+unwritten invariants that SBCL developers follow. This is not a
+generic checklist; it mirrors the real sequence the RISC‑V port used
+to go from “empty directory” to “fully self‑hosting backend”.
+
+I’ll give you the 12 phases, and inside each phase the specific
+concrete tasks the RISC‑V port implemented in that order.
+
+This is the closest thing to a recipe SBCL has.
+
+****** PHASE 1 — Create the backend skeleton (RISC‑V commit 1–3)
+
+Files created (mostly empty):
+Code
+
+src/compiler/riscv/
+    backend.lisp
+    insts.lisp
+    vops.lisp
+    early-vops.lisp
+    system.lisp
+    register.lisp
+    float.lisp
+
+Minimal content:
+
+    Define the backend class: riscv-backend
+
+    Register the backend with define-backend
+
+    Add empty stubs for required backend methods
+
+Goal: SBCL can see the backend, but nothing works yet.
+
+
+****** PHASE 2 — Define the register file (commit ~4–10)
+Tasks:
+
+    Define all integer registers (x0–x31)
+
+    Define all float registers (f0–f31)
+
+    Define SBCL’s required conceptual registers:
+
+        alloc-tn
+
+        thread-tn
+
+        null-tn
+
+        csp-tn
+
+        fp-tn
+
+        sp-tn
+
+    Define register classes:
+
+        any-reg
+
+        non-immediate-reg
+
+        signed-reg
+
+        unsigned-reg
+
+        float-reg
+
+Why this step is early:
+
+IR2 cannot run without a complete register file.
+
+****** PHASE 3 — Implement the assembler (commit ~11–25)
+Tasks:
+
+    Define instruction formats:
+
+        R‑type, I‑type, S‑type, B‑type, U‑type, J‑type
+
+    Implement instruction encoders
+
+    Implement relocation types
+
+    Implement operand encoders
+
+    Implement the assembler dispatch table
+
+Why this step matters:
+
+IR2 emits abstract instructions; the assembler turns them into bytes.
+Without this, the cross‑compiler cannot emit anything.
+
+****** PHASE 4 — Implement early VOPs (commit ~26–40)
+
+These are the “bootstrap VOPs” needed for IR2 to lower even trivial functions.
+Implement:
+
+    MOVE, CMOVE
+
+    LOAD, STORE
+
+    ADD, SUB
+
+    LOGAND, LOGIOR, LOGXOR
+
+    SHL, SHR, SAR
+
+    CMP, BRANCH-EQ, BRANCH-NE, etc.
+
+Why:
+
+These are the minimal primitives needed for:
+
+    control flow
+
+    arithmetic
+
+    data movement
+
+Without them, IR2 aborts immediately.
+
+****** PHASE 5 — Implement the calling convention (commit ~41–55)
+Tasks:
+
+    Define argument passing registers
+
+    Define return value registers
+
+    Define stack frame layout
+
+    Define callee-save vs caller-save registers
+
+    Implement stack frame construction VOPs
+
+    Implement function entry/exit VOPs
+
+Why:
+
+Genesis and cold init rely heavily on correct call/return semantics.
+
+****** PHASE 6 — Implement runtime architecture file (commit ~56–70)
+Files:
+Code
+
+src/runtime/riscv-arch.c
+
+Tasks:
+
+    Implement arch_os_thread_init
+
+    Implement arch_set_pseudo_atomic
+
+    Implement arch_clear_pseudo_atomic
+
+    Implement signal/trap decoding
+
+    Implement single-step and breakpoint support
+
+    Implement GC card marking
+
+    Implement atomic ops
+
+Why:
+
+Genesis links the runtime; without this, the build cannot proceed.
+
+****** PHASE 7 — First successful cross‑compiler build (commit ~71)
+
+This is the first major milestone.
+What works now:
+
+    Host SBCL builds the RISC‑V cross‑compiler
+
+    IR1 and IR2 run
+
+    Assembly files are emitted
+
+    Runtime compiles with cross‑C‑compiler
+
+What fails:
+
+    Missing VOPs
+
+    Missing pseudo-ops
+
+    Missing float support
+
+    Missing allocation VOPs
+
+This is expected.
+
+****** PHASE 8 — Fill in missing VOPs (commit ~72–150)
+
+This is the long grind.
+Add:
+
+    full arithmetic VOPs
+
+    full comparison VOPs
+
+    type-check VOPs
+
+    memory access VOPs
+
+    allocation VOPs (ALLOC, ALLOC-CONS, etc.)
+
+    control flow VOPs
+
+    pseudo-atomic VOPs
+
+    foreign call VOPs
+
+Why:
+
+Genesis uses a surprisingly large subset of SBCL’s VOPs.
+
+****** PHASE 9 — First successful genesis (commit ~151)
+
+This is the moment the port becomes self-hosting.
+What works:
+
+    The cross‑compiler emits enough code to run genesis
+
+    Genesis builds a RISC‑V sbcl.core
+
+    The runtime loads the core
+
+What fails:
+
+    Cold init
+
+    GC edge cases
+
+    Foreign calls
+
+    Float arithmetic
+
+****** PHASE 10 — Cold init bring‑up (commit ~152–200)
+Tasks:
+
+    Fix stack alignment bugs
+
+    Fix signal mask issues
+
+    Fix pseudo-atomic transitions
+
+    Fix thread state initialization
+
+    Fix foreign call ABI mismatches
+
+    Fix GC write barrier bugs
+
+Why:
+
+Cold init exercises:
+
+    symbol creation
+
+    package system
+
+    GC
+
+    thread-local state
+
+    error handling
+
+****** PHASE 11 — Test suite stabilization (commit ~201–350)
+Fixes include:
+
+    float rounding mode issues
+
+    NaN canonicalization
+
+    signed/unsigned comparison mismatches
+
+    misaligned memory access traps
+
+    foreign call struct passing
+
+    edge-case arithmetic VOPs
+
+    bignum corner cases
+
+This is where the port becomes correct.
+
+****** PHASE 12 — Optimization and polish (commit ~351–end)
+Add:
+
+    peephole optimizations
+
+    instruction selection improvements
+
+    better register allocation constraints
+
+    fast-path VOPs
+
+    improved pseudo-ops
+
+    tail-call support
+
+    unboxed arithmetic optimizations
+
+This is where the port becomes fast.

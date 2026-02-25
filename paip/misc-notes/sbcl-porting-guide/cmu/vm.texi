@@ -78,24 +78,22 @@ Some VOPs don't need to be implemented at all:
 
 Type testing/checking (somehow)
 
-}
-
 What this document talks about:
 
 Interface between compiler front-end and back end. (VOPs)
    Primitive \clisp operations directly supported by the VM.
    Support for complex language features such as function call.
 
-Sub-primitives that allow system code to do things not possible in \clisp.
+Sub-primitives that allow system code to do things not possible in @code{sbcl}.
 
-Descriptions of how the current \ccl system uses VM facilities, especially
+Descriptions of how the current SBCL system uses VM facilities, especially
 non-standard ones accessed through sub-primitives.
 
 Notes about known portability problems.
 
-Guidelines for writing portable \ccl system code. To some degree these
-guidelines are implied by statements that certain things are true of \ccl
-system code.
+Guidelines for writing portable SBCL system code. To some degree these
+guidelines are implied by statements that certain things are true of
+SBCL system code.
 
 Descriptions of data structures that are not directly used by the VM, such as
 debug information and Core files.
@@ -106,34 +104,45 @@ symbols and arrays.
 
 Who should read it:
 
-People who want to port \ccl.
-People who want to understand the compiler.
-People who want to understand how \ccl works.
-People who need to write portable \ccl system code.
-People such as debugger writers who need to access \ccl\t()'s internal data
+@itemize @bullet{}
+
+
+@item People who want to port SBCL.
+
+@item People who want to understand the compiler.
+
+@item People who want to understand how SBCL works.
+
+@item People who need to write portable SBCL system code.
+
+@item People such as debugger writers who need to access SBCL \t()'s internal data
 structures.
+
+@end itemize
 
 What it won't do:
 
-Tell you things that are obviously implementation dependent, such as type
-systems or memory management disciplines. See the the various implementation
-VM documents.
+@itemize
 
-Tell you only what you need to know. Programmers shouldn't exploit properties
-of the VM documented here unless there is no way to do the same thing in
-portable \clisp.
+@item Tell you things that are obviously implementation dependent, such as
+type systems or memory management disciplines. See the the various
+implementation VM documents.
 
-Tell you how the compiler works. In order to understand some of the subtleties
-of VOP descriptions, you will have to understand the IR2 representation and how
-it fits into the rest of the compiler.
+@item Tell you only what you need to know. Programmers shouldn't exploit
+properties of the VM documented here unless there is no way to do the
+same thing in portable SBCL.
 
-Tell you anything about \clisp semantics. When some part of the VM has a
-direct relationship to \clisp semantics, the relationship will be directly
-stated using \clisp terminology, since a restatement of the semantics is likely
-to be inaccurate or misleading. Exceptions will be made only when some
-implication of the \clisp semantics is non-obvious.
+@item Tell you how the compiler works. In order to understand some of the
+subtleties of VOP descriptions, you will have to understand the IR2
+representation and how it fits into the rest of the compiler.
 
-Tell you everything about how \ccl works. This document only offers
+@item Tell you anything about SBCL semantics. When some part of the VM has a
+direct relationship to SBCL semantics, the relationship will be
+directly stated using SBCL terminology, since a restatement of the
+semantics is likely to be inaccurate or misleading. Exceptions will be
+made only when some implication of the SBCL semantics is non-obvious.
+
+@item Tell you everything about how @code{sbcl} works. This document only offers
 information that is likely to be needed by programmers doing a port or writing
 system code; portable, self-contained parts of the system are totally ignored.
 This document deliberately avoids replicating information that is easily
@@ -141,168 +150,197 @@ available in the system sources, since such replicated information is always
 incorrect somewhere. In some cases, a forwarding pointer to the appropriate
 source will be given.
 
+@end itemize
 
 Things the VM won't do:
 
-The VM specification does not totally solve the problem of porting \ccl, since
-it is inevitable that it will not map cleanly to all possible combinations of
-hardware and operating systems. The VM should not be regarded as being cast in
-concrete, since changes in many characteristics would only affect a tiny
-fraction of the system sources.
+The VM specification does not totally solve the problem of porting
+SBCL, since it is inevitable that it will not map cleanly to all
+possible combinations of hardware and operating systems. The VM should
+not be regarded as being cast in concrete, since changes in many
+characteristics would only affect a tiny fraction of the system
+sources.
 
-One current major problem with porting is that large pieces of functionality
-are entirely within the VM, and would need to be reimplemented for each port.
-A major goal for future work on the system is moving code out of the VM, both
-by supporting a ``fast-call'' convention that allows reasonable use of Lisp in
-the out of line implementation of VOPs, and by having a ``bugout'' mechanism that
-allows the VM to call Lisp functions to implement the hard cases in some VOPs.
+One current major problem with porting is that large pieces of
+functionality are entirely within the VM, and would need to be
+reimplemented for each port. A major goal for future work on the
+system is moving code out of the VM, both by supporting a
+``fast-call'' convention that allows reasonable use of Lisp in the out
+of line implementation of VOPs, and by having a ``bugout'' mechanism
+that allows the VM to call Lisp functions to implement the hard cases
+in some VOPs.
 
 The VM is designed to support conventional, untagged, general register
 architectures. Suitably lobotomized, it could be mapped to less flexible
 hardware such as ``Lisp machines'', but the compiler would have serious
 difficulties supporting stack architectures.
 
-The VM does not support concurrent lightweight processes. Locking primitives
-and deep-binding of specials would be needed.
+The VM does not support concurrent lightweight processes. Locking
+primitives and deep-binding of specials would be needed.
 
-The VM does not deal with operating systems interface issues at all. A minimal
-port would require implementing at least file and terminal I/O streams. \ccl
-implements system interfaces using Aliens and other facilities built on top of
-them.
-
-\end{comment}
-
+The VM does not deal with operating systems interface issues at all. A
+minimal port would require implementing at least file and terminal I/O
+streams. @code{sbcl} implements system interfaces using aliens and
+other facilities built on top of them.
 
 
 Major components:
-\begin{itemize}
-Specific virtual operations implemented by the VM (VOPs). VOPs are primarily
+@itemize
+@item Specific virtual operations implemented by the VM (VOPs). VOPs are primarily
 the concern of the compiler, since it translates Lisp code into VOPs and then
 translates VOPs into the implementation.
 
-Sub-primitives that are used by Lisp code needing to perform operations
+@item Sub-primitives that are used by Lisp code needing to perform operations
 below the Lisp level. The compiler implements some sub-primitives directly
 using VOPs, while others are translated into Lisp code. Sub-primitives provide
 a layer of insulation between the Lisp system code and the VM, since the Lisp
 code may assume the existence of operations that are not implemented directly
 by the VM. Only sub-primitives with fairly portable semantics are documented
 here. Others are in implementation-specific VM documentation.
-\end{itemize}
+@end itemize
 
-\comment<Not all sub-primitives are VOPs, and most VOPs are not sub-primitives.>
-
-
-
-\subsection{VOP base name rules}
-
-The names of VOPs that implement functions are based on the function name.
-Other VOPs may use any base that doesn't conflict with a function name. There
-are some rules used to obtain the base name for related operations.
-
-To get the name of a setting operation, replace the string ``{\tt ref}'' in the name
-with ``{\tt set}''. If ``{\tt ref}'' doesn't appear in the name, add the prefix ``{\tt set-}'' to the
-base name. For example, {\tt svref} becomes {\tt svset}, and {\tt symbol-value}
-becomes {\tt set-symbol-value}.
-
-To get the name of a conditional VOP from the name of a predicate, add the
-prefix ``{\tt if-}'' to the predicate name. For example, {\tt eq} becomes {\tt if-eq}.
-{\tt eq} by itself would be a VOP that returned true or false value.
-
-Some operations check for some error condition, magically signalling the error
-through an implicit control transfer. These operations are prefixed with
-``{\tt check-}'', as in {\tt check-fixnum} and {\tt check-bound}.
+#Not all sub-primitives are VOPs, and most VOPs are not sub-primitives.*
 
 
 
-\subsection{VOP name prefixes and suffixes}
+
+@node VOP base name rules
+@subsection VOP base name rules
+
+
+The names of VOPs that implement functions are based on the function
+name. Other VOPs may use any base that doesn't conflict with a
+function name. There are some rules used to obtain the base name for
+related operations.
+
+To get the name of a setting operation, replace the string
+``@code{ref}'' in the name with ``@code{set}''. If ``@code{ref}''
+doesn't appear in the name, add the prefix ``@code{set-}'' to the base
+name. For example, @code{svref} becomes @code{svset}, and
+@code{symbol-value} becomes @code{set-symbol-value}.
+
+To get the name of a conditional VOP from the name of a predicate, add
+the prefix ``@code{if-}'' to the predicate name. For example,
+@code{eq} becomes @code{if-eq}.  @code{eq} by itself would be a VOP
+that returned true or false value.
+
+Some operations check for some error condition, magically signalling
+the error through an implicit control transfer. These operations are
+prefixed with ``@code{check-}'', as in @code{check-fixnum} and
+@code{check-bound}.
+
+
+
+
+@node VOP name prefixes and suffixes
+@subsection VOP name prefixes and suffixes
 
 Prefixes and suffixes are added to the base to get the names of variant
 versions of the VOP. The fully general VOP name looks like this:
-\begin{format}
-   {``{\tt small-}'' | ``{\tt fast-}''} {\it name}{``{\tt -c}'' {\it info}}{``{\tt /}'' {\it type}{``{\tt =>}'' {\it result-type}}
-\end{format}
-The ``{\tt small-}'' and ``{\tt fast-}'' prefixes indicates that the VOP does minimal
-safety checking and is optimized for space or speed, respectively. The absence
-of a prefix indicates the safest (or only) version. Usually if the ``{\tt small-}''
-VOP exists, it will be a synonym for either the fast version or the safe
-version, depending on which is smaller.
 
-The ``{\tt -c}'' suffix indicates that the some info that is passed as a normal
-argument to the base version of the VOP is passed as Codegen-Info in this
-version. A typical use would be for VOPs where it is important to use a
-different version when one of the arguments is a compile time constant.
-{\it info} is some (possibly null) string that indicates which ``{\tt -c}'' variant
-is involved.
+@{ @code{small-} | @code{fast-} @}  @var{name} @{ @code{-c} @var{info} @}
+@{ @code{/}@var{type} @{ @code{=>} @var{result-type} @} @}
 
-The ``{\tt /}{\it type}'' suffix asserts that all operands that could be of {\it type} are.
-For example, {\tt +/fixnum} adds two fixnums returning a fixnum, while
-{\tt length/simple-vector} finds the length of a simple vector, but the result isn't
-a simple vector.
+The @code{small-} and @code{fast-} prefixes indicates that the VOP
+does minimal safety checking and is optimized for space or speed,
+respectively. The absence of a prefix indicates the safest (or only)
+version. Usually if the @code{small-} VOP exists, it will be a synonym
+for either the fast version or the safe version, depending on which is
+smaller.
 
-The ``{\tt =>}{\it result-type}'' suffix supplies a result type assertion on the
-operation.
+The @code{-c} suffix indicates that the some info that is passed as a
+normal argument to the base version of the VOP is passed as
+@code{codegen-info} in this version. A typical use would be for VOPs
+where it is important to use a different version when one of the
+arguments is a compile time constant.  @var{info} is some (possibly
+null) string that indicates which @code{-c} variant is involved.
+
+The @code{/}@var{type} suffix asserts that all operands that could be
+of @var{type} are.  For example, @code{+/fixnum} adds two fixnums
+returning a fixnum, while @code{length/simple-vector} finds the length
+of a simple vector, but the result isn't a simple vector.
+
+The @code{=>}@var{result-type} suffix supplies a result type assertion
+on the operation.
 
 A not totally silly example of all these modifiers simultaneously is
- {\tt fast-+-c/fixnum=>integer}. This operation would this operation adds two
-fixnums, one of which is a constant passed as codegen info, resulting in an
-integer. The implementation is optimized for speed at the expense of space and
-safety.
+@code{fast-+-c/fixnum=>integer}. This operation would this operation
+adds two fixnums, one of which is a constant passed as codegen info,
+resulting in an integer. The implementation is optimized for speed at
+the expense of space and safety.
 
 
 
-\chapter{Data Types and Storage Resources}
+
+@node Data Types and Storage Resources
+@chapter Data Types and Storage Resources
+@cindex data type
+@cindex storage resources
+
 
 
-\section{Lisp Objects}
-\index{Lisp objects}
+
+@node Lisp Objects
+@section Lisp Objects
+@cindex lisp object
+
 
 A Lisp object is fixed-size data structure that is organized in a way mandated
 by the VM implementation. The fixed format allows the VM to determine the type
-of the object. \comment<Virtual type?  VM type?  Implementation type?
+of the object. @strong{Note} <Virtual type?  VM type?  Implementation type?
 ...provides the VM enough information about the type of the object for the VM
 to implement the VM-level semantics... ...supports the ``dynamic types''...>
 
-Lisp objects are stored in locations known as cells. 
+Lisp objects are stored in locations known as cells. They have the
+major types: immediate and non-immediate. Non-immediate objects may
+have the following subtypes:
 
+@itemize @bullet{}
 
-Has major types: immediate and non-immediate.
-Non-immediate objects may have a subtype.
-Non-immediate types:
-  symbol (nil may be weird)
-  cons 
-  ratio
-  complex
-  some float types
-  g-vector
-  i-vector
-  string
-  bit-vector
-  environment (always has subtype)
-  array header
-  bignum
-  structure
-  pc (code vector)
-  stack closure (control stack pointer)
+@item symbol (nil may be weird)
+@item cons 
+@item ratio
+@item complex
+@item some float types
+@item g-vector
+@item i-vector
+@item string
+@item bit-vector
+@item environment (always has subtype)
+@item array header
+@item bignum
+@item structure
+@item pc (code vector)
+@item stack closure (control stack pointer)
 
-Non-immediate objects are allocated in ``type spaces''. The type space of an
-object is characterized by a small integer known as the type code. Any two
-objects of one of the above boxed types will always have the same type code.
-{But not really... Some types might be allocated in different type spaces at
-different times. (?)}
+@end itemize
+
+Non-immediate objects are allocated in ``type spaces''. The type space
+of an object is characterized by a small integer known as the type
+code. Any two objects of one of the above boxed types will always have
+the same type code.  @strong{Note:} But not really... Some types might
+be allocated in different type spaces at different times. (?)
 
 The type code doesn't totally describe the object. In general, subtype
 information may be involved.
 
 
 Immediate types:
-  character
-  fixnum
-  unbound trap
-  short float
 
+@itemize @bullet
+
+@item character
+@item fixnum
+@item unbound trap
+@item short float
+
+@end itemize
 
 
-\section{Type VOPs}
+
+@node Type VOPs
+@section Type VOPs
+@cindex type VOP
 
 We consider control transfer to be the fundamental result of comparison, rather
 than anything such as a condition code. Although most compilers with whizzy
@@ -402,7 +440,7 @@ converting into an integer and accessing these fields:
 \begin{description}
 \item[{\tt %character-code-byte}]The character code. This is effectively required to
 start at bit 0, since \cl equates {\tt char-int} to {\tt char-code} when there is
-no bits or font. All current \ccl systems use ASCII for the character codes,
+no bits or font. All current @code{sbcl} systems use ASCII for the character codes,
 and define {\tt \#\newline} to be a linefeed, but system code should not count on
 this.
 
@@ -410,11 +448,11 @@ this.
 Hemlock to describe modifiers in keyboard events, but there is no assumption of
 any general portable significance of character bits.
 
-{\tt %character-font-byte}\\The character font. This is not used by \ccl, and is
+{\tt %character-font-byte}\\The character font. This is not used by @code{sbcl}, and is
 not particularly useful.
 \end{description}
 
-Characters should be converted to and from integers by using the \clisp
+Characters should be converted to and from integers by using the SBCL
 {\tt char-int} and {\tt int-char} functions, which the compiler translates into
 these VOPs:
 \begin{example}
@@ -448,7 +486,7 @@ if-char> (x y)
 \chapter{Symbols}
 
 
-Symbols are currently fairly boring in \ccl, containing only the obvious slots:
+Symbols are currently fairly boring in @code{sbcl}, containing only the obvious slots:
 \begin{description}
 {\tt %symbol-value-slot}\\The current dynamic value of this symbol. If the
 symbol is currently unbound, then the value of this slot is the unbound marker.
@@ -488,7 +526,7 @@ may only be used on symbols that have been defined to be constants. Since a
 constant cannot change in value and cannot be dynamically bound, the compiler
 may be able to compile uses of {\tt constant-ref} more efficiently. Unsafe
 versions of these VOPs may not check for the slot being unbound, which the
-corresponding \clisp functions are required to do.
+corresponding SBCL functions are required to do.
 \begin{example}
 {small, fast} symbol-value (symbol) => value
 {small, fast} constant-ref (symbol) => value
@@ -502,7 +540,7 @@ and {\tt fmakunbound} are implemented by setting the value to the unbound marker
 {small, fast} set-symbol-function (symbol new-value)
 \end{example}
 
-The \clisp accessors for other symbol slots are translated into uses of the
+The SBCL accessors for other symbol slots are translated into uses of the
 {\tt slot-ref} and {\tt slot-set} VOPs.
 
 
@@ -521,7 +559,7 @@ unbind (count)
 
 \section{Property Lists}
 
-The {\tt get} VOP implements the corresponding \clisp function, while {\tt put}
+The {\tt get} VOP implements the corresponding SBCL function, while {\tt put}
 implements its setf-inverse.
 \begin{example}
 get (symbol indicator default) => value
@@ -542,7 +580,7 @@ list (elt0 ... elt<n-1> more-elts) => list
     top). List* is similar.
 \end{example}
 
-These VOPs implement the corresponding \clisp functions:
+These VOPs implement the corresponding SBCL functions:
 \begin{example}
 {small, fast} car (list) => value 
 {small, fast} cdr (list) => value 
@@ -554,7 +592,7 @@ These VOPs set the car or cdr of a cons:
 {small, fast} set-cdr (cons new-value)
 \end{example}
 
-These VOPs implement the \clisp {\tt assoc} and {\tt member} functions with test
+These VOPs implement the SBCL {\tt assoc} and {\tt member} functions with test
 functions of {\tt eql} and {\tt eq}:
 \begin{example}
 assoc (item alist) => cons-or-nil
@@ -564,7 +602,7 @@ memq (item list) => cons-or-nil
 \end{example}
 
 
-{\tt getf} implements the corresponding \clisp function, while {\tt putf} is used
+{\tt getf} implements the corresponding SBCL function, while {\tt putf} is used
 to implement its setf-inverse. {\tt putf} returns the new value for the list so
 that it may stored back into the place.
 \begin{example}
@@ -625,7 +663,7 @@ if-= (x y)
 {small, fast} +/fixnum
 {small, fast} +/fixnum=>integer
 {small, fast} +/xxx-float
-    Same for -, *.  Fixnum multiplication by a constant power of 2 (or near
+    Same for -, *. Fixnum multiplication by a constant power of 2 (or near
     power of 2) can be done by a transform.
 
 / (x y) => z
@@ -1042,7 +1080,7 @@ information.
 \section{Function Calls}
 \index{function call}
 
-\ccl supports three major calling conventions. The convention used
+@code{sbcl} supports three major calling conventions. The convention used
 depends on the amount of information available at compile time:
 \begin{description}
 Local\\Local call is used when the call and the called function are

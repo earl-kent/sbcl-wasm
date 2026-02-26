@@ -1,0 +1,265 @@
+
+
+@chapter Introduction
+
+
+Internal Design of CMU Common Lisp 
+on the IBM RT PC
+
+
+
+David B. McDonald
+Scott E. Fahlman
+Skef Wholey
+
+
+CMU-CS-87-157
+
+
+
+@strong{EEK: The purpose for temporarily adding this historical
+work is to demonstrate how to coordinate the documentation of a
+specific port with the hardware abstracted description of SBCL
+provided in the rest of the document.}
+
+CMU Common Lisp is an implementation of Common Lisp that currently
+runs on the IBM RT PC under Mach, a Berkeley Unix 4.3 binary
+compatible operating system. This document describes low level
+details of the implementation. In particular, it describes the data
+formats used for all Lisp objects, the assembler language routines
+(miscops) used to support compiled code, the function call and return
+mechanism, and other design information necessary to understand the
+underlying structure of the CMU Common Lisp implementation on the IBM
+RT PC under the Mach operating system.
+
+
+Contract=Strategic87-90
+
+
+This document is based heavily on the document @i{Revised Internal Design
+of Spice Lisp} by Skef Wholey, Scott Fahlman, and Joseph Ginder.
+
+The FASL file format was designed by Guy L. Steele Jr. and Walter van
+Roggen, and the appendix on this subject is their document with very few
+modifications.
+
+
+@section Scope and Purpose
+
+This document describes a new implementation of CMU Common Lisp (nee Spice
+Lisp) as it is implemented on the @value(DinkyMachine) running Mach, a
+Berkeley Unix 4.3 binary compatible operating system. This design is
+undergoing rapid change, and for the present is not guaranteed to
+accurately describe any past, present, or future implementation of CMU
+Common Lisp. All questions and comments on this material should be
+directed to David B. McDonald (David.McDonald@@CS.CMU.EDU).
+
+This document specifies the hand-coded assembler routines (miscops) and
+virtual memory architecture of the @value(DinkyMachine) CMU Common Lisp system.
+This is a working document, and it will change frequently as the system is
+developed and maintained. If some detail of the system does not agree with
+what is specified here, it is to be considered a bug.
+
+@section Notational Conventions
+@cindex Bit numbering
+@cindex Byte numbering
+CMU Common Lisp objects are 32 bits long. The high-order bit of each word is
+numbered 0; the low-order bit is numbered 31. If a word is broken into smaller
+units, these are packed into the word from left to right. For example, if we
+break a word into bytes, byte 0 would occupy bits 0-7, byte 1 would occupy
+8-15, byte 2 would occupy 16-23, and byte 3 would occupy 24-31.
+
+All CMU Common Lisp documentation uses decimal as the default radix; other
+radices will be indicated by a subscript (as in 77@-[8]) or by a clear
+statement of what radix is in use.
+
+@chapter [Data Types and Object Formats]
+
+@section [Lisp Objects]
+@cindex [Lisp objects]
+
+Lisp objects are 32 bits long.	They come in 32 basic types, divided into three
+classes: immediate data types, pointer types, and forwarding pointer types.
+The storage formats are as follows:
+
+@cindex [Immediate object format]
+@cindex [Pointer object format]
+
+@verbatim
+
+@b[Immediate Data Types:]
+ 0	       4 5						     31
+------------------------------------------------------------------------
+| Type Code (5) |	       Immediate Data (27)		       |
+------------------------------------------------------------------------
+
+@b[Pointer and Forwarding Types:]
+ 0	       4 5	        6 7			29	     31
+------------------------------------------------------------------------
+| Type Code (5) | Space Code (2) |    Pointer (23)	  | Unused (2) |
+------------------------------------------------------------------------
+@end verbatim
+
+@section [Table of Type Codes]
+@cindex [Type codes]
+
+@verbatim
+
+Code	Type		Class		Explanation
+----	----		-----		-----------
+0	+ Fixnum	Immediate	Positive fixnum, miscop code, etc.
+1	GC-Forward	Pointer 	GC forward pointer, used during GC.
+4	Bignum		Pointer 	Bignum.
+5	Ratio		Pointer 	Two words: numerator, denominator.
+6	+ Short Float	Immediate	Positive short flonum.
+7	- Short Float	Immediate	Negative short flonum.
+8	Single Float	Pointer 	Single precision float.
+9	Double Float	Pointer 	Double precision float (?).
+9	Long Float	Pointer 	Long float.
+10	Complex 	Pointer 	Two words: real, imaginary parts.
+11	String		Pointer 	Character string.
+12	Bit-Vector	Pointer 	Vector of bits
+13	Integer-Vector	Pointer 	Vector of integers
+14	General-Vector	Pointer 	Vector of Lisp objects.
+15	Array		Pointer 	Array header.
+16	Function	Pointer 	Compiled function header.
+17	Symbol		Pointer 	Symbol.
+18	List		Pointer 	Cons cell.
+20	C. S. Pointer	Pointer 	Pointer into control stack.
+21	B. S. Pointer	Pointer 	Pointer into binding stack.
+26	Interruptible	Immediate	Marks a miscop as interruptible.
+27	Character	Immediate	Character object.
+28	Values-Marker	Immediate	Multiple values marker.
+29	Catch-All	Immediate	Catch-All object.
+30	Trap		Immediate	Illegal object trap.
+31	- Fixnum	Immediate	Negative fixnum.
+@end verbatim
+
+@section [Table of Space Codes]
+@cindex [Space codes]
+
+@verbatim
+
+Code	Space		Explanation
+----	-----		-----------
+0	Dynamic-0	Storage normally garbage collected, space 0.
+1	Dynamic-1	Storage normally garbage collected, space 1.
+2	Static		Permanent objects, never moved or reclaimed.
+3	Read-Only	Objects never moved, reclaimed, or altered.
+@end verbatim
+
+@section Immediate Data Type Descriptions
+
+@table @code
+
+@cindex Fixnum format
+@item Fixnum
+28-bit two's complement integer. The sign bit is stored redundantly
+in the top 5 bits of the word.
+
+@cindex [Short float format]
+@item Short-Float
+The sign bit is stored as part of the type code,
+allowing a 28 bit signed short float format. The format of short floating
+point numbers is:
+@verbatim
+ 0	       3     4	    5           12 13		    31
+---------------------------------------------------------------
+| Type code (4) | Sign (1) | Exponent (8) |   Mantissa (19)   |
+---------------------------------------------------------------
+@end verbatim
+The floating point number is the same format as the @value(DinkyMachine)
+supports for single precision numbers, except it has been shifted right
+by four bits for the type code. The result of any operation is therefore
+truncated. Long floating point numbers are also available if you need
+more accuracy and better error propagation properties.
+
+@cindex [Character object]
+@item Character
+A character object holding a character code, control bits, and font
+in the following format:
+@verbatim
+ 0	       4 6	   7  8       15 16	 23 24	    31
+---------------------------------------------------------------
+| Type code (5) | Unused (3) | Font (8) | Bits (8) | Code (8) |
+---------------------------------------------------------------
+@end verbatim
+
+@cindex [Values-Marker]
+@item Values-Marker
+Used to mark the presence of multiple values on the stack. The
+low 16 bits indicate how many values are being returned. Note that only 65535
+values can be returned from a multiple-values producing form. These are pushed
+onto the stack in order, and the Values-Marker is returned in register A0.
+
+@cindex [Catch-All object]
+@item Catch-All
+Object used as the catch tag for unwind-protects. Special things
+happen when a catch frame with this as its tag is encountered during a throw.
+See section @ref[Catch] for details.
+
+@cindex [Trap]
+@cindex [Illegal object trap]
+@item Trap
+Illegal object trap. This value is used in symbols to signify an
+undefined value or definition.
+
+@cindex [Interruptible Marker]
+@item Interruptible-Marker
+Object used to mark a miscop as interruptible. This
+object is put in one of the registers and signals to the interrupt handler
+that the miscop can be interrupted safely. Only miscops that can take a long
+time (e.g., length when passed a circular list, system call miscops that
+may wait indefinitely) are marked this way.
+@end table
+
+@section [Pointer-Type Objects and Spaces]
+@cindex [Pointer object format]
+@cindex [Virtual memory]
+
+Each of the pointer-type lisp objects points into a different space in virtual
+memory. There are separate spaces for Bit-Vectors, Symbols, Lists, and so on.
+The 5-bit type-code provides the high-order virtual address bits for the
+object, followed by the 2-bit space code, followed by the 25-bit pointer
+address. This gives a 30-bit virtual address to a 32-bit word; since the
+@value(DinkyMachine) is a byte-addressed machine, the two low-order
+bits are 0. In effect we have carved a 30-bit space into a fixed set
+of 23-bit subspaces, not all of which are used.
+
+@cindex [Space codes]
+The space code divides each of the type spaces into four sub-spaces,
+as shown in the table above. At any given time, one of the dynamic
+spaces is considered newspace, while the other is oldspace.
+During a stop and copy garbage collection, a ``flip'' can be done, turning the
+old newspace into the new oldspace. All type-spaces are flipped at once.
+Allocation of new dynamic objects always occurs in newspace.
+
+@cindex [Static space]
+@cindex [Read-only space]
+Optionally, the user (or system functions) may allocate objects in
+static or read-only space. Such objects are never reclaimed once they
+are allocated -- they occupy the space in which they were initially
+allocated for the lifetime of the Lisp process. The advantage of
+static allocation is that the GC never has to move these objects,
+thereby saving a significant amount of work, especially if the objects
+are large. Objects in read-only space are static, in that they are
+never moved or reclaimed; in addition, they cannot be altered once
+they are set up. Pointers in read-only space may only point to
+read-only or static space, never to dynamic space. This saves even
+more work, since read-only space does not need to be scavenged, and
+pages of read-only material do not need to be written back onto the
+disk during paging.
+
+Objects in a particular type-space will contain either pointers to
+garbage-collectible objects or words of raw non-garbage-collectible bits, but
+not both. Similarly, a space will contain either fixed-length objects or
+variable-length objects, but not both.	A variable-length object always
+contains a 24-bit length field right-justified in the first word, with
+the positive fixnum type-code in the high-order five bits. The remaining three
+bits can be used for sub-type information. The length field gives the
+size of the object in 32-bit words, including the header word.	The
+garbage collector needs this information when the object is moved, and
+it is also useful for bounds checking.
+
+The format of objects in each space are as follows:
+

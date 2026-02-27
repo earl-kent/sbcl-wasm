@@ -1,16 +1,18 @@
 \part{Compiler Retargeting}
 
-\chapter{Retargeting the Compiler}
-[\#\#\#
+@node Retargeting the Compiler
+@chapter Retargeting the Compiler
 
-In general, it is a danger sign if a generator references a TN that isn't an
-operand or temporary, since lifetime analysis hasn't been done for that use.
-We are doing weird stuff for the old-cont and return-pc passing locations,
-hoping that the conflicts at the called function have the desired effect.
-Other stuff?  When a function returns unknown values, we don't reference the
-values locations when a single-value return is done.  But nothing is live at a
-return point anyway.
+@strong{[\#\#\#}
 
+In general, it is a danger sign if a generator references a TN that
+isn't an operand or temporary, since lifetime analysis hasn't been
+done for that use. We are doing weird stuff for the old-cont and
+return-pc passing locations, hoping that the conflicts at the called
+function have the desired effect. Other stuff?  When a function
+returns unknown values, we don't reference the values locations when a
+single-value return is done. But nothing is live at a return point
+anyway.
 
 
 Have a way for template conversion to special-case constant arguments?  
@@ -18,109 +20,162 @@ How about:
     If an arg restriction is (:satisfies [$<$predicate function$>$]), and the
     corresponding argument is constant, with the constant value satisfying the
     predicate, then (if any other restrictions are satisfied), the template
-    will be emitted with the literal value passed as an info argument.  If the
+    will be emitted with the literal value passed as an info argument. If the
     predicate is omitted, then any constant will do.
 
     We could sugar this up a bit by allowing (:member $<$object$>$*) for
     (:satisfies (lambda (x) (member x '($<$object$>$*))))
 
 We could allow this to be translated into a Lisp type by adding a new Constant
-type specifier.  This could only appear as an argument to a function type.
+type specifier. This could only appear as an argument to a function type.
 To satisfy (Constant $<$type$>$), the argument must be a compile-time constant of
-the specified type.  Just Constant means any constant (i.e. (Constant *)).
+the specified type. Just Constant means any constant (i.e. (Constant *)).
 This would be useful for the type constraints on ICR transforms.
 
 
 Constant TNs: we count on being able to indirect to the leaf, and don't try to
-wedge the information into the offset.  We set the FSC to an appropriate
+wedge the information into the offset. We set the FSC to an appropriate
 immediate SC.
 
-    Allow ``more operands'' to VOPs in define-vop.  You can't do much with the
+    Allow ``more operands'' to VOPs in define-vop. You can't do much with the
     more operands: define-vop just fills in the cost information according to
-    the loading costs for a SC you specify.  You can't restrict more operands,
-    and you can't make local preferences.  In the generator, the named variable
-    is bound to the TN-ref for the first extra operand.  This should be good
+    the loading costs for a SC you specify. You can't restrict more operands,
+    and you can't make local preferences. In the generator, the named variable
+    is bound to the TN-ref for the first extra operand. This should be good
     enough to handle all the variable arg VOPs (primarily function call and
-    return).  Usually more operands are used just to get TN lifetimes to work
+    return). Usually more operands are used just to get TN lifetimes to work
     out; the generator actually ignores them.
 
-    Variable-arg VOPs can't be used with the VOP macro.  You must use VOP*.
+    Variable-arg VOPs can't be used with the VOP macro. You must use VOP*.
     VOP* doesn't do anything with these extra operand except stick them on the
-    ends of the operand lists passed into the template.  VOP* is often useful
+    ends of the operand lists passed into the template. VOP* is often useful
     within the convert functions for non-VOP templates, since it can emit a VOP
     using an already prepared TN-Ref list.
     
 
     It is pretty basic to the whole primitive-type idea that there is only one
-    primitive-type for a given lisp type.  This is really the same as saying
-    primitive types are disjoint.  A primitive type serves two somewhat
+    primitive-type for a given lisp type. This is really the same as saying
+    primitive types are disjoint. A primitive type serves two somewhat
     unrelated purposes:
      -- It is an abstraction of a Lisp type used to select type specific
-        operations.  Originally kind of an efficiency hack, but it lets a
+        operations. Originally kind of an efficiency hack, but it lets a
         template's type signature be used both for selection and operand
         representation determination.
-     -- It represents a set of possible representations for a value (SCs).  The
+     -- It represents a set of possible representations for a value (SCs). The
         primitive type is used to determine the legal SCs for a TN, and is also
         used to determine which type-coercion/move VOP to use.
 
-]
+@strong{]}
 
 There are basically three levels of target dependence:
 
- -- Code in the ``front end'' (before VMR conversion) deals only with Lisp
-    semantics, and is totally target independent.
+@itemize
 
- -- Code after VMR conversion and before code generation depends on the VM,
-    but should work with little modification across a wide range of
-    ``conventional'' architectures.
+@item Code in the ``front end'' (before VMR conversion) deals only
+with Lisp semantics, and is totally target independent.
 
- -- Code generation depends on the machine's instruction set and other
-    implementation details, so it will have to be redone for each
-    implementation.  Most of the work here is in defining the translation into
-    assembly code of all the supported VOPs.
+@item Code after VMR conversion and before code generation depends on
+the VM, but should work with little modification across a wide range
+of ``conventional'' architectures.
 
+@item Code generation depends on the machine's instruction set and
+other implementation details, so it will have to be redone for each
+implementation. Most of the work here is in defining the translation
+into assembly code of all the supported VOPs.
+
+@end itemize
 
 
-\chapter{Storage bases and classes}
-New interface: instead of CURRENT-FRAME-SIZE, have CURRENT-SB-SIZE \verb+<name>+ which
-returns the current element size of the named SB.
+@node Storage bases and classes
+@chapter Storage bases and classes
+@cindex storage base
+@cindex storage class
 
-How can we have primitive types that overlap, i.e. (UNSIGNED-BYTE 32),
-(SIGNED-BYTE 32), FIXNUM?
+Storage base 
+
+@deffn sb-allocated-size @var{name}
+The size of the @var{name} SB in the currently compiled
+component. This is useful mainly for finding the size for allocating
+stack frames.
+@end deffn
+
+@noindent
+New interface: instead of @code{current-frame-size}, have
+@code{current-sb-size} @code{\verb+<name>+} which returns the current
+element size of the named SB.
+
+@noindent
+New interface: instead of @code{current-frame-size}, have
+@code{current-sb-size} @code{\verb+<name>+} which returns the current
+element size of the named SB.
+
+
+(* 4 (sb-allocated-size 'stack))
+
+
+
+
+
+
+
+
+
+;; in codgen.lisp
+(defun sb-allocated-size (name)
+  "The size of the Name'd SB in the currently compiled component.  Useful
+  mainly for finding the size for allocating stack frames."
+  (finite-sb-current-size (sb-or-lose name)))
+
+@sp
+
+@noindent
+How can we have primitive types that overlap,
+i.e. @code{(unsigned-byte 32)}, @code{(signed-byte 32)},
+@code{fixnum}?
+
+@sp
+
+@noindent
 Primitive types are used for two things:
-    Representation selection: which SCs can be used to represent this value?
-	For this purpose, it isn't necessary that primitive types be disjoint,
-	since any primitive type can choose an arbitrary set of
-	representations.  For moves between the overlapping representations,
-	the move/load operations can just be noops when the locations are the
-	same (vanilla MOVE), since any bad moves should be caught out by type
-	checking.
-    VOP selection:
-	Is this operand legal for this VOP?  When ptypes overlap in interesting
-	ways, there is a problem with allowing just a simple ptype restriction,
-	since we might want to allow multiple ptypes.  This could be handled
-	by allowing ``union primitive types'', or by allowing multiple primitive
-	types to be specified (only in the operand restriction.)  The latter
-	would be along the lines of other more flexible VOP operand restriction
-	mechanisms, (constant, etc.)
 
+@itemize @bullet{}
 
+@item Representation selection:
+which SCs can be used to represent this value?  For this purpose, it
+isn't necessary that primitive types be disjoint, since any primitive
+type can choose an arbitrary set of representations. For moves
+between the overlapping representations, the move/load operations can
+just be noops when the locations are the same (vanilla MOVE), since
+any bad moves should be caught out by type checking.
 
-Ensure that load/save-operand never need to do representation conversion.
+@item VOP selection:
+Is this operand legal for this VOP?  When ptypes overlap in
+interesting ways, there is a problem with allowing just a simple ptype
+restriction, since we might want to allow multiple ptypes. This could
+be handled by allowing ``union primitive types'', or by allowing
+multiple primitive types to be specified (only in the operand
+restriction.)  The latter would be along the lines of other more
+flexible VOP operand restriction mechanisms, (constant, etc.)
 
-The PRIMITIVE-TYPE more/coerce info would be moved into the SC.  This could
-perhaps go along with flushing the TN-COSTS.  We would annotate the TN with
-best SC, which implies the representation (boxed or unboxed).  We would still
+@end itemize
+
+@noindent
+Ensure that @code{load}/@code{save-operand} never need to do
+representation conversion.
+
+The PRIMITIVE-TYPE more/coerce info would be moved into the SC. This could
+perhaps go along with flushing the TN-COSTS. We would annotate the TN with
+best SC, which implies the representation (boxed or unboxed). We would still
 need to represent the legal SCs for restricted TNs somehow, and also would have to
 come up with some other way for pack to keep track of which SCs we have already
 tried.
 
 An SC would have a list of ``alternate'' SCs and a boolean SAVE-P value that
-indicates it needs to be saved across calls in some non-SAVE-P SC.  A TN is
-initially given its ``best'' SC.  The SC is annotated with VOPs that are used for
+indicates it needs to be saved across calls in some non-SAVE-P SC. A TN is
+initially given its ``best'' SC. The SC is annotated with VOPs that are used for
 moving between the SC and its alternate SCs (load/save operand, save/restore
-register).  It is also annotated with the ``move'' VOPs used for moving between
-this SC and all other SCs it is possible to move between.  We flush the idea
+register). It is also annotated with the ``move'' VOPs used for moving between
+this SC and all other SCs it is possible to move between. We flush the idea
 that there is only c-to-t and c-from-t.
 
 But how does this mesh with the idea of putting operand load/save back into the
@@ -136,74 +191,92 @@ constant loading functions could be associated with SCs using this mechanism.
 
 So given a TN packed in SC X and an SC restriction for Y and Z, how do we know
 which load function to call?  There would be ambiguity if X was an alternate
-for both Y and Z and they specified different load functions.  This seems
+for both Y and Z and they specified different load functions. This seems
 unlikely to arise in practice, though, so we could just detect the ambiguity
-and give an error at define-vop time.  If they are doing something totally
+and give an error at define-vop time. If they are doing something totally
 weird, they can always inhibit loading and roll their own.
 
 Note that loading costs can be specified at the same time (same syntax) as
-association of loading functions with SCs.  It seems that maybe we will be
+association of loading functions with SCs. It seems that maybe we will be
 rolling DEFINE-SAVE-SCS and DEFINE-MOVE-COSTS into DEFINE-STORAGE-CLASS.
 
 Fortunately, these changes will affect most VOP definitions very little.
 
 
-A Storage Base represents a physical storage resource such as a register set or
-stack frame.  Storage bases for non-global resources such as the stack are
-relativized by the environment that the TN is allocated in.  Packing conflict
-information is kept in the storage base, but non-packed storage resources such
-as closure environments also have storage bases.
-Some storage bases:
-\begin{verbatim}
-    General purpose registers
-    Floating point registers
-    Boxed (control) stack environment
-    Unboxed (number) stack environment
-    Closure environment
-\end{verbatim}
+A @dfn{Storage Base} (SB) represents a physical storage resource such
+as a register set or stack frame. Storage bases for non-global
+resources such as the stack are relativized by the environment that
+the TN is allocated in. Packing conflict information is kept in the
+storage base, but non-packed storage resources such as closure
+environments also have storage bases.
+@cindex Storage Base (SB)
+@cindex SB
 
+@noindent
+Some storage bases:
+
+@itemize @bullet {}
+@item General purpose registers
+@item Floating point registers
+@item Boxed (control) stack environment
+@item Unboxed (number) stack environment
+@item Closure environment
+@end itemize
+
+@noindent
 A storage class is a potentially arbitrary set of the elements in a storage
-base.  Although conceptually there may be a hierarchy of storage classes such
+base. Although conceptually there may be a hierarchy of storage classes such
 as ``all registers'', ``boxed registers'', ``boxed scratch registers'', this doesn't
-exist at the implementation level.  Such things can be done by specifying
-storage classes whose locations overlap.  A TN shouldn't have lots of
+exist at the implementation level. Such things can be done by specifying
+storage classes whose locations overlap. A TN shouldn't have lots of
 overlapping SC's as legal SC's, since time would be wasted repeatedly
 attempting to pack in the same locations.
 
 There will be some SC's whose locations overlap a great deal, since we get Pack
-to do our representation analysis by having lots of SC's.  An SC is basically a
-way of looking at a storage resource.  Although we could keep a fixnum and an
+to do our representation analysis by having lots of SC's. An SC is basically a
+way of looking at a storage resource. Although we could keep a fixnum and an
 unboxed representation of the same number in the same register, they correspond
 to different SC's since they are different representation choices.
 
+@noindent
 TNs are annotated with the primitive type of the object that they hold:
-    T: random boxed object with only one representation.
-    Fixnum, Integer, XXX-Float: Object is always of the specified numeric type.
-    String-Char: Object is always a string-char.
 
-When a TN is packed, it is annotated with the SC it was packed into.  The code
-generator for a VOP must be able to uniquely determine the representation of
-its operands from the SC. (debugger also...)
+@itemize @bullet{}
+@item @code{t}: random boxed object with only one representation.
 
+@item @code{fixnum}, @code{integer}, @code{xxx-float}: object is
+always of the specified numeric type.
+
+@item @code{string-char}: object is always a string-char.
+@end itemize
+
+When a TN is packed, it is annotated with the SC it was packed
+into. The code generator for a VOP must be able to uniquely determine
+the representation of its operands from the SC. (debugger also...)
+
+@noindent
 Some SCs:
-    Reg: any register (immediate objects)
-    Save-Reg: a boxed register near r15 (registers easily saved in a call)
-    Boxed-Reg: any boxed register (any boxed object)
-    Unboxed-Reg: any unboxed register (any unboxed object)
-    Float-Reg, Double-Float-Reg: float in FP register.
-    Stack: boxed object on the stack (on cstack)
-    Word: any 32bit unboxed object on nstack.
-    Double: any 64bit unboxed object on nstack.
+@itemize
+@item @code{reg}: any register (immediate objects)
+@item @code{save-reg}: a boxed register near r15 (registers easily saved in a call)
+@item @code{boxed-reg}: any boxed register (any boxed object)
+@item @code{unboxed-reg}: any unboxed register (any unboxed object)
+@item @code{float-reg}, @code{double-float-reg}: float in fp register.
+@item @code{stack}: boxed object on the stack (on cstack)
+@item @code{word}: any 32bit unboxed object on nstack.
+@item @code{double}: any 64bit unboxed object on nstack.
+@end itemize
 
-We have a number of non-packed storage classes which serve to represent access
-costs associated with values that are not allocated using conflicts
-information.  Non-packed TNs appear to already be packed in the appropriate
-storage base so that Pack doesn't get confused.  Costs for relevant non-packed
-SC's appear in the TN-Ref cost information, but need not ever be summed into
-the TN cost vectors, since TNs cannot be packed into them.
+We have a number of non-packed storage classes which serve to
+represent access costs associated with values that are not allocated
+using conflicts information. Non-packed TNs appear to already be
+packed in the appropriate storage base so that Pack doesn't get
+confused. Costs for relevant non-packed SC's appear in the TN-Ref cost
+information, but need not ever be summed into the TN cost vectors,
+since TNs cannot be packed into them.
 
 There are SCs for non-immediate constants and for each significant kind of
-immediate operand in the architecture.  On the RT, 4, 8 and 20 bit integer SCs
+immediate operand in the architecture. On the RT, 4, 8 and 20 bit integer SCs
 are probably worth having.
 
 \begin{verbatim}
@@ -223,22 +296,22 @@ The main aspect of the VM that is likely to vary for good reason is the type
 system:
 
  -- Different systems will have different ways of representing dynamic type
-    information.  The primary effect this has on the compiler is causing VMR
+    information. The primary effect this has on the compiler is causing VMR
     conversion of type tests and checks to be implementation dependent.
     Rewriting this code for each implementation shouldn't be a big problem,
     since the portable semantics of types has already been dealt with.
 
  -- Different systems will have different specialized number and array types,
-    and different VOPs specialized for these types.  It is easy to add this kind
-    of knowledge without affecting the rest of the compiler.  All you have to
+    and different VOPs specialized for these types. It is easy to add this kind
+    of knowledge without affecting the rest of the compiler. All you have to
     do is define the VOPs and translations.
 
  -- Different systems will offer different specialized storage resources
     such as floating-point registers, and will have additional kinds of
-    primitive-types.  The storage class mechanism handles a large part of this,
+    primitive-types. The storage class mechanism handles a large part of this,
     but there may be some problem in getting VMR conversion to realize the
     possibly large hidden costs in implicit moves to and from these specialized
-    storage resources.  Probably the answer is to have some sort of general
+    storage resources. Probably the answer is to have some sort of general
     mechanism for determining the primitive-type for a TN given the Lisp type,
     and then to have some sort of mechanism for automatically using specialized
     Move VOPs when the source or destination has some particular primitive-type.
@@ -246,10 +319,10 @@ system:
 \#|
 How to deal with list/null(symbol)/cons in primitive-type structure?  Since
 cons and symbol aren't used for type-specific template selection, it isn't
-really all that critical.  Probably Primitive-Type should return the List
+really all that critical. Probably Primitive-Type should return the List
 primitive type for all of Cons, List and Null (indicating when it is exact).
 This would allow type-dispatch for simple sequence functions (such as length)
-to be done using the standard template-selection mechanism.  [Not a wired
+to be done using the standard template-selection mechanism. [Not a wired
 assumption] 
 |\#
 
@@ -260,7 +333,7 @@ assumption]
 Before the operand TN-refs are passed to the emit function, the following
 stuff is done:
  -- The refs in the operand and result lists are linked together in order using
-    the Across slot.  This list is properly NIL terminated.
+    the Across slot. This list is properly NIL terminated.
  -- The TN slot in each ref is set, and the ref is linked into that TN's refs
     using the Next slot.
  -- The Write-P slot is set depending on whether the ref is an argument or
@@ -280,19 +353,19 @@ other operand to the same VOP, to simplify more operand LTN number coalescing.
 |\#
 
 It seems we need a fairly elaborate model for intra-VOP conflicts in order to
-allocate temporaries without introducing spurious conflicts.  Consider the
+allocate temporaries without introducing spurious conflicts. Consider the
 important case of a VOP such as a miscop that must have operands in certain
-registers.  We allocate a wired temporary, create a local preference for the
-corresponding operand, and move to (or from) the temporary.  If all temporaries
+registers. We allocate a wired temporary, create a local preference for the
+corresponding operand, and move to (or from) the temporary. If all temporaries
 conflict with all arguments, the result will be correct, but arguments could
-never be packed in the actual passing register.  If temporaries didn't conflict
+never be packed in the actual passing register. If temporaries didn't conflict
 with any arguments, then the temporary for an earlier argument might get packed
 in the same location as the operand for a later argument; loading would then
 destroy an argument before it was read.
 
 A temporary's intra-VOP lifetime is represented by the times at which its life
-starts and ends.  There are various instants during the evaluation that start
-and end VOP lifetimes.  Two TNs conflict if the live intervals overlap.
+starts and ends. There are various instants during the evaluation that start
+and end VOP lifetimes. Two TNs conflict if the live intervals overlap.
 Lifetimes are open intervals: if one TN's lifetime begins at a point where
 another's ends, then the TNs don't conflict.
 
@@ -300,24 +373,24 @@ The times within a VOP are the following:
 
 :Load
     This is the beginning of the argument's lives, as far as intra-vop
-    conflicts are concerned.  If load-TNs are allocated, then this is the
+    conflicts are concerned. If load-TNs are allocated, then this is the
     beginning of their lives.
 
 (:Argument $<$n$>$)
     The point at which the N'th argument is read for the last time (by this
-    VOP).  If the argument is dead after this VOP, then the argument becomes
+    VOP). If the argument is dead after this VOP, then the argument becomes
     dead at this time, and may be reused as a temporary or result load-TN.
 
 (:Eval $<$n$>$)
-    The N'th evaluation step.  There may be any number of evaluation steps, but
+    The N'th evaluation step. There may be any number of evaluation steps, but
     it is unlikely that more than two are needed.
 
 (:Result $<$n$>$) 
-    The point at which the N'th result is first written into.  This is the
+    The point at which the N'th result is first written into. This is the
     point at which that result becomes live.
 
 :Save
-    Similar to :Load, but marks the end of time.  This is the point at which result
+    Similar to :Load, but marks the end of time. This is the point at which result
     load-TNs are stored back to the actual location.
 
 In any of the list-style time specifications, the keyword by itself stands for
@@ -328,7 +401,7 @@ the first such time, i.e.
 
 Note that argument/result read/write times don't actually have to be in the
 order specified, but they must *appear* to happen in that order as far as
-conflict analysis is concerned.  For example, the arguments can be read in any
+conflict analysis is concerned. For example, the arguments can be read in any
 order as long as no TN is written that has a life beginning at or after
 (:Argument $<$n$>$), where N is the number of an argument whose reading was
 postponed.
@@ -337,12 +410,12 @@ postponed.
 
 We probably also want some syntactic sugar in Define-VOP for automatically
 moving operands to/from explicitly allocated temporaries so that this kind of
-thing is somewhat easy.  There isn't really any reason to consider the
+thing is somewhat easy. There isn't really any reason to consider the
 temporary to be a load-TN, but we want to compute costs as though it was and
 want to use the same operand loading routines.
 
 We also might consider allowing the lifetime of an argument/result to be
-extended forward/backward.  This would in many cases eliminate the need for
+extended forward/backward. This would in many cases eliminate the need for
 temporaries when operands are read/written out of order.
 ]
 
@@ -351,7 +424,7 @@ temporaries when operands are read/written out of order.
 
 Note that in this model, if an operand has no restrictions, it has no cost.
 This makes sense, since the purpose of the cost is to indicate the
-relative value of packing in different SCs.  If the operand isn't required to
+relative value of packing in different SCs. If the operand isn't required to
 be in a good SC (i.e. a register), then we might as well leave it in memory.
 The SC restriction mechanism can be used even when doing a move into the SC is
 too complex to be generated automatically (perhaps requiring temporary
@@ -367,7 +440,7 @@ can also use it to give better efficiency notes:
     failed to open-code.
  -- We can tell whether any of the ``better'' templates could possibly apply,
     i.e. is the inapplicability of a template because of inadequate type
-    information or because the type is just plain wrong.  We don't want to
+    information or because the type is just plain wrong. We don't want to
     flame people when a template that couldn't possibly match doesn't match,
     e.g. complaining that we can't use fixnum+ when the arguments are known to
     be floats.
@@ -380,7 +453,7 @@ punctuation that describes what the template ``does'', i.e. we say
 ``Unable to do ~A, doing ~A instead.''
 
 The Cost is moved from the Vop-Info to the Template structure, and is used to
-determine the ``goodness'' of possibly applicable templates.  [Could flush
+determine the ``goodness'' of possibly applicable templates. [Could flush
 Template/Vop-Info distinction]  The cost is used to choose the best applicable
 template to emit, and also to determine what better templates we might have
 been able to use.
@@ -401,7 +474,7 @@ VOP writers expect:
 \item[MOVE]
       You write when you port the assembler.)
 \item[EMIT-LABEL]
-      Assembler interface like INST.  Takes a label you made and says ``stick it
+      Assembler interface like INST. Takes a label you made and says ``stick it
       here.''
    \item[GEN-LABEL]
       Returns a new label suitable for use with EMIT-LABEL exactly once and
@@ -413,8 +486,8 @@ VOP writers expect:
       of the next instruction.
    \item[ASSEMBLE]
    \item[ASSEMBLE-ELSEWHERE]
-      Get ready for assembling stuff.  Takes a VOP and arbitrary PROGN-style
-      body.  Wrap these around instruction emission code announcing the first
+      Get ready for assembling stuff. Takes a VOP and arbitrary PROGN-style
+      body. Wrap these around instruction emission code announcing the first
       pass of our assembler.
    \item[CURRENT-NFP-TN]
       This returns a TN for the NFP if the caller uses the number stack, or
@@ -432,39 +505,39 @@ VOP writers expect:
 \item[STORE-STACK-TN]
 \item[LOAD-STACK-TN]
    These move a value from a register to the control stack, or from the
-   control stack to a register.  They take care of checking the TN types,
+   control stack to a register. They take care of checking the TN types,
    modifying offsets according to the address units per word, etc.
 \end{Lentry}
 
 \chapter{Required VOPS}
 
 
-Note: the move VOP cannot have any wired temps.  (Move-Argument also?)  This is
+Note: the move VOP cannot have any wired temps. (Move-Argument also?)  This is
 so we can move stuff into wired TNs without stepping on our toes.
 
 
 We create set closure variables using the Value-Cell VOP, which takes a value
-and returns a value cell containing the value.  We can basically use this
-instead of a Move VOP when initializing the variable.  Value-Cell-Set and
-Value-Cell-Ref are used to access the value cell.  We can have a special effect
+and returns a value cell containing the value. We can basically use this
+instead of a Move VOP when initializing the variable. Value-Cell-Set and
+Value-Cell-Ref are used to access the value cell. We can have a special effect
 for value cells so that value cells references can be discovered to be common
 subexpressions or loop invariants.
 
 
 
 
-Represent unknown-values continuations as (start, count).  Unknown values
-continuations are always outside of the current frame (on stack top).  Within a
+Represent unknown-values continuations as (start, count). Unknown values
+continuations are always outside of the current frame (on stack top). Within a
 function, we always set up and receive values in the standard passing
-locations.  If we receive stack values, then we must BLT them down to the start
-of our frame, filling in any unsupplied values.  If we generate unknown values
+locations. If we receive stack values, then we must BLT them down to the start
+of our frame, filling in any unsupplied values. If we generate unknown values
 (i.e. PUSH-VALUES), then we set the values up in the standard locations, then
-BLT them to stack top.  When doing a tail-return of MVs, we just set them up in
+BLT them to stack top. When doing a tail-return of MVs, we just set them up in
 the standard locations and decrement SP: no BLT is necessary.
 
 Unknown argument call (MV-CALL) takes its arguments on stack top (is given a
-base pointer).  If not a tail call, then we just set the arg pointer to the
-base pointer and call.  If a tail call, we must BLT the arguments down to the
+base pointer). If not a tail call, then we just set the arg pointer to the
+base pointer and call. If a tail call, we must BLT the arguments down to the
 beginning of the current frame.
 
 
@@ -472,19 +545,19 @@ Implement more args by BLT'ing the more args *on top* of the current frame.
 This solves two problems:
 \begin{itemize}
 \item Any register more arguments can be made uniformly accessibly by copying
-    them into memory.  [We can't store the registers in place, since the
+    them into memory. [We can't store the registers in place, since the
     beginning of the frame gets double use for storing the old-cont, return-pc
     and env.]
 \item It solves the deallocation problem: the arguments will be deallocated when
-    the frame is returned from or a tail full call is done out of it.  So
+    the frame is returned from or a tail full call is done out of it. So
     keyword args will be properly tail-recursive without any special mechanism
-    for squeezing out the more arg once the parsing is done.  Note that a tail
+    for squeezing out the more arg once the parsing is done. Note that a tail
     local call won't blast the more arg, since in local call the callee just
     takes the frame it is given (in this case containing the more arg).
 \end{itemize}
 
 More args in local call???  Perhaps we should not attempt local call conversion
-in this case.  We already special-case keyword args in local call.  It seems
+in this case. We already special-case keyword args in local call. It seems
 that the main importance of more args is primarily related to full call: it is
 used for defining various kinds of frobs that need to take arbitrary arguments:
 \begin{itemize}
@@ -493,8 +566,8 @@ used for defining various kinds of frobs that need to take arbitrary arguments:
 \item ``Pass through'' applications such as dispatch functions
 \end{itemize}
 Given the marginal importance of more args in local call, it seems unworth
-going to any implementation difficulty.  In fact, it seems that it would cause
-complications both at the VMR level and also in the VM definition.  This being
+going to any implementation difficulty. In fact, it seems that it would cause
+complications both at the VMR level and also in the VM definition. This being
 the case, we should flush it.
 
 
@@ -507,11 +580,11 @@ the case, we should flush it.
 These registers are used in function call and return:
 
 A0..A{\it n}
-    In full call, the first three arguments.  In unknown values return, the
+    In full call, the first three arguments. In unknown values return, the
     first three return values.
 
 CFP
-    The current frame pointer.  In full call, this initially points to a
+    The current frame pointer. In full call, this initially points to a
     partial frame large enough to hold the passed stack arguments (zero-length
     if none).
 
@@ -522,15 +595,15 @@ OCFP
     In full call, the passing location for the frame to return to.
 
     In unknown-values return of other than one value, the pointer to returned
-    stack values.  In such a return, OCFP is always initialized to point to
-    the frame returned from, even when no stack values are returned.  This
+    stack values. In such a return, OCFP is always initialized to point to
+    the frame returned from, even when no stack values are returned. This
     allows OCFP to be used to restore CSP.
 
 LRA
     In full call, the passing location for the return PC.
 
 NARGS
-    In full call, the number of arguments passed.  In unknown-values return of
+    In full call, the number of arguments passed. In unknown-values return of
     other than one value, the number of values returned.
 
 
@@ -542,10 +615,10 @@ It is an invariant that CSP always points after any useful information so that
 at any time an interrupt can come and allocate stuff in the stack.
 
 TR call is also a constraint: we can't deallocate the caller's frame before the
-call, since it holds the stack arguments for the call.  
+call, since it holds the stack arguments for the call. 
 
 What we do is have the caller set up CFP, and have the callee set CSP to CFP
-plus the frame size.  The caller leaves CSP alone: the callee is the one who
+plus the frame size. The caller leaves CSP alone: the callee is the one who
 does any necessary stack deallocation.
 
 In a TR call, we don't do anything: CFP is left as CFP, and CSP points to the
@@ -563,8 +636,8 @@ values are returned, or decides not to use the fixed values convention to allow
 tail-recursive XEP calls.
 
 The unknown-values return convention has variants: single value and variable
-values.  We make this distinction to optimize the important case of a returner
-who knows exactly one value is being returned.  Note that it is possible to
+values. We make this distinction to optimize the important case of a returner
+who knows exactly one value is being returned. Note that it is possible to
 return a single value using the variable-values convention, but it is less
 efficient.
 
@@ -576,12 +649,12 @@ Single-value return makes only the following guarantees:
     CSP has been reset: there is no garbage on the stack.
 
 In variable value return, more information is passed back:
-    A0..A2 hold the first three return values.  If fewer than three values are
+    A0..A2 hold the first three return values. If fewer than three values are
     returned, then the unused registers are initialized to NIL.
 
-    OCFP points to the frame returned from.  Note that because of our
+    OCFP points to the frame returned from. Note that because of our
     tail-recursive implementation of call, the frame receiving the values is
-    always immediately under the frame returning the values.  This means that
+    always immediately under the frame returning the values. This means that
     we can use OCFP to index the values when we access them, and to restore
     CSP when we want to discard them.
 
@@ -658,7 +731,7 @@ CNAME
    This holds the symbol for a named call and garbage otherwise.
 
 OCFP
-   This holds the frame pointer, which the system restores upon return.  The
+   This holds the frame pointer, which the system restores upon return. The
    callee saves this if necessary; this is passed as a pseudo-argument.
 
 A0 ... An
@@ -669,23 +742,23 @@ NARGS
 
 LRA
    This holds the lisp-return-address object which indicates where to return.
-   For a tail call, this retains its current value.  The callee saves this
+   For a tail call, this retains its current value. The callee saves this
    if necessary; this is passed as a pseudo-argument.
 
 CODE
    This holds the function object being called.
 
 CSP
-   The caller ignores this.  The callee sets it as necessary based on CFP.
+   The caller ignores this. The callee sets it as necessary based on CFP.
 
 CFP
-   This holds the callee's frame pointer.  Caller sets this to the new frame
+   This holds the callee's frame pointer. Caller sets this to the new frame
    pointer, which it remembered when it started computing arguments; this is
-   CSP if there were no stack arguments.  For a tail call CFP retains its
+   CSP if there were no stack arguments. For a tail call CFP retains its
    current value.
 
 NSP
-   The system uses this within a single function.  A function using NSP must
+   The system uses this within a single function. A function using NSP must
    allocate and deallocate before returning or making a tail call.
 
 Register usage at the time of the return for single value return, which
@@ -698,7 +771,7 @@ CODE
    This holds the lisp-return-address at which the system continues executing.
 
 CSP
-   This holds the CFP.  That is, the stack is guaranteed to be clean, and there
+   This holds the CFP. That is, the stack is guaranteed to be clean, and there
    is no code at the return site to adjust the CSP.
 
 CFP
@@ -777,7 +850,7 @@ Callee:
 \begin{verbatim}
 XEP-ALLOCATE-FRAME
   emit function header (maybe initializes offset back to component start,
-  			but other pointers are set up at load-time.  Pads
+  			but other pointers are set up at load-time. Pads
 			to dual-word boundary.)
   CSP <- CFP + compile-time determined constant (frame size)
   if the function uses the number stack
@@ -853,7 +926,7 @@ when (current-nfp-tn VOP-self-pointer)
 	       times address units per word
 NARGS <- value of VOP argument
 copy the args to the beginning of the current (returner's) frame.
-   Actually some go into the argument registers.  When putting the rest at
+   Actually some go into the argument registers. When putting the rest at
    the beginning of the frame, leave room for those in the argument registers.
 CSP <- CFP + NARGS * address-units-per-word
 nil out unused arg regs
@@ -872,11 +945,11 @@ spitting out transfer control to get stuff from the returner.
 DEFAULT-UNKNOWN-VALUES
 (We know what we want and we got something.)
 If returnee wants one value, it never does anything to deal with a shortage
-of return values.  However, if start at PC, then it has to adjust the stack
-pointer to dump extra values (move OCFP into CSP).  If it starts at PC+N,
+of return values. However, if start at PC, then it has to adjust the stack
+pointer to dump extra values (move OCFP into CSP). If it starts at PC+N,
 then it just goes along with the ``want one value, got it'' case.
 If the returnee wants multiple values, and there's a shortage of return
-values, there are two cases to handle.  One, if the returnee wants fewer
+values, there are two cases to handle. One, if the returnee wants fewer
 values than there are return registers, and we start at PC+N, then it fills
 in return registers \verb|A1..A<desired values necessary>|; if we start at PC,
 then the returnee is fine since the returning conventions have filled in
@@ -900,11 +973,11 @@ This also restores CODE from LRA by subtracting an assemble-time constant.
 
 RECEIVE-UKNOWN-VALUES
 (I want whatever I get.)
-We want these at the end of our frame.  When the returnee starts at
+We want these at the end of our frame. When the returnee starts at
 PC, it moves the return value registers to OCFP..OCFP[An] ignoring where
 the end of the stack is and whether all the return value registers had
-values.  The returner left room on the stack before the stack return values
-for the register return values.  When the returnee starts at PC+N, bump CSP
+values. The returner left room on the stack before the stack return values
+for the register return values. When the returnee starts at PC+N, bump CSP
 by 1 and copy A0 there.
 This also restores CODE from LRA by subtracting an assemble-time constant.
 
@@ -942,12 +1015,12 @@ arguments:
 \end{verbatim}
 KNOWN-CALL-LOCAL, CALL-LOCAL, MULTIPLE-CALL-LOCAL
 KNOWN-CALL-LOCAL has no need to affect CODE since CODE is the same for the
-caller/returnee and the returner.  This uses KNOWN-RETURN.
+caller/returnee and the returner. This uses KNOWN-RETURN.
 With CALL-LOCAL and MULTIPLE-CALL-LOCAL, the caller/returnee must fixup
-CODE since the callee may do a tail full call.  This happens in the code
-emitted by DEFAULT-UNKNOWN-VALUES and RECEIVE-UNKNOWN-VALUES.  We use these
+CODE since the callee may do a tail full call. This happens in the code
+emitted by DEFAULT-UNKNOWN-VALUES and RECEIVE-UNKNOWN-VALUES. We use these
 return conventions since we don't know what kind of values the returner
-will give us.  This could happen due to a tail full call to an unknown
+will give us. This could happen due to a tail full call to an unknown
 function, or because the callee had different return points that returned
 various numbers of values.
 
@@ -993,16 +1066,16 @@ jump and run off LIP
 \chapter{Customizing VMR Conversion}
 
 Another way in which different implementations differ is in the relative cost
-of operations.  On machines without an integer multiply instruction, it may be
+of operations. On machines without an integer multiply instruction, it may be
 desirable to convert multiplication by a constant into shifts and adds, while
 this is surely a bad idea on machines with hardware support for multiplication.
 Part of the tuning process for an implementation will be adding implementation
 dependent transforms and disabling undesirable standard transforms.
 
 When practical, ICR transforms should be used instead of VMR generators, since
-transforms are more portable and less error-prone.  Note that the Lisp code
+transforms are more portable and less error-prone. Note that the Lisp code
 need not be implementation independent: it may contain all sorts of
-sub-primitives and similar stuff.  Generally a function should be implemented
+sub-primitives and similar stuff. Generally a function should be implemented
 using a transform instead of a VMR translator unless it cannot be implemented
 as a transform due to being totally evil or it is just as easy to implement as
 a translator because it is so simple.
@@ -1012,67 +1085,67 @@ a translator because it is so simple.
 
 If the code emitted for a VOP when an argument is constant is very different
 than the non-constant case, then it may be desirable to special-case the
-operation in VMR conversion by emitting different VOPs.  An example would be if
+operation in VMR conversion by emitting different VOPs. An example would be if
 SVREF is only open-coded when the index is a constant, and turns into a miscop
-call otherwise.  We wouldn't want constant references to spuriously allocate
+call otherwise. We wouldn't want constant references to spuriously allocate
 all the miscop linkage registers on the off chance that the offset might not be
-constant.  See the :constant feature of VOP primitive type restrictions.
+constant. See the :constant feature of VOP primitive type restrictions.
 
 
 \section{Supporting Multiple Hardware Configurations}
 
 
 A winning way to change emitted code depending on the hardware configuration,
-i.e. what FPA is present is to do this using primitive types.  Note that the
+i.e. what FPA is present is to do this using primitive types. Note that the
 Primitive-Type function is VM supplied, and can look at any appropriate
-hardware configuration switches.  Short-Float can become 6881-Short-Float,
-AFPA-Short-Float, etc.  There would be separate SBs and SCs for the registers
+hardware configuration switches. Short-Float can become 6881-Short-Float,
+AFPA-Short-Float, etc. There would be separate SBs and SCs for the registers
 of each kind of FP hardware, with each hardware-specific primitive type
-using the appropriate float register SC.  Then the hardware specific templates
+using the appropriate float register SC. Then the hardware specific templates
 would provide AFPA-Short-Float as the argument type restriction.
 
 Primitive type changes:
 
 The primitive-type structure is given a new \%Type slot, which is the CType
-structure that is equivalent to this type.  There is also a Guard slot, which,
+structure that is equivalent to this type. There is also a Guard slot, which,
 if true is a function that control whether this primitive type is allowed (due
 to hardware configuration, etc.)  
 
-We add new :Type and :Guard keywords to Def-Primitive-Type.  Type is the type
+We add new :Type and :Guard keywords to Def-Primitive-Type. Type is the type
 specifier that is equivalent (default to the primitive-type name), and Guard is
 an expression evaluated in the null environment that controls whether this type
 applies (default to none, i.e. constant T).
 
 The Primitive-Type-Type function returns the Lisp CType corresponding to a
-primitive type.  This is the \%Type unless there is a guard that returns false,
+primitive type. This is the \%Type unless there is a guard that returns false,
 in which case it is the empty type (i.e. NIL).
 
 [But this doesn't do what we want it to do, since we will compute the
 function type for a template at load-time, so they will correspond to whatever
-configuration was in effect then.  Maybe we don't want to dick with guards here
-(if at all).  I guess we can defer this issue until we actually support
-different FP configurations.  But it would seem pretty losing to separately
+configuration was in effect then. Maybe we don't want to dick with guards here
+(if at all). I guess we can defer this issue until we actually support
+different FP configurations. But it would seem pretty losing to separately
 flame about all the different FP configurations that could be used to open-code
 + whenever we are forced to closed-code +.
 
 If we separately report each better possibly applicable template that we
 couldn't use, then it would be reasonable to report any conditional template
-allowed by the configuration.  
+allowed by the configuration. 
 
 But it would probably also be good to give some sort of hint that perhaps it
 would be a good time to make sure you understand how to tell the compiler to
-compile for a particular configuration.  Perhaps if there is a template that
-applies *but for the guard*, then we could give a note.  This way, if someone
+compile for a particular configuration. Perhaps if there is a template that
+applies *but for the guard*, then we could give a note. This way, if someone
 thinks they are being efficient by throwing in lots of declarations, we can let
 them know that they may have to do more.
 
 I guess the guard should be associated with the template rather than the
-primitive type.  This would allow LTN and friends to easily tell whether a
-template applies in this configuration.  It is also probably more natural for
+primitive type. This would allow LTN and friends to easily tell whether a
+template applies in this configuration. It is also probably more natural for
 some sorts of things: with some hardware variants, it may be that the SBs and
 representations (SCs) are really the same, but there are some different allowed
-operations.  In this case, we could easily conditionalize VOPs without the
-increased complexity due to bogus SCs.  If there are different storage
+operations. In this case, we could easily conditionalize VOPs without the
+increased complexity due to bogus SCs. If there are different storage
 resources, then we would conditionalize Primitive-Type as well.
 
 
@@ -1081,14 +1154,14 @@ resources, then we would conditionalize Primitive-Type as well.
 
     (defun continuation-tn (cont \&optional (check-p t))
       ...)
-Return the TN which holds Continuation's first result value.  In general
-this may emit code to load the value into a TN.  If Check-P is true, then
+Return the TN which holds Continuation's first result value. In general
+this may emit code to load the value into a TN. If Check-P is true, then
 when policy indicates, code should be emitted to check that the value satisfies
 the continuation asserted type.
 
     (defun result-tn (cont)
       ...)
-Return the TN that Continuation's first value is delivered in.  In general,
+Return the TN that Continuation's first value is delivered in. In general,
 may emit code to default any additional values to NIL.
 
     (defun result-tns (cont n)
@@ -1098,12 +1171,12 @@ for each of the first N values.
 
 
 Nearly all open-coded functions should be handled using standard template
-selection.  Some (all?) exceptions:
+selection. Some (all?) exceptions:
 \begin{itemize}
-\item List, List* and Vector take arbitrary numbers of arguments.  Could
-    implement Vector as a source transform.  Could even do List in a transform
+\item List, List* and Vector take arbitrary numbers of arguments. Could
+    implement Vector as a source transform. Could even do List in a transform
     if we explicitly represent the stack args using \%More-Args or something.
-\item \%Typep varies a lot depending on the type specifier.  We don't want to
+\item \%Typep varies a lot depending on the type specifier. We don't want to
     transform it, since we want \%Typep as a canonical form so that we can do
     type optimizations.
 \item Apply is weird.

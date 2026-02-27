@@ -342,229 +342,325 @@ Immediate types:
 @section Type VOPs
 @cindex type VOP
 
-We consider control transfer to be the fundamental result of comparison, rather
-than anything such as a condition code. Although most compilers with whizzy
-register allocation seem to explicitly allocate and manipulate the condition
-codes, it seems that any benefit is small in our case. This is partly because
-our VOPs are at a somewhat higher level, making it difficult to tell which VOPs
-do and don't trash the the CC. Explicitly incorporating condition codes in our
-VM also introduces another architecture dependency.
+We consider control transfer to be the fundamental result of
+comparison, rather than anything such as a condition code. Although
+most compilers with whizzy register allocation seem to explicitly
+allocate and manipulate the condition codes, it seems that any benefit
+is small in our case. This is partly because our VOPs are at a
+somewhat higher level, making it difficult to tell which VOPs do and
+don't trash the the CC. Explicitly incorporating condition codes in
+our VM also introduces another architecture dependency.
 
-At the IR2 level, we have a class of IF-XXX VOPs which transfer control to one
-of two places on the basis of some test on the operands. When generating code
-for a predicate, we peek at the destination IF node to find where to transfer
-control to.
-			
-The exact representation of type tests in IR2 will be fairly implementation
-dependent, since it will depend on the specific type system for the given
-implementation. For example, if an implementation can test some types with a
-simple tag check, but other types require reading a field from the object in
-addition, then the two different kinds of checks should be distinct at the VOP
-level, since this will allow the VOP cost and storage information to be more
-accurate. Generation of type tests should be factored out of code which would
-otherwise be more portable. Probably the IR2 translator for TYPEP and the type
-check generation code are the only places that should know about how type tests
-are represented in IR2.
+At the IR2 level, we have a class of @code{if-xxx} VOPs which transfer
+control to one of two places on the basis of some test on the
+operands. When generating code for a predicate, we peek at the
+destination @code{if} node to find where to transfer control to.
 
-if-type (object)
-if-type-range
-    If-Type Tests whether Object has the type code that is passed in the
-    codegen info. If-Type-Range tests for a range of type codes.
+The exact representation of type tests in IR2 will be fairly
+implementation dependent, since it will depend on the specific type
+system for the given implementation. For example, if an implementation
+can test some types with a simple tag check, but other types require
+reading a field from the object in addition, then the two different
+kinds of checks should be distinct at the VOP level, since this will
+allow the VOP cost and storage information to be more
+accurate. Generation of type tests should be factored out of code
+which would otherwise be more portable. Probably the IR2 translator
+for @code{typep} and the type check generation code are the only
+places that should know about how type tests are represented in IR2.
 
-{small, fast} if-vector-type (object)
-    Test that Object is either of the specified type code, or is a 1d array
-    header with data having the specified type code.
 
-if-vector-subtype (object)
-    Test the subtype field of a vector-like object. It is assumed that the
-    object has already been determined to be vector-like.
+@deffn {VOP} if-type @var{object}
+@deffnx {VOP} if-type-range @var{object}
+@code{if-type} tests whether object has the type code that is passed
+in the codegen info. @code{if-type-range} tests for a range of type
+codes.
+@end deffn
 
-if-fixnump (object)
-if-short-float-p
-if-characterp
-    The rationale behind having these as separate VOPs is that they are likely
-    to be immediate types, and thus may have bizzare type schemes.
+@deffn {VOP} @code{@{small, fast@}} @code{if-vector-type} @var{object}
 
-if-consp (object)
-if-listp
-    We have distinct operations for these predicates since one or the other
-    isn't a simple tag test, but we don't know which one.
+Test that @var{object} is either of the specified type code, or is a
+1d array header with data having the specified type code.
 
-if-rationalp (object)
-if-floatp
-if-integerp
-if-numberp
-if-vectorp
-if-functionp
-    The rationale behind having these operations is that they may take a lot of
-    code, so it is reasonable to put them out of line.
+@end deffn
 
+
+@deffn {VOP} if-vector-subtype @var{object}
+
+Test the subtype field of a vector-like object. It is assumed that the
+object has already been determined to be vector-like.
+@end deffn
+
+
+@deffn {VOP} if-fixnump @var{object}
+@deffnx {VOP} if-short-float-p @var{object}
+@deffnx {VOP} if-characterp @var{object}
+The rationale behind having these as separate VOPs is that they
+are likely to be immediate types, and thus may have bizzare type
+schemes.
+@end deffn
+
+
+
+@deffn {VOP} if-consp @var{object}
+@deffnx {VOP} if-listp @var{object}
+We have distinct operations for these predicates since one or the other
+isn't a simple tag test, but we don't know which one.
+@end deffn
+
+@deffn {VOP} if-rationalp @var{object}
+@deffnx {VOP} if-floatp @var{object}
+@deffnx {VOP} if-integerp @var{object}
+@deffnx {VOP} if-numberp @var{object}
+@deffnx {VOP} if-vectorp @var{object}
+@deffnx {VOP} if-functionp @var{object}
+The rationale behind having these operations is that they may take a
+lot of code, so it is reasonable to put them out of line.
+@end deffn
 
 
-\section{Type Sub-primitives}
 
-change-type (object) => result
-    Change the type of an object according to codegen info. The meaning of
-    this is highly type-system dependent, but it doesn't matter, since the
-    compiler will never emit this VOP directly. The only way that it can show
-    up is through %Primitive.
-get-type
+@node Type Sub-primitives
+@section Type Sub-primitives
+@cindex type sub-primitive
 
+@deffn {VOP} change-type @var{object} => result
+@deffnx {VOP} get-type @var{object}
+Change the type of an object according to codegen info. The meaning of
+this is highly type-system dependent, but it doesn't matter, since the
+compiler will never emit this VOP directly. The only way that it can
+show up is through %Primitive.
+@end deffn
+    
 
 Storage resources:
 
 Boxed and unboxed locations:
-Non-immediate objects may not be stored in unboxed locations.
-Things not lisp objects may not be stored in boxed locations.
 
-Control stack is boxed.
-Optional number stack is unboxed.
-Heap environment is boxed.
-Fixed number of registers, some boxed and some unboxed.
+@itemize bullet{}
+@item Non-immediate objects may not be stored in unboxed locations.
+@item Things not lisp objects may not be stored in boxed locations.
+@end itemize
 
-PCs may be stored on the control stack or in boxed registers, subject to the
-constraint that a corresponding environment is also stored. Locations
-containing PCs don't need to be zeroed when they are no longer used; nothing
-bad will happen if an old PC is unaccompanied by an environment.
+Also,
+@itemize bullet{}
+@item Control stack is boxed.
+@item Optional number stack is unboxed.
+@item Heap environment is boxed.
+@item Fixed number of registers, some boxed and some unboxed.
+@end itemize
 
 
-\item[Trap]Illegal object trap. This value is used in symbols to signify an
-undefined value or definition.
+PCs may be stored on the control stack or in boxed registers, subject
+to the constraint that a corresponding environment is also
+stored. Locations containing PCs don't need to be zeroed when they are
+no longer used; nothing bad will happen if an old PC is unaccompanied
+by an environment.
+
+
+@deffn {} @code{[Trap] Illegal object trap}
+
+This value is used in symbols to signify an undefined value or
+definition.
+@end deffn
+
 
 
-\chapter{Characters}
+
+@node Characters
+@chapter Characters
+@cindex character
 
 
-Character is an immediate type. Characters are manipulated primarily by
-converting into an integer and accessing these fields:
-\begin{description}
-\item[{\tt %character-code-byte}]The character code. This is effectively required to
-start at bit 0, since \cl equates {\tt char-int} to {\tt char-code} when there is
-no bits or font. All current @code{sbcl} systems use ASCII for the character codes,
-and define {\tt \#\newline} to be a linefeed, but system code should not count on
-this.
+Character is an immediate type. Characters are manipulated primarily
+by converting into an integer and accessing these fields:
 
-\item[{\tt %character-control-byte}]The character bits. Character bits are used by
-Hemlock to describe modifiers in keyboard events, but there is no assumption of
-any general portable significance of character bits.
+@deffn {} @code{%character-code-byte}
+@strong{NOTE:} <EEK: appears obsolete> The character code. This is
+effectively required to start at bit 0, since CL equates
+@code{char-int} to @code{char-code} when there is no bits or font. All
+current @code{sbcl} systems use ASCII @strong{NOTE:}<EEK unicode?> for
+the character codes, and define @code{\#\newline} to be a linefeed,
+but system code should not count on this.
 
-{\tt %character-font-byte}\\The character font. This is not used by @code{sbcl}, and is
-not particularly useful.
-\end{description}
+@end deffn
+
+@deffn {} @code{%character-control-byte}
+@strong{NOTE:} <EEK: appears obsolete>
+
+The character bits. Character bits are used by Hemlock to describe
+modifiers in keyboard events, but there is no assumption of any
+general portable significance of character bits. @strong{NOTE:}<EEK
+surely this has been removed in SBCL>
+
+@end deffn
+
+
+@deffn {} @code{%character-font-byte}
+@strong{NOTE:} <EEK: appears obsolete>
+
+The character font. This is not used by @code{sbcl}, and is not
+particularly useful.
+
+@end deffn
+
+
 
 Characters should be converted to and from integers by using the SBCL
-{\tt char-int} and {\tt int-char} functions, which the compiler translates into
-these VOPs:
-\begin{example}
-char-int (char) => int
-int-char (int) => char
-\end{example}
-In the common case where Char is known to be a {\tt string-char}, these
-operations are equivalent to {\tt char-code} and {\tt code-char}. In addition to
-providing a portable interface to character conversion, the VOP representation
-of this type conversion allows the compiler to avoid unnecessary boxing and
-unboxing of character objects.
+
+@deffn {sb-impl} @code{char-int}
+@deffnx {sb-impl} @code{int-char}
+
+The compiler translates these functions into these VOPs:
+
+@example
+char-int (@var{char}) => @var{int}
+int-char @var{int} => @var{char}
+@end example
+
+In the common case where @var{char} is known to be a
+@code{string-char}, these operations are equivalent to
+@code{char-code} and @code{code-char}. In addition to providing a
+portable interface to character conversion, the VOP representation of
+this type conversion allows the compiler to avoid unnecessary boxing
+and unboxing of character objects.
 
 Existing code explicitly converts fixnums to characters by using the
-Make-Immediate-Type sub-primitive with %Character-Type. Currently conversion
-of characters to fixnums is rather confused. Originally, characters were a
-subtype of the Misc type code, and the result of the Make-Fixnum sub-primitive
-had to be masked with {\tt %character-int-mask}; some code still does this, while
-other code may not.
+@code{make-immediate-type} sub-primitive with
+@code{%character-type}. Currently conversion of characters to fixnums
+is rather confused. Originally, characters were a subtype of the Misc
+type code, and the result of the @code{make-fixnum} sub-primitive had
+to be masked with @code{%character-int-mask}; some code still does
+this, while other code may not.
+@end deffn
 
-Character comparisons could be implemented by doing numeric comparisons on the
-result of {\tt char-int}, or by using {\tt eq} in the case of {\tt char=}, but this
-can result in unnecessary type conversions. Instead, the compiler uses these
-conditional VOPs:
-\begin{example}
-if-char= (x y)
-if-char< (x y)
-if-char> (x y)
-\end{example}
+
+@deffn {obsolete} if-char= (x y)
+@deffnx {obsolete} if-char< (x y)
+@deffnx {obsolete} if-char> (x y)
+
+@strong{NOTE:} <EEK: appears obsolete>
+
+
+Character comparisons could be implemented by doing numeric
+comparisons on the result of @code{char-int}, or by using @code{eq} in
+the case of @code{char=}, but this can result in unnecessary type
+conversions. Instead, the compiler uses these conditional VOPs:
+@end deffn
 
 
-\chapter{Symbols}
-
+@node Symbols
+@chapter{Symbols}
+@cindex symbol
 
 Symbols are currently fairly boring in @code{sbcl}, containing only the obvious slots:
-\begin{description}
-{\tt %symbol-value-slot}\\The current dynamic value of this symbol. If the
-symbol is currently unbound, then the value of this slot is the unbound marker.
 
-{\tt %symbol-function-slot}\\The global function function definition of this
-symbol. If the symbol is not fbound, then this slot holds the unbound marker.
 
-\multiple{
-{\tt %symbol-plist-slot} \*
-{\tt %symbol-name-slot} \*
-{\tt %symbol-package-slot}
-}\\The property list, print name and package for this symbol.
-\end{description}
+@deffn {sb-vm} @code{symbol-value-slot}
+The current dynamic value of this symbol. If the symbol is currently
+unbound, then the value of this slot is the unbound marker.
+@end deffn
+
+@deffn {sb-vb} symbol-function-slot
+@strong{NOTE:} <EEK: appears obsolete>
+The global function function definition of this symbol. If the symbol
+is not fbound, then this slot holds the unbound marker.
+@end deffn
+
+@deffn {sb-vb} @code{%symbol-plist-slot}
+@deffnx {sb-vb} @code{%symbol-name-slot}
+@deffnx {sb-vb} @code{%symbol-package-slot}
+@strong{NOTE:} <EEK: Some appear to be obsolete>
+@end deffn
+
 
 
 
-\section{Sub-primitives}
 
-The {\tt alloc-symbol} sub-primitive allocates a new symbol object. {\it name} is
+@node Sub-primitives
+@section Sub-primitives
+@cindex sub-primitive
+
+
+@deffn {} alloc-symbol @var{name}
+sub-primitive allocates a new symbol object. @var{name} is
 the simple-string that is to be the name of the symbol.
-\begin{example}
-alloc-symbol (name) => symbol
-\end{example}
 
-The {\tt set-symbol-package} sub-primitive is used by system code that must set
-the symbol package.
-\begin{example}
-set-symbol-package (symbol new-value)
-\end{example}
+@example
+alloc-symbol @var{name} => @var{symbol}
+@end example
+
+@end deffn
+
+
+@deffn {sb-impl} @code{%set-symbol-package}
+sub-primitive is used by system code that must set the symbol package.
+
+@example
+(%set-symbol-package symbol new-value)
+@end example
+@end deffn
 
 
 
-\section{Accessor VOPs}
 
-These VOPs read the global symbol value and definition cells. {\tt constant-ref}
-may only be used on symbols that have been defined to be constants. Since a
-constant cannot change in value and cannot be dynamically bound, the compiler
-may be able to compile uses of {\tt constant-ref} more efficiently. Unsafe
-versions of these VOPs may not check for the slot being unbound, which the
-corresponding SBCL functions are required to do.
-\begin{example}
-{small, fast} symbol-value (symbol) => value
-{small, fast} constant-ref (symbol) => value
-{small, fast} symbol-function (symbol) => value
-\end{example}
+@node Accessor VOPs
+@section Accessor VOPs
+@cindex  accessor VOP
 
-These VOPs set the global symbol value and definition cells. {\tt makunbound}
-and {\tt fmakunbound} are implemented by setting the value to the unbound marker.
-\begin{example}
-{small, fast} set-symbol-value (symbol new-value)
-{small, fast} set-symbol-function (symbol new-value)
-\end{example}
+These VOPs read the global symbol value and definition
+cells. @code{constant-ref} may only be used on symbols that have been
+defined to be constants. Since a constant cannot change in value and
+cannot be dynamically bound, the compiler may be able to compile uses
+of @code{constant-ref} more efficiently. Unsafe versions of these VOPs
+may not check for the slot being unbound, which the corresponding SBCL
+functions are required to do.
+
+@deffn {} {small, fast} symbol-value @var{symbol} => @var{value}
+@deffnx {} {small, fast} constant-ref @var{symbol} => @var{value}
+@deffnx {} {small, fast} symbol-function @var{symbol} => @var{value}
+
+These VOPs set the global symbol value and definition
+cells. @code{makunbound} and @code{fmakunbound} are implemented by
+setting the value to the unbound marker.
+@end deffn
+
+
+@deffn {} {small, fast} set-symbol-value (symbol new-value)
+@deffnx {} {small, fast} set-symbol-function (symbol new-value)
 
 The SBCL accessors for other symbol slots are translated into uses of the
-{\tt slot-ref} and {\tt slot-set} VOPs.
+@code{slot-ref} and @code{slot-set} VOPs.
+@end deffn
 
 
 
-\section{Special Binding}
+@node Special Binding
+@section Special Binding
+@cindex special binding
 
-These VOPs implement dynamic binding of special variables using shallow
-binding. {\tt bind} binds {\it symbol} to the specified {\it value}, while
-{\tt unbind} undoes the most recent {\it count} special bindings on the binding
-stack.
-\begin{example}
-bind (symbol value)
-unbind (count)
-\end{example}
+@deffn {} bind (symbol value)
+@deffnx {} unbind (count)
+
+These VOPs implement dynamic binding of special variables using
+shallow binding. @code{bind} binds @var{symbol} to the specified
+@var{value}, while @code{unbind} undoes the most recent @var{count}
+special bindings on the binding stack.
+@end deffn
+
 
 
-\section{Property Lists}
+@node Property Lists
+@section Property Lists
+@cindex property list
 
-The {\tt get} VOP implements the corresponding SBCL function, while {\tt put}
-implements its setf-inverse.
-\begin{example}
-get (symbol indicator default) => value
-put (symbol indicator value)
-\end{example}
+
+@deffn {} get @var{symbol} @var{indicator} @var{default} => @var{value}
+@deffnx {} put @var{symbol} @var{indicator} @var{value}
+
+
+The @code{get} VOP implements the corresponding SBCL function, while
+@code{put} implements its setf-inverse.
+@end deffn
 
 
 \chapter{Lists}

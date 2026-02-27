@@ -1,6 +1,11 @@
-\chapter{User Interface of the Compiler}
 
-\section{Error Message Utilities}
 
-\section{Source Paths}
-\label{source-paths}
+@node User Interface of the Compiler
+@chapter User Interface of the Compiler
+
+@node Error Message Utilities
+@section Error Message Utilities
+
+@node Source Paths
+@section Source Paths
+

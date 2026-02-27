@@ -1,0 +1,24 @@
+
+
+
+Rabbit (Guy Steele, 1978)
+
+Orbit (David Kranz, 1988)
+
+The Python Compiler for Common Lisp (various CMU CS technical reports)
+
+Representation and Optimization in Python
+
+Flow Analysis and Type Inference in Python
+
+The CMU Common Lisp User’s Manual (compiler chapters)
+
+Lambda: The Ultimate Declarative
+
+Lambda: The Ultimate Imperative
+
+Aho, Sethi, Ullman — Compilers: Principles, Techniques, and Tools (the Dragon Book)
+
+Allen & Kennedy — Optimizing Compilers for Modern Architectures
+
+Muchnick — Advanced Compiler Design and Implementation

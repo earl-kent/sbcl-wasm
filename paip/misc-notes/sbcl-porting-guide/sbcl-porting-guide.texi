@@ -236,7 +236,12 @@ operating environments
 Maclisp -> Spice Lisp -> CMUCL -> SBCL
 
 
+@include cmu/internal-design.texi
+
 @include cmu/compiler-overview.texi
+
+
+
 
 @part Compiler Front End
 @include cmu/front.texi
@@ -262,6 +267,9 @@ Maclisp -> Spice Lisp -> CMUCL -> SBCL
 
 @c as a template for documenting a port.
 @include cmu/rtguts.texi
+
+@c as a todo list for the document
+@include cmu/outline.texi
 
 
 @node Index

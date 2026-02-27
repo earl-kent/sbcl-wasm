@@ -60,12 +60,12 @@ ENVADD = \
   $(AM_V_GEN)TEXINPUTS="$(srcdir):$(texinfodir):$(emacsdir):$(TEXINPUTS)" \
   MAKEINFO="$(MAKEINFO) $(MAKEINFO_OPTS)"
 
-DVI_TARGETS = emacs-lisp-intro.dvi
+DVI_TARGETS = sbcl-porting-guide.dvi
 HTML_TARGETS = eintr.html
-PDF_TARGETS = emacs-lisp-intro.pdf
-PS_TARGETS = emacs-lisp-intro.ps
+PDF_TARGETS = sbcl-porting-guide.pdf
+PS_TARGETS = sbcl-porting-guide.ps
 
-srcs = ${srcdir}/emacs-lisp-intro.texi ${srcdir}/doclicense.texi \
+srcs = ${srcdir}/sbcl-porting-guide.texi ${srcdir}/doclicense.texi \
   ${emacsdir}/docstyle.texi
 
 ## Disable implicit rules.
@@ -87,16 +87,16 @@ ${buildinfodir}:
 ${buildinfodir}/eintr.info: ${srcs} | ${buildinfodir}
 	$(AM_V_GEN)$(MAKEINFO) $(MAKEINFO_OPTS) $(INFO_OPTS) -o $@ $<
 
-emacs-lisp-intro.dvi: ${srcs}
+sbcl-porting-guide.dvi: ${srcs}
 	$(ENVADD) $(TEXI2DVI) $<
 
-emacs-lisp-intro.pdf: ${srcs}
+sbcl-porting-guide.pdf: ${srcs}
 	$(ENVADD) $(TEXI2PDF) $<
 
 eintr.html: ${srcs}
 	$(AM_V_GEN)$(MAKEINFO) $(MAKEINFO_OPTS) $(HTML_OPTS) -o $@ $<
 
-emacs-lisp-intro.ps: emacs-lisp-intro.dvi
+sbcl-porting-guide.ps: sbcl-porting-guide.dvi
 	$(DVIPS) -o $@ $<
 
 .PHONY: mostlyclean clean distclean bootstrap-clean maintainer-clean infoclean

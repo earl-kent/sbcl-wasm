@@ -44,6 +44,16 @@
     
 *** Cross compilation
 
+**** To run interactively
+     #+BEGIN_SRC lisp
+       ;; assuming you called config earlier
+       (load "loader.lisp")
+       ;; (load-sbcl-file "make-host-1.lisp")
+       ;; Use ordinary load to avoid 
+       (load "make-host-1.lisp")
+     #+END_SRC
+
+
 **** Of note
      - target SB-XC:*FEATURES* = (:X86-64 :GENCGC :64-BIT
        :ALIEN-CALLBACKS :ANSI-CL :ANSI-COMPLIANT-LOAD-TRUENAME :AVX2

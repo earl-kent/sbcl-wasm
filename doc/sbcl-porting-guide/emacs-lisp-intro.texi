@@ -1,0 +1,334 @@
+\input texinfo                       @c -*- mode: texinfo; coding: utf-8 -*-
+@comment %**start of header
+@setfilename ../../info/eintr.info
+@settitle Programming in Emacs Lisp
+@include docstyle.texi
+@syncodeindex vr cp
+@syncodeindex fn cp
+@finalout
+
+@c ================ How to Print a Book in Various Sizes ================
+
+@c This book can be printed in any of three different sizes.
+@c Set the following @-commands appropriately.
+
+@c     7 by 9.25 inches:
+@c              @smallbook
+@c              @clear largebook
+
+@c     8.5 by 11 inches:
+@c              @c smallbook
+@c              @set largebook
+
+@c     European A4 size paper:
+@c              @c smallbook
+@c              @afourpaper
+@c              @set largebook
+
+@c (Note: if you edit the book so as to change the length of the
+@c table of contents, you may have to change the value of 'pageno' below.)
+
+@c <<<< For hard copy printing, this file is now
+@c      set for smallbook, which works for all sizes
+@c      of paper, and with PostScript figures >>>>
+
+@set smallbook
+@ifset smallbook
+@smallbook
+@clear  largebook
+@end ifset
+
+@c ================ Included Figures ================
+
+@c If you clear this, the figures will be printed as ASCII diagrams
+@c rather than PostScript/PDF.
+@c (This is not relevant to Info, since Info only handles ASCII.)
+@set print-postscript-figures
+@c clear print-postscript-figures
+
+@comment %**end of header
+
+@c per rms and peterb, use 10pt fonts for the main text, mostly to
+@c save on paper cost.
+@c Do this inside @tex for now, so current makeinfo does not complain.
+@tex
+@ifset smallbook
+@fonttextsize 10
+
+@end ifset
+\global\hbadness=6666 % don't worry about not-too-underfull boxes
+@end tex
+
+@c @pagesizes 11in, 7.5in
+
+@c For 8.5 by 11 inch format: do not use such a small amount of
+@c whitespace between paragraphs as smallbook format
+@ifset largebook
+@tex
+\global\parskip 6pt plus 1pt
+@end tex
+@end ifset
+
+@c For all sized formats:  print within-book cross
+@c reference with ``...''  rather than [...]
+
+@c This works with the texinfo.tex file, version 2003-05-04.08,
+@c in the Texinfo version 4.6 of the 2003 Jun 13 distribution.
+
+@tex
+\if \xrefprintnodename
+ \global\def\xrefprintnodename#1{\unskip, ``#1''}
+ \else
+ \global\def\xrefprintnodename#1{ ``#1''}
+\fi
+% \global\def\xrefprintnodename#1{, ``#1''}
+@end tex
+
+
+@firstparagraphindent none
+
+
+@c ----------------------------------------------------
+
+@dircategory SBCL
+@direntry
+* Guide SBCL Cross-Compiling
+@end direntry
+
+@c When printing, define edition-number to be the printed edition
+@c number, titlepage-edition-number to be the spelled out edition
+@c number suitable for the title page, and update-date to be the date,
+@c in the preferred style for these.  E.g., run the shell command:
+@c   texi2any -D 'edition-number 3.11' \
+@c            -D 'titlepage-edition-number Revised Third Edition' \
+@c            -D 'update-date 31 March 2020'
+@c This relates mainly to the published book sold by the FSF.
+
+@copying
+@cite{Guide SBCL Cross-Compiling}
+@sp 1
+@ifset edition-number
+Edition @value{edition-number}, @value{update-date}
+@end ifset
+@sp 1
+Copyright @copyright{} blah blah blah 
+
+@sp 1
+
+@iftex
+Misc. Published by the: blah blah blah
+@end iftex
+
+@ifnottex
+@end ifnottex
+
+@sp 1
+ISBN blah blah
+
+@quotation
+Permission is granted to copy, distribute and/or modify this document
+under the terms of the MIT License
+@end quotation
+@end copying
+
+@c half title; two lines here, so do not use 'shorttitlepage'
+@tex
+{\begingroup%
+    \hbox{}\vskip 1.5in \chaprm \centerline{Guide SBCL Cross-Compiling}%
+        \endgroup\page\hbox{}\page}
+@end tex
+
+@titlepage
+@sp 6
+@center @titlefont{Guide SBCL Cross-Compiling}
+@sp 2
+@ifset titlepage-edition-number
+@center @value{titlepage-edition-number}
+@end ifset
+@sp 4
+@center by CMU CL team, Fred, Earl Kent, many others
+
+@page
+@vskip 0pt plus 1filll
+@insertcopying
+@end titlepage
+
+@iftex
+@headings off
+@evenheading @thispage @| @| @thischapter
+@oddheading @thissection @| @| @thispage
+@end iftex
+
+@ifnothtml
+@c     Keep T.O.C. short by tightening up for largebook
+@ifset largebook
+@tex
+\global\parskip 2pt plus 1pt
+\global\advance\baselineskip by -1pt
+@end tex
+@end ifset
+@end ifnothtml
+
+
+@shortcontents
+@contents
+
+@ifnottex
+@node Top
+@top Guide SBCL Cross-Compiling
+
+
+@insertcopying
+
+This master menu first lists each chapter and index; then it lists
+every node in every chapter.
+@end ifnottex
+
+@c Uncomment the 3 lines below, starting with @iftex, if you want the
+@c pages of Preface to be numbered in roman numerals.  Use -9 instead
+@c of -11 for smallbook format.
+
+@c >>>> Set pageno appropriately <<<<
+
+@c The first page of the Preface is a roman numeral; it is the first
+@c right handed page after the Table of Contents; hence the following
+@c setting must be for an odd negative number.
+
+@c iftex
+@c global@pageno = -11
+@c end iftex
+
+@set COUNT-WORDS count-words-example
+@c Length of variable name chosen so that things still line up when expanded.
+
+
+@node Preface
+@unnumbered Preface
+
+At least initially this is mostly a project plan for porting SBCL to
+WASM which is an unusual port that needs indepth integration with
+SBCL's cross-building capabilities, with considerable novel re-working
+of the process, making it an ideal project to document the proecss and
+its assumptions.
+
+
+@node On Reading this Text
+@unnumberedsec On Reading this Text
+
+Some general pointers on how to use this text:
+
+1. to understanding he SBCL compiler as an independent facility
+separate from integration into an SBCL system.
+
+2. To understand, in depth the cross-compilation process for SBCL.
+
+3. To provide a checklist for porting SBCL to other architectures, and
+operating environments
+
+4. To get up to speed tweaking existing architectures.
+
+5. Getting the cross compilation process running.
+
+@node SBCL History (???)
+@unnumberedsec SBCL History (???)
+@cindex SBCL History
+
+Maclisp -> Spice Lisp -> CMUCL -> SBCL
+
+
+@include cmu/internal-design.texi
+
+@include cmu/compiler-overview.texi
+
+
+
+
+@part Compiler Front End
+@include cmu/front.texi
+
+@part Compiler Middle Phase
+@include cmu/middle.texi
+
+@part Compiler Back End
+@include cmu/back.texi
+
+@part The SBCL Lisp Virtual Machine
+@include cmu/vm.texi
+
+@part User Interface to the Compiler
+@include cmu/interface.texi
+
+@part Retargeting the Compile
+@include cmu/retargeting.texi
+@include cmu/debugger.texi
+
+@c appendix stuff
+@include cmu/glossary.texi
+
+@c as a template for documenting a port.
+@include cmu/rtguts.texi
+
+@c as a todo list for the document
+@include cmu/outline.texi
+
+
+@node Index
+@unnumbered Index
+
+@ignore
+MENU ENTRY: NODE NAME.
+@end ignore
+
+@printindex cp
+
+@iftex
+@c Place biographical information on right-hand (verso) page
+
+@tex
+\par\vfill\supereject
+\ifodd\pageno
+    \global\evenheadline={\hfil} \global\evenfootline={\hfil}
+    \global\oddheadline={\hfil} \global\oddfootline={\hfil}
+    %\page\hbox{}\page
+\else
+%    \par\vfill\supereject
+    \global\evenheadline={\hfil} \global\evenfootline={\hfil}
+    \global\oddheadline={\hfil} \global\oddfootline={\hfil}
+    %\page\hbox{}%\page
+    %\page\hbox{}%\page
+\fi
+@end tex
+
+@c page
+@w{ }
+
+@c ================ Biographical information ================
+
+@w{ }
+@sp 8
+@center About the Author
+@sp 1
+@end iftex
+
+@ifnottex
+@node About the Author
+@unnumbered About the Author
+@end ifnottex
+
+
+
+@c @page
+@c @w{ }
+@c
+@c @c Prevent page number on blank verso, so eject it first.
+@c @tex
+@c \par\vfill\supereject
+@c @end tex
+
+@c @iftex
+@c @headings off
+@c @evenheading @thispage @| @| @thistitle
+@c @oddheading            @| @| @thispage
+@c @end iftex
+
+@bye

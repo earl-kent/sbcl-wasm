@@ -38,7 +38,7 @@ The following is a key of the three bit low-tagging scheme:
    101 structure pointer
    110 unused
    111 other-pointer to data-blocks (other than conses, structures,
-   				     and functions)
+                                     and functions)
 
 This taging scheme forces a dual-word alignment of data-blocks on the heap, but
 this can be pretty negligible:
@@ -158,7 +158,7 @@ See section "Data-Blocks and Other-immediates Typing" for details.
 
 Pointers to data-blocks have the following format:
    ----------------------------------------------------------------
-   |      Dual-word address of data-block (29 bits)       | 1 1	1 |
+   |      Dual-word address of data-block (29 bits)       | 1 1 1 |
    ----------------------------------------------------------------
 
 The word pointed to by the above descriptor is a header-word, and it has the
@@ -202,47 +202,47 @@ byte and comparing it against a constant is more efficient than wasting even a
 small amount of time shifting out the other-immediate tag to compare against a
 five bit constant.
 
-	   Number   (< 30)
-00000 010      bignum						10
-00000 010      ratio						14
-00000 010      single-float					18
-00000 010      double-float					22
-00000 010      complex						26
+           Number   (< 30)
+00000 010      bignum                                           10
+00000 010      ratio                                            14
+00000 010      single-float                                     18
+00000 010      double-float                                     22
+00000 010      complex                                          26
 
-	   Array   (>= 30 code 86)
-	      Simple-Array   (>= 20 code 70)
-00000 010	    simple-array				30
-	         Vector  (>= 34 code 82)
-00000 010	    simple-string				34
-00000 010	    simple-bit-vector				38
-00000 010	    simple-vector				42
-00000 010	    (simple-array (unsigned-byte 2) (*))	46
-00000 010	    (simple-array (unsigned-byte 4) (*))	50
-00000 010	    (simple-array (unsigned-byte 8) (*))	54
-00000 010	    (simple-array (unsigned-byte 16) (*))	58
-00000 010	    (simple-array (unsigned-byte 32) (*))	62
-00000 010	    (simple-array single-float (*))		66
-00000 010	    (simple-array double-float (*))		70
-00000 010	 complex-string					74
-00000 010	 complex-bit-vector				78
-00000 010	 (array * (*))   -- general complex vector.	82
-00000 010     complex-array					86
+           Array   (>= 30 code 86)
+              Simple-Array   (>= 20 code 70)
+00000 010           simple-array                                30
+                 Vector  (>= 34 code 82)
+00000 010           simple-string                               34
+00000 010           simple-bit-vector                           38
+00000 010           simple-vector                               42
+00000 010           (simple-array (unsigned-byte 2) (*))        46
+00000 010           (simple-array (unsigned-byte 4) (*))        50
+00000 010           (simple-array (unsigned-byte 8) (*))        54
+00000 010           (simple-array (unsigned-byte 16) (*))       58
+00000 010           (simple-array (unsigned-byte 32) (*))       62
+00000 010           (simple-array single-float (*))             66
+00000 010           (simple-array double-float (*))             70
+00000 010        complex-string                                 74
+00000 010        complex-bit-vector                             78
+00000 010        (array * (*))   -- general complex vector.     82
+00000 010     complex-array                                     86
 
-00000 010  code-header-type					90
-00000 010  function-header-type					94
-00000 010  closure-header-type					98
-00000 010  funcallable-instance-header-type			102
-00000 010  unused-function-header-1-type			106
-00000 010  unused-function-header-2-type			110
-00000 010  unused-function-header-3-type			114
-00000 010  closure-function-header-type				118
-00000 010  return-pc-header-type				122
-00000 010  value-cell-header-type				126
-00000 010  symbol-header-type					130
-00000 010  base-character-type					134
-00000 010  system-area-pointer-type (header type)		138
-00000 010  unbound-marker					142
-00000 010  weak-pointer-type					146
+00000 010  code-header-type                                     90
+00000 010  function-header-type                                 94
+00000 010  closure-header-type                                  98
+00000 010  funcallable-instance-header-type                     102
+00000 010  unused-function-header-1-type                        106
+00000 010  unused-function-header-2-type                        110
+00000 010  unused-function-header-3-type                        114
+00000 010  closure-function-header-type                         118
+00000 010  return-pc-header-type                                122
+00000 010  value-cell-header-type                               126
+00000 010  symbol-header-type                                   130
+00000 010  base-character-type                                  134
+00000 010  system-area-pointer-type (header type)               138
+00000 010  unbound-marker                                       142
+00000 010  weak-pointer-type                                    146
 
 
 
@@ -270,19 +270,19 @@ Symbol data-block has the following format:
     -------------------------------------------------------
     |     5 (data-block words)     | Symbol Type (8 bits) |
     -------------------------------------------------------
-    |   		Value Descriptor		  |
+    |                   Value Descriptor                  |
     -------------------------------------------------------
-    |			Function Pointer 		  |
+    |                   Function Pointer                  |
     -------------------------------------------------------
-    |		      Raw Function Address 		  |
+    |                 Raw Function Address                |
     -------------------------------------------------------
-    |			 Setf Function	 		  |
+    |                    Setf Function                    |
     -------------------------------------------------------
-    |			 Property List			  |
+    |                    Property List                    |
     -------------------------------------------------------
-    |			   Print Name			  |
+    |                      Print Name                     |
     -------------------------------------------------------
-    |			    Package			  |
+    |                       Package                       |
     -------------------------------------------------------
 
 Most of these slots are self-explanatory given what symbols must do in Common
@@ -299,25 +299,25 @@ operations such as CAR and CDR to be fast on it.  CMU Common Lisp solves this
 by putting nil as the first object in static space, where other global values
 reside, so it has a known address in the system:
     -------------------------------------------------------  <-- start static
-    |				0			  |      space
+    |                           0                         |      space
     -------------------------------------------------------
     |     5 (data-block words)     | Symbol Type (8 bits) |
     -------------------------------------------------------  <-- nil
-    |			    Value/CAR			  |
+    |                       Value/CAR                     |
     -------------------------------------------------------
-    |			  Definition/CDR		  |
+    |                     Definition/CDR                  |
     -------------------------------------------------------
-    |		       Raw Function Address 		  |
+    |                  Raw Function Address               |
     -------------------------------------------------------
-    |			  Setf Function	 		  |
+    |                     Setf Function                   |
     -------------------------------------------------------
-    |			  Property List			  |
+    |                     Property List                   |
     -------------------------------------------------------
-    |			    Print Name			  |
+    |                       Print Name                    |
     -------------------------------------------------------
-    |			     Package			  |
+    |                        Package                      |
     -------------------------------------------------------
-    |			       ...			  |
+    |                          ...                        |
     -------------------------------------------------------
 In addition, we make the list typed pointer to nil actually point past the
 header word of the nil symbol data-block.  This has usefulness explained below.
@@ -351,9 +351,9 @@ The array-header data-block has the following format:
    ----------------------------------------------------------------
    |               Range of First Index (30 bits)           | 0 0 | 
    ----------------------------------------------------------------
-				  .
-				  .
-				  .
+                                  .
+                                  .
+                                  .
 
 The array type in the header-word is one of the eight-bit patterns from section
 "Data-Blocks and Other-immediates Typing", indicating that this is a complex
@@ -402,11 +402,11 @@ Bignum data-blocks have the following format:
     -------------------------------------------------------
     |      Length (24 bits)        | Bignum Type (8 bits) |
     -------------------------------------------------------
-    |   	      least significant bits		  |
+    |                 least significant bits              |
     -------------------------------------------------------
-				.
-				.
-				.
+                                .
+                                .
+                                .
 
 The elements contain the two's complement representation of the integer with
 the least significant bits in the first element or closer to the header.  The
@@ -473,71 +473,76 @@ The following are the three kinds of pointers to code data-blocks:
       terminated list kept in a known slot in the code data-block.
 
 
+
 A code data-block has the following format:
-   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  <-- A
-   |  Header-Word count (24 bits)	  |  %Code-Type (8 bits)  |
-   ----------------------------------------------------------------
-   |  Number of code words (fixnum tag)				  |
-   ----------------------------------------------------------------
-   |  Pointer to first function header (other-pointer tag)	  |
-   ----------------------------------------------------------------
-   |  Debug information (structure tag)				  |
-   ----------------------------------------------------------------
-   |  First constant (a descriptor)				  |
-   ----------------------------------------------------------------
-   |  ...                       				  |
-   ----------------------------------------------------------------
-   |  Last constant (and last word of code header)           	  |
-   ----------------------------------------------------------------
-   |  Some instructions (non-descriptor)			  |
-   ----------------------------------------------------------------
-   |     (pad to dual-word boundary if necessary)		  |
-   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  <-- B
-   |  Word offset from code header (24)	  |  %Return-PC-Type (8)  |
-   ----------------------------------------------------------------
-   |  First instruction after return				  |
-   ----------------------------------------------------------------
-   |  ... more code and return-PC header-words			  |
-   ----------------------------------------------------------------
-   |     (pad to dual-word boundary if necessary)	  	  |
-   ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  <-- C
-   |  Offset from code header (24)  |  %Function-Header-Type (8)  |
-   ----------------------------------------------------------------
-   |  Self-pointer back to previous word (with other-pointer tag) |
-   ----------------------------------------------------------------
-   |  Pointer to next function (other-pointer low-tag) or NIL	  |
-   ----------------------------------------------------------------
-   |  Function name (a string or a symbol)			  |
-   ----------------------------------------------------------------
-   |  Function debug arglist (a string)				  |
-   ----------------------------------------------------------------
-   |  Function type (a list-style function type specifier)	  |
-   ----------------------------------------------------------------
-   |  Start of instructions for function (non-descriptor)	  |
-   ----------------------------------------------------------------
-   |  More function headers and instructions and return PCs,	  |
-   |  until we reach the total size of header-words + code	  |
-   |  words.							  |
-   ----------------------------------------------------------------
+@verbatim
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  <-- A
+|  Header-Word count (24 bits)         |  %Code-Type (8 bits)  |
+----------------------------------------------------------------
+|  Number of code words (fixnum tag)                           |
+----------------------------------------------------------------
+|  Pointer to first function header (other-pointer tag)        |
+----------------------------------------------------------------
+|  Debug information (structure tag)                           |
+----------------------------------------------------------------
+|  First constant (a descriptor)                               |
+----------------------------------------------------------------
+|  ...                                                         |
+----------------------------------------------------------------
+|  Last constant (and last word of code header)                |
+----------------------------------------------------------------
+|  Some instructions (non-descriptor)                          |
+----------------------------------------------------------------
+|     (pad to dual-word boundary if necessary)                 |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  <-- B
+|  Word offset from code header (24)   |  %Return-PC-Type (8)  |
+----------------------------------------------------------------
+|  First instruction after return                              |
+----------------------------------------------------------------
+|  ... more code and return-PC header-words                    |
+----------------------------------------------------------------
+|     (pad to dual-word boundary if necessary)                 |
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++  <-- C
+|  Offset from code header (24)  |  %Function-Header-Type (8)  |
+----------------------------------------------------------------
+|  Self-pointer back to previous word (with other-pointer tag) |
+----------------------------------------------------------------
+|  Pointer to next function (other-pointer low-tag) or NIL     |
+----------------------------------------------------------------
+|  Function name (a string or a symbol)                        |
+----------------------------------------------------------------
+|  Function debug arglist (a string)                           |
+----------------------------------------------------------------
+|  Function type (a list-style function type specifier)        |
+----------------------------------------------------------------
+|  Start of instructions for function (non-descriptor)         |
+----------------------------------------------------------------
+|  More function headers and instructions and return PCs,      |
+|  until we reach the total size of header-words + code        |
+|  words.                                                      |
+----------------------------------------------------------------
+@end verbatim
 
 
 The following are detailed slot descriptions:
-   Code data-block header-word:
+
+@itemize @bullet{}
+@item Code data-block header-word:
       The immediate data in the code data-block's header-word is the number of
       leading descriptors in the code data-block, the fixed overhead words plus
       the number of constants.  The first non-descriptor word, some code,
       appears at this word offset from the header.
-   Number of code words:
+@item Number of code words:
       The total number of non-header-words in the code data-block.  The total
       word size of the code data-block is the sum of this slot and the
       immediate header-word data of the previous slot.  The system accesses
       this slot with the system constant, %Code-Code-Size-Slot, offset from the
       header-word.
-   Pointer to first function header:
+@item Pointer to first function header:
       A NIL-terminated list of the function headers for all entry points to
       this component.  The system accesses this slot with the system constant,
       %Code-Entry-Points-Slot, offset from the header-word.
-   Debug information:
+@item Debug information:
       The DEBUG-INFO structure describing this component.  All information that
       the debugger wants to get from a running function is kept in this
       structure.  Since there are many functions, the current PC is used to
@@ -547,23 +552,23 @@ The following are detailed slot descriptions:
       the function object for the currently running function, since this
       data-block may not exist.  The system accesses this slot with the system
       constant, %Code-Debug-Info-Slot, offset from the header-word.
-   First constant ... last constant:
+@item First constant ... last constant:
       These are the constants referenced by the component, if there are any.
       The system accesses the first constant slot with the system constant,
       %Code-Constants-Offset, offset from the header-word.
 
-   Return-PC header word:
+@item Return-PC header word:
       The immediate header-word data is the word offset from the enclosing code
       data-block's header-word to this word.  This allows GC and the debugger
       to easily recover the code data-block from a return-PC.  The code at the
       return point restores the current code pointer using a subtract immediate
       of the offset, which is known at compile time.
 
-   Function entry point header-word:
+@item Function entry point header-word:
       The immediate header-word data is the word offset from the enclosing code
       data-block's header-word to this word.  This is the same as for the
       retrun-PC header-word.
-   Self-pointer back to header-word:
+@item Self-pointer back to header-word:
       In a non-closure function, this self-pointer to the previous header-word
       allows the call sequence to always indirect through the second word in a
       user callable function.  See section "Closure Format".  With a closure,
@@ -575,50 +580,51 @@ The following are detailed slot descriptions:
       a user callable Lisp object.  The system accesses this slot with the
       system constant, %Function-Code-Slot, offset from the function
       header-word.
-   Pointer to next function:
+@item Pointer to next function:
       This is the next link in the thread of entry point functions found in
       this component.  This value is NIL when the current header is the last
       entry point in the component.  The system accesses this slot with the
       system constant, %Function-Header-Next-Slot, offset from the function
       header-word.
-   Function name:
+@item Function name:
       This function's name (for printing).  If the user defined this function
       with DEFUN, then this is the defined symbol, otherwise it is a
       descriptive string.  The system accesses this slot with the system
       constant, %Function-Header-Name-Slot, offset from the function
       header-word.
-   Function debug arglist:
+@item Function debug arglist:
       A printed string representing the function's argument list, for human
       readability.  If it is a macroexpansion function, then this is the
       original DEFMACRO arglist, not the actual expander function arglist.  The
       system accesses this slot with the system constant,
       %Function-Header-Debug-Arglist-Slot, offset from the function
       header-word.
-   Function type:
+@item Function type:
       A list-style function type specifier representing the argument signature
       and return types for this function.  For example,
          (FUNCTION (FIXNUM FIXNUM FIXNUM) FIXNUM)
       or
-	 (FUNCTION (STRING &KEY (:START UNSIGNED-BYTE)) STRING)
+         (FUNCTION (STRING &KEY (:START UNSIGNED-BYTE)) STRING)
       This information is intended for machine readablilty, such as by the
       compiler.  The system accesses this slot with the system constant,
       %Function-Header-Type-Slot, offset from the function header-word.
-
+@end itemize
 
 
 ;;;; Closure Format.
 
 A closure data-block has the following format:
-   ----------------------------------------------------------------
-   |  Word size (24 bits)	         | %Closure-Type (8 bits) |
-   ----------------------------------------------------------------
-   |  Pointer to function header (other-pointer low-tag)	  |
-   ----------------------------------------------------------------
-   |				  .				  |
-   |	               Environment information                    |
-   |				  .				  |
-   ----------------------------------------------------------------
-
+@verbatim
+----------------------------------------------------------------
+|  Word size (24 bits)                | %Closure-Type (8 bits) |
+----------------------------------------------------------------
+|  Pointer to function header (other-pointer low-tag)          |
+----------------------------------------------------------------
+|                              .                               |
+|                   Environment information                    |
+|                              .                               |
+----------------------------------------------------------------
+@end verbatim
 
 A closure descriptor has function low-tag bits.  This means that a descriptor
 with function low-tag bits may point to either a function header or to a
@@ -685,7 +691,7 @@ A system area pointer data-block has the following format:
     -------------------------------------------------------
     |     1 (data-block words)        | SAP Type (8 bits) |
     -------------------------------------------------------
-    |   	      system area pointer		  |
+    |                 system area pointer                 |
     -------------------------------------------------------
 
 "SAP" means "system area pointer", and much of our code contains this naming

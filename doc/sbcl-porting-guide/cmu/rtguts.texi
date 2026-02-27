@@ -46,16 +46,21 @@ modifications.
 
 @section Scope and Purpose
 
-This document describes a new implementation of CMU Common Lisp (nee Spice
-Lisp) as it is implemented on the @value(DinkyMachine) running Mach, a
-Berkeley Unix 4.3 binary compatible operating system. This design is
-undergoing rapid change, and for the present is not guaranteed to
-accurately describe any past, present, or future implementation of CMU
-Common Lisp. All questions and comments on this material should be
-directed to David B. McDonald (David.McDonald@@CS.CMU.EDU).
+This document describes a new implementation of CMU Common Lisp (nee
+Spice Lisp) as it is implemented on the DinkyMachine @footnote{Note
+that the DinkyMachine is essentially what would become the CMU CL and
+later SBCL virtual machine. The name is used here to distinguish the
+RT PC backend format from PERQ and Vax at a moment of transitioning
+all development to the new backend.} running Mach, a Berkeley Unix 4.3
+binary compatible operating system. This design is undergoing rapid
+change, and for the present is not guaranteed to accurately describe
+any past, present, or future implementation of CMU Common Lisp. All
+questions and comments on this material should be directed to David
+B. McDonald (David.McDonald@@CS.CMU.EDU).
+@cindex DinkyMachine
 
 This document specifies the hand-coded assembler routines (miscops) and
-virtual memory architecture of the @value(DinkyMachine) CMU Common Lisp system.
+virtual memory architecture of the DinkyMachine CMU Common Lisp system.
 This is a working document, and it will change frequently as the system is
 developed and maintained. If some detail of the system does not agree with
 what is specified here, it is to be considered a bug.
@@ -73,80 +78,91 @@ All CMU Common Lisp documentation uses decimal as the default radix; other
 radices will be indicated by a subscript (as in 77@-[8]) or by a clear
 statement of what radix is in use.
 
-@chapter [Data Types and Object Formats]
+@node Data Types and Object Formats
+@chapter Data Types and Object Formats
 
-@section [Lisp Objects]
-@cindex [Lisp objects]
+@node Lisp Objects
+@section Lisp Objects
+@cindex lisp object
 
-Lisp objects are 32 bits long.	They come in 32 basic types, divided into three
-classes: immediate data types, pointer types, and forwarding pointer types.
-The storage formats are as follows:
+lisp objects are 32 bits long. They come in 32 basic types, divided
+into three classes: immediate data types, pointer types, and
+forwarding pointer types. The storage formats are as follows:
 
-@cindex [Immediate object format]
-@cindex [Pointer object format]
+@cindex immediate object format
+@cindex pointer object format
 
-@verbatim
 
-@b[Immediate Data Types:]
- 0	       4 5						     31
+@smallexample
+Immediate Data Types:
+ 0             4 5                                                   31
 ------------------------------------------------------------------------
-| Type Code (5) |	       Immediate Data (27)		       |
+| Type Code (5) |              Immediate Data (27)                     |
 ------------------------------------------------------------------------
 
-@b[Pointer and Forwarding Types:]
- 0	       4 5	        6 7			29	     31
+Pointer and Forwarding Types:
+ 0             4 5              6 7                     29           31
 ------------------------------------------------------------------------
-| Type Code (5) | Space Code (2) |    Pointer (23)	  | Unused (2) |
+| Type Code (5) | Space Code (2) |    Pointer (23)        | Unused (2) |
 ------------------------------------------------------------------------
-@end verbatim
+@end smallexample
 
-@section [Table of Type Codes]
-@cindex [Type codes]
 
-@verbatim
 
-Code	Type		Class		Explanation
-----	----		-----		-----------
-0	+ Fixnum	Immediate	Positive fixnum, miscop code, etc.
-1	GC-Forward	Pointer 	GC forward pointer, used during GC.
-4	Bignum		Pointer 	Bignum.
-5	Ratio		Pointer 	Two words: numerator, denominator.
-6	+ Short Float	Immediate	Positive short flonum.
-7	- Short Float	Immediate	Negative short flonum.
-8	Single Float	Pointer 	Single precision float.
-9	Double Float	Pointer 	Double precision float (?).
-9	Long Float	Pointer 	Long float.
-10	Complex 	Pointer 	Two words: real, imaginary parts.
-11	String		Pointer 	Character string.
-12	Bit-Vector	Pointer 	Vector of bits
-13	Integer-Vector	Pointer 	Vector of integers
-14	General-Vector	Pointer 	Vector of Lisp objects.
-15	Array		Pointer 	Array header.
-16	Function	Pointer 	Compiled function header.
-17	Symbol		Pointer 	Symbol.
-18	List		Pointer 	Cons cell.
-20	C. S. Pointer	Pointer 	Pointer into control stack.
-21	B. S. Pointer	Pointer 	Pointer into binding stack.
-26	Interruptible	Immediate	Marks a miscop as interruptible.
-27	Character	Immediate	Character object.
-28	Values-Marker	Immediate	Multiple values marker.
-29	Catch-All	Immediate	Catch-All object.
-30	Trap		Immediate	Illegal object trap.
-31	- Fixnum	Immediate	Negative fixnum.
-@end verbatim
+@section Table of Type Codes
+@cindex type code
+
+
+@multitable @columnfractions 0.08 0.22 0.2 0.5
+
+@headitem Code @tab Type @tab Class @tab Explanation
+
+@item 0 @tab + Fixnum @tab Immediate @tab Positive fixnum, miscop code, etc.
+@item 1 @tab GC-Forward @tab Pointer @tab GC forward pointer, used during GC.
+@item 4 @tab Bignum @tab Pointer @tab Bignum.
+@item 5 @tab Ratio @tab Pointer @tab Two words: numerator, denominator.
+@item 6 @tab + Short Float @tab Immediate @tab Positive short flonum.
+@item 7 @tab - Short Float @tab Immediate @tab Negative short flonum.
+@item 8 @tab Single Float @tab Pointer @tab Single precision float.
+@item 9 @tab Double Float @tab Pointer @tab Double precision float (?).
+@item 9 @tab Long Float @tab Pointer @tab Long float.
+@item 10 @tab Complex @tab Pointer @tab Two words: real, imaginary parts.
+@item 11 @tab String @tab Pointer @tab Character string.
+@item 12 @tab Bit-Vector @tab Pointer @tab Vector of bits
+@item 13 @tab Integer-Vector @tab Pointer @tab Vector of integers
+@item 14 @tab General-Vector @tab Pointer @tab Vector of Lisp objects.
+@item 15 @tab Array @tab Pointer @tab Array header.
+@item 16 @tab Function @tab Pointer @tab Compiled function header.
+@item 17 @tab Symbol @tab Pointer @tab Symbol.
+@item 18 @tab List @tab Pointer @tab Cons cell.
+@item 20 @tab C. S. Pointer @tab Pointer @tab Pointer into control stack.
+@item 21 @tab B. S. Pointer @tab Pointer @tab Pointer into binding stack.
+@item 26 @tab Interruptible @tab Immediate @tab Marks a miscop as interruptible.
+@item 27 @tab Character @tab Immediate @tab Character object.
+@item 28 @tab Values-Marker @tab Immediate @tab Multiple values marker.
+@item 29 @tab Catch-All @tab Immediate @tab Catch-All object.
+@item 30 @tab Trap @tab Immediate @tab Illegal object trap.
+@item 31 @tab- Fixnum @tab Immediate @tab Negative fixnum.
+
+@end multitable
+
 
 @section [Table of Space Codes]
 @cindex [Space codes]
 
 @verbatim
 
-Code	Space		Explanation
-----	-----		-----------
-0	Dynamic-0	Storage normally garbage collected, space 0.
-1	Dynamic-1	Storage normally garbage collected, space 1.
-2	Static		Permanent objects, never moved or reclaimed.
-3	Read-Only	Objects never moved, reclaimed, or altered.
+Code    Space           Explanation
+----    -----           -----------
+0       Dynamic-0       Storage normally garbage collected, space 0.
+1       Dynamic-1       Storage normally garbage collected, space 1.
+2       Static          Permanent objects, never moved or reclaimed.
+3       Read-Only       Objects never moved, reclaimed, or altered.
 @end verbatim
+
+
+
+
 
 @section Immediate Data Type Descriptions
 
@@ -162,28 +178,43 @@ in the top 5 bits of the word.
 The sign bit is stored as part of the type code,
 allowing a 28 bit signed short float format. The format of short floating
 point numbers is:
-@verbatim
- 0	       3     4	    5           12 13		    31
+@end table
+
+
+@smallexample
+ 0             3     4      5           12 13               31
 ---------------------------------------------------------------
 | Type code (4) | Sign (1) | Exponent (8) |   Mantissa (19)   |
 ---------------------------------------------------------------
-@end verbatim
-The floating point number is the same format as the @value(DinkyMachine)
-supports for single precision numbers, except it has been shifted right
-by four bits for the type code. The result of any operation is therefore
-truncated. Long floating point numbers are also available if you need
-more accuracy and better error propagation properties.
+@end smallexample
+
+@table @code
+
+@cindex DinkyMachine
+@item @w{}
+The floating point number is the same format as the DinkyMachine
+supports for single precision numbers, except it has been shifted
+right by four bits for the type code. The result of any operation is
+therefore truncated. Long floating point numbers are also available if
+you need more accuracy and better error propagation properties.
+
 
 @cindex [Character object]
 @item Character
 A character object holding a character code, control bits, and font
 in the following format:
-@verbatim
- 0	       4 6	   7  8       15 16	 23 24	    31
+@end table
+
+
+@smallexample
+ 0             4 6         7  8       15 16      23 24      31
 ---------------------------------------------------------------
 | Type code (5) | Unused (3) | Font (8) | Bits (8) | Code (8) |
 ---------------------------------------------------------------
-@end verbatim
+@end smallexample
+
+
+@table @code
 
 @cindex [Values-Marker]
 @item Values-Marker
@@ -196,7 +227,7 @@ onto the stack in order, and the Values-Marker is returned in register A0.
 @item Catch-All
 Object used as the catch tag for unwind-protects. Special things
 happen when a catch frame with this as its tag is encountered during a throw.
-See section @ref[Catch] for details.
+See section @ref{Catch} for details.
 
 @cindex [Trap]
 @cindex [Illegal object trap]
@@ -211,7 +242,13 @@ object is put in one of the registers and signals to the interrupt handler
 that the miscop can be interrupted safely. Only miscops that can take a long
 time (e.g., length when passed a circular list, system call miscops that
 may wait indefinitely) are marked this way.
+
+
 @end table
+
+
+
+
 
 @section [Pointer-Type Objects and Spaces]
 @cindex [Pointer object format]
@@ -222,7 +259,7 @@ memory. There are separate spaces for Bit-Vectors, Symbols, Lists, and so on.
 The 5-bit type-code provides the high-order virtual address bits for the
 object, followed by the 2-bit space code, followed by the 25-bit pointer
 address. This gives a 30-bit virtual address to a 32-bit word; since the
-@value(DinkyMachine) is a byte-addressed machine, the two low-order
+DinkyMachine is a byte-addressed machine, the two low-order
 bits are 0. In effect we have carved a 30-bit space into a fixed set
 of 23-bit subspaces, not all of which are used.
 
@@ -253,17 +290,17 @@ disk during paging.
 Objects in a particular type-space will contain either pointers to
 garbage-collectible objects or words of raw non-garbage-collectible bits, but
 not both. Similarly, a space will contain either fixed-length objects or
-variable-length objects, but not both.	A variable-length object always
+variable-length objects, but not both.  A variable-length object always
 contains a 24-bit length field right-justified in the first word, with
 the positive fixnum type-code in the high-order five bits. The remaining three
 bits can be used for sub-type information. The length field gives the
-size of the object in 32-bit words, including the header word.	The
+size of the object in 32-bit words, including the header word.  The
 garbage collector needs this information when the object is moved, and
 it is also useful for bounds checking.
 
 The format of objects in each space are as follows:
 
-@node [Bignums]
+@node Bignums
 
 
 @table @code
@@ -299,7 +336,7 @@ Vector of lisp objects, any length. The first word is a fixnum
 giving the number of words allocated for the vector (up to 24 bits). The
 highest legal index is this number minus 2. The second word is vector entry 0,
 and additional entries are allocated contiguously in virtual memory. General
-vectors are sometimes called G-Vectors. (See section @ref[Vectors] for further
+vectors are sometimes called G-Vectors. (See section @ref{Vectors} for further
 details.)
 
 @cindex [Integer-Vector format]
@@ -309,13 +346,13 @@ details.)
 Vector of integers, any length. The 24 low bits of the first
 word give the allocated length in 32-bit words. The low-order 28 bits of the
 second word gives the length of the vector in entries, whatever the length of
-the individual entries may be.	The high-order 4 bits of the second word
+the individual entries may be.  The high-order 4 bits of the second word
 contain access-type information that yields, among other things, the number of
 bits per entry. Entry 0 is left-justified in the third word of the vector.
 Bits per entry will normally be powers of 2, so they will fit neatly into
 32-bit words, but if necessary some empty space may be left at the low-order
 end of each word. Integer vectors are sometimes called I-Vectors. (See
-section @ref[Vectors] for details.)
+section @ref{Vectors} for details.)
 
 @cindex [Bit-Vector format]
 @cindex [Vector format]
@@ -338,16 +375,18 @@ bignum, if it is negative, so is the bignum.
 @item Floats
 Floats are stored as two or more consecutive words of bits, in the
 following format:
-@verbatim
----------------------------------------------------------------
-|  Header word, used only for GC forward pointers.	      |
----------------------------------------------------------------
-|  Appropriate number of 32-bit words in machine format	      |
----------------------------------------------------------------
-@end verbatim
+
+@smallexample
+----------------------------------------------------------
+|  Header word, used only for GC forward pointers.       |
+----------------------------------------------------------
+|  Appropriate number of 32-bit words in machine format  |
+----------------------------------------------------------
+@end smallexample
+
 The number of words used to represent a floating point number is one plus the
 size of the floating point number being stored. The floating point numbers
-will be represented in whatever format the @value(DinkyMachine) expects. The
+will be represented in whatever format the DinkyMachine expects. The
 extra header word is needed so that a valid floating point number is not
 mistaken for a gc-forward pointer during a garbage collection.
 
@@ -367,7 +406,7 @@ This is actually a header which holds the accessing and
 other information about the array. The actual array contents are held in a
 vector (either an I-Vector or G-Vector) pointed to by an entry in
 the header. The header is identical in format to a G-Vector. For
-details on what the array header contains, see section @ref[Arrays].
+details on what the array header contains, see section @ref{Arrays}.
 
 @cindex [String format]
 @item String
@@ -400,7 +439,7 @@ and a number of lisp objects used as constants by the function.
 When a data structure is transported into newspace, a GC-Forward
 pointer is left behind in the first word of the oldspace object. This points
 to the same type-space in which it is found. For example, a GC-Forward in
-G-Vector space points to a structure in the G-Vector newspace.	GC-Forward
+G-Vector space points to a structure in the G-Vector newspace.  GC-Forward
 pointers are only found in oldspace.
 @end table
 
@@ -419,7 +458,7 @@ frequently. These include the allocation table, the active-catch-frame,
 information to link to C routines, etc. Memory at location 00200000@-[16]
 contains code for various miscops. Also, any C code loaded into a running
 Lisp process is loaded after the miscops. The format of the allocation
-table is described in chapter @ref[Alloc-Chapter].
+table is described in chapter @ref{Alloc-Chapter}.
 
 The control stack grows upward (toward higher addresses) in memory,
 and is a framed stack. It contains only general Lisp objects (with
@@ -429,20 +468,20 @@ function call contains an area for the function's arguments, an area
 for local variables, a pointer to the caller's frame, and a pointer
 into the binding stack. The frame for a Catch form contains similar
 information. The precise stack format can be found in chapter
-@ref[Runtime].
+@ref{Runtime}.
 
 The special binding stack grows downward. This stack is used to hold
 previous values of special variables that have been bound. It grows and
 shrinks with the depth of the binding environment, as reflected in the
-control stack.	This stack contains symbol-value pairs, with only boxed
+control stack.  This stack contains symbol-value pairs, with only boxed
 Lisp objects present.
 
 All Lisp objects are allocated on word boundaries, since the
-@value(DinkyMachine) can only access words on word boundaries.
+DinkyMachine can only access words on word boundaries.
 
-@section [Vectors and Arrays]
-@node [Vectors]
-@cindex [Vectors]
+@node Vectors
+@section Vectors and Arrays
+@cindex vectors
 
 Common Lisp arrays can be represented in a few different ways in CMU Common
 Lisp -- different representations have different performance advantages.
@@ -459,15 +498,15 @@ G-Vectors contain Lisp objects. The format is as follows:
 
 @verbatim
 ------------------------------------------------------------------
-|  Fixnum code (5) | Subtype (3) |   Allocated length (24)	 |
+|  Fixnum code (5) | Subtype (3) |   Allocated length (24)       |
 ------------------------------------------------------------------
-|  Vector entry 0   (Additional entries in subsequent words)	 |
+|  Vector entry 0   (Additional entries in subsequent words)     |
 ------------------------------------------------------------------
 @end verbatim
 
 The first word of the vector is
 a header indicating its length; the remaining words hold the boxed entries of
-the vector, one entry per 32-bit word.	The header word is of type fixnum. It
+the vector, one entry per 32-bit word.  The header word is of type fixnum. It
 contains a 3-bit subtype field, which is used to indicate several special types
 of general vectors. At present, the following subtype codes are defined:
 
@@ -502,7 +541,7 @@ field of the header word.
 It is not an error to create a vector of length 0, though it will always be an
 out-of-bounds error to access such an object. The maximum possible length for
 a general vector is 2@+[24]-2 entries, and that can't fit in the available
-space.	The maximum length is 2@+[23]-2 entries, and that is only possible if
+space.  The maximum length is 2@+[23]-2 entries, and that is only possible if
 no other general vectors are present in the space.
 
 @cindex [Bignum Format]
@@ -527,9 +566,9 @@ words without any type-codes or other overhead. The format is as follows:
 ----------------------------------------------------------------
 | Fixnum code (5) | Subtype (3) |  Allocated length (24)       |
 ----------------------------------------------------------------
-| Access type (4) | Number of entries (28)		       |
+| Access type (4) | Number of entries (28)                     |
 ----------------------------------------------------------------
-| Entry 0 left justified				       |
+| Entry 0 left justified                                       |
 ----------------------------------------------------------------
 @end verbatim
 
@@ -557,16 +596,16 @@ and the number-of-entries field of an integer vector.
 @cindex [Access-type codes]
 The high-order 4 bits of the second word contain an access-type code
 which indicates how many bits are occupied by each item (and therefore
-how many items are packed into a 32-bit word).	The encoding is as follows:
+how many items are packed into a 32-bit word).  The encoding is as follows:
 @verbatim
-0   1-Bit			8   Unused
-1   2-Bit			9   Unused
-2   4-Bit			10  Unused
-3   8-Bit			11  Unused
-4   16-Bit			12  Unused
-5   32-Bit			13  Unused
-6   Unused			14  Unused
-7   Unused			15  Unused
+0   1-Bit                       8   Unused
+1   2-Bit                       9   Unused
+2   4-Bit                       10  Unused
+3   8-Bit                       11  Unused
+4   16-Bit                      12  Unused
+5   32-Bit                      13  Unused
+6   Unused                      14  Unused
+7   Unused                      15  Unused
 @end verbatim
 
 In I-Vectors, the data items are packed into the third and subsequent
@@ -590,9 +629,9 @@ their own space. Strings always have subtype 0 and access-type 3 (8-Bit).
 Strings differ from normal I-Vectors in that the accessing miscops accept
 and return objects of type Character rather than Fixnum.
 
-@subsection [Arrays]
-@node [Arrays]
-@cindex [Arrays]
+@node Arrays
+@subsection Arrays
+@cindex arrays
 
 An array header is identical in form to a G-Vector. Like any G-Vector, its
 first word contains a fixnum type-code, a 3-bit subtype code, and a 24-bit
@@ -605,7 +644,7 @@ in the header-vector are interpreted as follows:
 @table @emph
 @item 0 Data Vector
 This is a pointer to the I-Vector, G-Vector, or string that
-contains the actual data of the array.	In a multi-dimensional array, the
+contains the actual data of the array.  In a multi-dimensional array, the
 supplied indices are converted into a single 1-D index which is used to access
 the data vector in the usual way.
 
@@ -628,7 +667,7 @@ mapping a portion of one array into another. For most arrays, this is 0.
 @item 4 Range of First Index
 This is the number of index values along the first
 dimension, or one greater than the largest legal value of this index (since the
-arrays are always zero-based).	A fixnum in the range 0 to 2@+[24]-1. If any
+arrays are always zero-based).  A fixnum in the range 0 to 2@+[24]-1. If any
 of the indices has a range of 0, the array is legal but will contain no data
 and accesses to it will always be out of range. In a 0-dimension array, this
 entry will not be present.
@@ -650,8 +689,8 @@ dimension, the next index is added in, and so on. In other words, if the data
 vector is scanned linearly, the last array index is the one that varies most
 rapidly, then the index before it, and so on.
 
-@section [Symbols Known to the Assembler Routines]
-@node [Known-Objects]
+@node Known-Objects
+@section Symbols Known to the Assembler Routines
 
 A large number of symbols will be pre-defined when a CMU Common Lisp system
 is fired up. A few of these are so fundamental to the operation of the
@@ -671,10 +710,10 @@ case. NIL has been placed in Cons cell space so that the more common
 operations on lists will yield the desired results. This slows down
 some symbol operations but this should be insignificant compared to
 the savings in list operations. A test for NIL for the
-@value(DinkyMachine) is:
+DinkyMachine is:
 @example
-	xiu	R0,P,X'9400'
-	bz	IsNIL	or bnz	IsNotNIL
+        xiu     R0,P,X'9400'
+        bz      IsNIL   or bnz  IsNotNIL
 @end example
 
 @cindex [T]
@@ -693,19 +732,19 @@ an interpreted function.
 @item %SP-Internal-Error
 8C000028@-[16] The function stored in the definition cell
 of this symbol is called whenever an error is detected during the execution of
-an assembler routine. See section @ref[Errors] for details.
+an assembler routine. See section @ref{Errors} for details.
 
 @cindex [%SP-Software-Interrupt-Handler]
 @item %SP-Software-Interrupt-Handler
 8C00003C@-[16] The function stored in the
 definition cell of this symbol is called whenever a software interrupt occurs.
-See section @ref[Interrupts] for details.
+See section @ref{Interrupts} for details.
 
 @cindex [%SP-Internal-Throw-Tag]
 @item %SP-Internal-Throw-Tag
 8C000050@-[16] This symbol is bound to the tag being
 thrown when a Catch-All frame is encountered on the stack. See section
-@ref[Catch] for details.
+@ref{Catch} for details.
 
 @cindex [%Initial-function]
 @item %Initial-function
@@ -947,17 +986,17 @@ occurs, otherwise the operation quietly returns zero.
 
 
 
-@chapter [Runtime Environment]
-@cindex [Runtime Environment]
-@node [Runtime]
+@node Runtime
+@chapter Runtime Environment
+@cindex Runtime Environment
 
-@section [Register Allocation]
-@cindex [Register allocation]
-To describe the assembler support routines in chapter @ref[Instr-Chapter] and
+@section Register Allocation
+@cindex Register allocation
+To describe the assembler support routines in chapter @ref{Instr-Chapter} and
 the complicated
-control conventions in chapter @ref[Control-Conventions] requires that we talk
+control conventions in chapter @ref{Control-Conventions} requires that we talk
 about the allocation of the 16 32-bit general purpose registers provided
-by the @value(DinkyMachine).
+by the DinkyMachine.
 
 @table @code
 @cindex [Program-Counter register]
@@ -982,7 +1021,7 @@ and local variables stored on the control stack.
 @cindex [Binding-Stack-Pointer register]
 @item Binding-Stack-Pointer (BS) [R12]
 This register contains the current binding
-stack pointer.	The binding stack is a downward growing stack and follows
+stack pointer.  The binding stack is a downward growing stack and follows
 a decrement-write/increment-read discipline.
 
 @cindex [Local registers]
@@ -1023,8 +1062,8 @@ collection).
 @end table
 
 
-@section [Function Object Format]
-@node [Fn-Format]
+@node Fn-Format
+@section Function Object Format
 
 Each compiled function is represented in the machine as a Function
 Object. This is identical in form to a G-Vector of lisp objects, and
@@ -1071,29 +1110,34 @@ is there for the printer and anyone else who cares.
 After the one-word G-Vector header, the entries of the function object
 are as follows:
 
-@verbatim
-0  Name of the innermost enclosing named function.
-1  Pointer to the unboxed Code vector holding the instructions.
-2  A fixnum with bit fields as follows:
-   24  - 31: The minimum legal number of args (0 to 255).
-   16  - 23: The maximum number of args, not counting &rest (0 to 255).
-	The fixnum has a negative type code, if the function accepts a &rest
-	arg and a positive one otherwise.
-3  A string describing the source file from which the function was defined.
-   See below for a description of the format.
-4  A string containing a printed representation of the argument list, for
-   documentation purposes. If the function is a defmacro macroexpansion
-   function, the argument list will be the one originally given to defmacro
-   rather than the actual arglist to the expansion function.
-5  The symbols and constants area starts here.
-   This word is entry 0 of the symbol/constant area.
-   The first few entries in this area are fixnums representing the
-   code-vector entry points for various numbers of optional arguments.
-@end verbatim
+@multitable @columnfractions 0.10 0.9
+@item 0 @tab Name of the innermost enclosing named function.
+@item 1 @tab Pointer to the unboxed Code vector holding the
+             instructions.
+@item 2 @tab A fixnum with bit fields as follows:
+@item   @tab 24 - 31: The minimum legal number of args (0 to 255).
+@item   @tab 16 - 23: The maximum number of args, not counting &rest (0 to 255).
+@item   @tab      The fixnum has a negative type code, if the
+                  function accepts a &rest arg and a positive one otherwise.
+@item 3 @tab A string describing the source file from which the
+             function was defined. See below for a description of the format.
+@item 4 @tab A string containing a printed representation of the
+             argument list, for documentation purposes. If the
+             function is a defmacro macroexpansion function, the
+             argument list will be the one originally given to
+             defmacro rather than the actual arglist to the expansion
+             function.
+@item 5 @tab The symbols and constants area starts here. This word is
+             entry 0 of the symbol/constant area.
+@item   @tab The first few entries in this area are fixnums
+             representing the
+@item   @tab code-vector entry points for various numbers of optional
+             arguments.
+@end multitable
 
-@section [Defined-From String Format]
-@node [Defined-From-String-Format]
-@cindex [Defined-From String Format]
+@node Defined-From-String-Format
+@section Defined-From String Format
+@cindex Defined-From String Format
 
 The defined-from string may have any of three different formats, depending
 on which of the three compiling functions compiled it:
@@ -1120,18 +1164,18 @@ An example of the format of @i[user-time] is 6-May-86 1:04:44. The
 It should be noted that in each case, the universal time is the last
 thing in the string.
 
-@section [Control-Stack Format]
-@node [Control-Stack-Format]
-@cindex [Control-stack format]
+@node Control-Stack-Format
+@section Control-Stack Format
+@cindex Control-stack format
 
 The CMU Common Lisp control stack is a framed stack. Call frames, which hold
 information for function calls, are intermixed with catch frames, which hold
 information used for non-local exits. In addition, the control stack is used
 as a scratchpad for random computations.
 
-@subsection [Call Frames]
-@cindex [Open frame]
-@cindex [Active frame]
+@subsection Call Frames
+@cindex Open frame
+@cindex Active frame
 
 At any given time, the machine contains pointers to the current top
 of the control stack and the start of the current active frame (in
@@ -1149,7 +1193,7 @@ as an argument to some previously opened frame or goes to some other
 destination. The binding stack is popped and old values are
 restored.
 
-On the @value(DinkyMachine), open frames still exist, however, no register is
+On the DinkyMachine, open frames still exist, however, no register is
 allocated to point at the most recent one. Instead, a count of the arguments
 to the function is kept. In most cases, a known fixed number of arguments are
 passed to a function, and this is all that is needed to calculate the correct
@@ -1167,12 +1211,12 @@ are actually supplied.
 
 In an open frame, stack space is allocated up to the point where the arguments
 are stored. Nothing is stored in the frame
-at this time.	Thus, as arguments are computed, they can simply be pushed on
+at this time.   Thus, as arguments are computed, they can simply be pushed on
 the stack. Since the first three arguments are passed in registers, it is
 sometimes necessary to save these values when succeeding arguments are
 complicated. When the function is finally started, the remainder of the frame
 is built (including storing all the
-registers that must be saved).	A call frame looks like this:
+registers that must be saved).  A call frame looks like this:
 @verbatim
 0   Saved local 0 register.
 1   Saved local 1 register.
@@ -1187,6 +1231,7 @@ registers that must be saved).	A call frame looks like this:
 @end verbatim
 The first slot is pointed to by the Active-Frame register if this frame is
 currently active.
+
 
 @subsection [Catch Frames]
 @cindex [Catch]
@@ -1210,7 +1255,7 @@ catch frame looks like this:
 5   Pointer to previous catch frame.
 @end verbatim
 The conventions used to manipulate call and catch frames are described in
-chapter @ref[Control-Conventions].
+chapter @ref{Control-Conventions}.
 
 @section [Binding-Stack Format]
 @cindex [Binding stack format]
@@ -1220,15 +1265,15 @@ first is a pointer to the symbol being bound. Pushed second is the symbol's
 old value (any boxed item) that is to be restored when the binding stack is
 popped.
 
-@chapter [Storage Management]
-@cindex [Storage management]
-@cindex [Garbage Collection]
-@node [Alloc-Chapter]
+@node Alloc-Chapter
+@chapter Storage Management
+@cindex Storage management
+@cindex Garbage Collection
 
 @cindex [Free-Storage pointer]
 @cindex [Clean-Space pointer]
 New objects are allocated from the lowest unused addresses within the specified
-space.	Each allocation call specifies how many words are wanted, and a
+space.  Each allocation call specifies how many words are wanted, and a
 Free-Storage pointer is incremented by that amount. There is one of these
 Free-Storage pointers for each space, and it points to the lowest free address
 in the space. There is also a Clean-Space pointer associated with each space
@@ -1237,17 +1282,17 @@ which is indexed by the type and space code. The
 address of the Free-Storage pointer for a given space is
 
 @verbatim
-	(+ alloc-table-base (lsh type 5) (lsh space 3)).
+        (+ alloc-table-base (lsh type 5) (lsh space 3)).
 @end verbatim
 
 The address of the Clean-Space pointer is
 
 @verbatim
-	(+ alloc-table-base (lsh type 5) (lsh space 3) 4).
+        (+ alloc-table-base (lsh type 5) (lsh space 3) 4).
 @end verbatim
 
 
-Common Lisp on the @value(DinkyMachine) uses a stop-and-copy garbage
+Common Lisp on the DinkyMachine uses a stop-and-copy garbage
 collector to reclaim storage. The Collect-Garbage miscop performs a
 full GC. The algorithm used is a degenerate form of Baker's
 incremental garbage collection scheme. When the Collect-Garbage miscop
@@ -1328,9 +1373,9 @@ the end of the list is encountered or a non-oldspace pointer occurs in the cdr
 position. This linearizes lists in the cdr direction which should
 improve paging performance.
 
-@section [Purification]
-@cindex [Purification]
-@node [PURIFY]
+@node PURIFY
+@section Purification
+@cindex purification
 
 Garbage is created when the files that make up a CMU Common Lisp system are
 loaded. Many functions are needed only for initialization and
@@ -1348,9 +1393,9 @@ space into read-only or static space.
 
 
 
-@chapter [Assembler Support Routines]
-@node [Instr-Chapter]
-@cindex [Assembler Support Routines]
+@node Instr-Chapter
+@chapter Assembler Support Routines
+@cindex assembler support routines
 
 To support compiled Common Lisp code many hand coded assembler
 language routines (miscops) are required. These routines accept
@@ -1386,15 +1431,15 @@ Several of the instructions described in the Perq Internal Design Document do
 not have associated miscops, rather they have been code directly in-line.
 Examples of these instructions include push, pop, bind, bind-null, many of the
 predicates, and a few other instructions. Most of these instructions can be
-performed in 4 or fewer @value(DinkyMachine) instructions and the overhead of
+performed in 4 or fewer DinkyMachine instructions and the overhead of
 calling a miscop seemed overly expensive. Some instructions are encoded
 in-line or as a miscop call depending on settings of compiler optimization
 switches. If space is more important than speed, then some Perq instructions
 are compiled as calls to out of line miscops rather than generating in-line
 code.
 
-@section [Miscop Descriptions]
-@node[macro-codes]
+@node macro-codes
+@section Miscop Descriptions
 
 There are 10 classes of miscops: allocation, stack manipulation,
 list manipulation, symbol manipulation, array manipulation, type predicate,
@@ -1474,7 +1519,7 @@ static allocation space with @i[Length] elements initialized to
 @cindex [Vector]
 @item Vector (@i[Elt@-[0] Elt@-[1] ... Elt@-[Length - 1] Length])
 returns a new
-G-Vector containing the specified @i[Length] elements.	@i[Length] should be a
+G-Vector containing the specified @i[Length] elements.  @i[Length] should be a
 fixnum and is passed in register A0. The rest of the arguments are passed on
 the stack.
 
@@ -1757,7 +1802,7 @@ returns the @var{I}'th element of the I-Vector
 @item Typed-Vset (@var{A Vector I Value})
 sets the @var{I}'th element of the I-Vector
 @var{Vector} to @var{Value} indexing into @var{Vector} as if its access-code were
-@var{A}.	@var{A}, @var{I}, and @var{Value} should be fixnums.	@var{Value} is returned.
+@var{A}.        @var{A}, @var{I}, and @var{Value} should be fixnums.    @var{Value} is returned.
 
 @cindex [Header-Length]
 @item Header-Length (@var{Object})
@@ -1825,14 +1870,14 @@ the two-dimensional array @var{Array} to @var{Value} and returns @var{Value}.
 @cindex [Bit-Bash]
 @item Bit-Bash (@var{V1 V2 V3 Op})
 @var{V1}, @var{V2}, and @var{V3} should be bit-vectors
-and @var{Op} should be a fixnum.	The elements of the bit vector @var{V3} are
+and @var{Op} should be a fixnum.        The elements of the bit vector @var{V3} are
 filled with the result of @var{Op}'ing the corresponding elements of @var{V1} and
 @var{V2}. @var{Op} should be a Boole-style number (see the Boole miscop in
-section @ref[Boole-Section]).
+section @ref{Boole-Section}).
 @end table
 
 The rest of the miscops in this section implement special cases of sequence or
-string operations.	Where an operand is referred to as a string, it may
+string operations.      Where an operand is referred to as a string, it may
 actually be an 8-bit I-Vector or system area pointer.
 
 @table @code
@@ -1841,7 +1886,7 @@ actually be an 8-bit I-Vector or system area pointer.
 
 moves bytes from @var{Src-String} into @var{Dst-String} between @var{Dst-Start}
 (inclusive) and @var{Dst-End} (exclusive). @var{Dst-Start} - @var{Dst-End} bytes are
-moved.	If the substrings specified overlap, ``the right thing happens,'' i.e.
+moved.  If the substrings specified overlap, ``the right thing happens,'' i.e.
 all the characters are moved to the right place. This miscop corresponds
 to the Common Lisp function REPLACE when the sequences are simple-strings.
 
@@ -1866,7 +1911,7 @@ current index into the @var{String} is returned.
 Computes the hash code of the first
 @var{Length} characters of @var{String} and pushes it on the stack. This
 corresponds to the Common Lisp function SXHASH when the object is a
-simple-string.	The @var{Length} operand can be Nil, in which case the length of
+simple-string.  The @var{Length} operand can be Nil, in which case the length of
 the string is calculated in assembler.
 @end table
 
@@ -1877,7 +1922,7 @@ than as miscops. In particular, all the predicates on basic types are coded
 in-line with default optimization settings in the compiler. Currently, all of
 these predicates set the eq condition code bit to return an indication of
 whether the predicate is true or false. This is so that the
-@value(DinkyMachine) branch instructions can be used directly without having to
+DinkyMachine branch instructions can be used directly without having to
 test for NIL. However, this only works if the value of the predicate is needed
 for a branching decision. In the cases where the value is actually needed, T
 or NIL is generated in-line according to whether the predicate is true or
@@ -2068,7 +2113,7 @@ returning the result.
 
 
 
-@node [Boole-Section]
+@node Boole-Section
 
 @table @code
 
@@ -2115,7 +2160,7 @@ rules as for +. The value of the remainder is equal to @var{N} - @var{X} *
 @var{Quotient}.
 @end itemize
 
-On the @value(DinkyMachine), the integer part is returned in register A0, and
+On the DinkyMachine, the integer part is returned in register A0, and
 the remainder in A1.
 
 @cindex [+]
@@ -2169,22 +2214,22 @@ performs the Common Lisp Boole operation @var{Op} on @var{X},
 and @var{Y}. The Boole constants for CMU Common Lisp are these:
 
 @verbatim
-	boole-clr	0
-	boole-set	1
-	boole-1 	2
-	boole-2 	3
-	boole-c1	4
-	boole-c2	5
-	boole-and	6
-	boole-ior	7
-	boole-xor	8
-	boole-eqv	9
-	boole-nand	10
-	boole-nor	11
-	boole-andc1	12
-	boole-andc2	13
-	boole-orc1	14
-	boole-orc2	15
+        boole-clr       0
+        boole-set       1
+        boole-1         2
+        boole-2         3
+        boole-c1        4
+        boole-c2        5
+        boole-and       6
+        boole-ior       7
+        boole-xor       8
+        boole-eqv       9
+        boole-nand      10
+        boole-nor       11
+        boole-andc1     12
+        boole-andc2     13
+        boole-orc1      14
+        boole-orc2      15
 @end verbatim
 
 @cindex [Ash]
@@ -2226,14 +2271,14 @@ or bit-field of any length within @var{N}. This is extracted and is returned
 right-justified as a fixnum. @var{S} is the length of the field in bits; @var{P}
 is the number of bits from the right of @var{N} to the beginning of the
 specified field. @var{P} = 0 means that the field starts at bit 0 of @var{N}, and
-so on.	It is an error if the specified field is not entirely within the 26
+so on.  It is an error if the specified field is not entirely within the 26
 bits of @var{N}
 
 @cindex [Logdpb]
 @item Logdpb (@var{V S P N})
 All args are fixnums. Returns a number equal to @var{N},
 but with the field specified by @var{P} and @var{S} replaced by the @var{S} low-order
-bits of @var{V}.	It is an error if the field does not fit into the 26 bits of
+bits of @var{V}.        It is an error if the field does not fit into the 26 bits of
 @var{N}.
 
 @cindex [Sin]
@@ -2267,7 +2312,7 @@ calculate the result.
 @end table
 
 @subsection [Branching]
-All branching is done with @value(DinkyMachine) branch instructions.
+All branching is done with DinkyMachine branch instructions.
 Instructions are generated to set the condition code bits appropriately, and
 a branch which tests the appropriate condition code bit is generated.
 
@@ -2276,20 +2321,20 @@ a branch which tests the appropriate condition code bit is generated.
 @table @code
 @cindex [Call]
 @item Call()
-A call frame for a function is opened.	This is explained in
+A call frame for a function is opened.  This is explained in
 more detail in the next chapter.
 
 @cindex [Call-0]
 @item Call-0 (@var{F})
 @var{F} must be an executable function, but is a
-function of 0 arguments. Thus, there is no need to collect arguments.	The
+function of 0 arguments. Thus, there is no need to collect arguments.   The
 call frame is opened and activated in a single miscop.
 
 @cindex [Call-Multiple]
 @item Call-Multiple ()
 Just like a Call miscop, but it marks the frame
 to indicate that multiple values will be accepted. See
-section @ref[Multi].
+section @ref{Multi}.
 
 @cindex [Set-Up-Apply-Args]
 @item Set-Up-Apply-Args ()
@@ -2341,9 +2386,9 @@ call.
 
 @cindex [Return]
 @item Return (@var{X})
-Return from the current function call.	After the current
+Return from the current function call.  After the current
 frame is popped off the stack, @var{X} is returned in register A0 as the result
-Being returned. See section @ref[Return] for more details.
+Being returned. See section @ref{Return} for more details.
 
 @cindex [Return-From]
 @item Return-From (@var{X} @var{F})
@@ -2472,24 +2517,24 @@ anything else.
 @item Catch (@var{Tag PC})
 builds a catch frame. @var{Tag} is the tag caught by this
 catch frame, @var{PC} is a saved-format PC (i.e., an index into the current code
-vector). See section @ref[Catch] for details.
+vector). See section @ref{Catch} for details.
 
 @cindex [Catch-Multiple]
 @item Catch-Multiple (@var{Tag PC})
 builds a multiple-value catch frame. @var{Tag} is
 the tag caught by this catch frame, and @var{PC} is a saved-format PC. See
-section @ref[Catch] for details.
+section @ref{Catch} for details.
 
 @cindex [Catch-All]
 @item Catch-All (@var{PC})
 builds a catch frame whose tag is the special Catch-All
 object. @var{PC} is the saved-format PC, which is the address to branch to if
-this frame is thrown through. See section @ref[Catch] for details.
+this frame is thrown through. See section @ref{Catch} for details.
 
 @cindex [Throw]
 @item Throw (@var{X Tag})
 @var{Tag} is the throw-tag, normally a symbol. @var{X} is the
-value to be returned. See section @ref[Catch] for a description of how this
+value to be returned. See section @ref{Catch} for a description of how this
 miscop works.
 
 @cindex [Rest-Entry-0]
@@ -2599,13 +2644,13 @@ nothing; if not, push @var{VM} and return a Values-Marker 1.
 
 @cindex [Flush-Values]
 @item Flush-Values (@var{})
-is a no-op for the @value(DinkyMachine), since the only
+is a no-op for the DinkyMachine, since the only
 time that a Flush-Values miscop is generated is in some well-defined cases
 where all the values are wanted on the stack.
 @end table
 
-@subsection [System Hacking]
-@node [System-Hacking-Instructions]
+@node System-Hacking-Instructions
+@subsection System Hacking
 
 @table @code
 @cindex [Get-Type]
@@ -2622,7 +2667,7 @@ fixnum.
 @item Make-Immediate-Type (@var{X A})
 returns an object whose type bits are the
 integer @var{A} and whose other bits come from the immediate object or pointer
-@var{X}.	@var{A} should be an immediate type code.
+@var{X}.        @var{A} should be an immediate type code.
 
 @cindex [8bit-System-Ref]
 @item 8bit-System-Ref (@var{X I})
@@ -2779,7 +2824,7 @@ the currently active catch frame. This is Nil if there is no active catch.
 
 @cindex [Set-Call-Frame]
 @item Set-Call-Frame (@var{P})
-@var{P} must be a control stack pointer.	This becomes
+@var{P} must be a control stack pointer.        This becomes
 the current active call frame pointer.
 
 @cindex [Current-Stack-Pointer]
@@ -2797,7 +2842,7 @@ to the first word above the current top of the binding stack.
 @cindex [Read-Control-Stack]
 @item Read-Control-Stack (@var{F})
 @var{F} must be a control stack pointer. Returns
-the Lisp object that resides at this location.	If the addressed object is
+the Lisp object that resides at this location.  If the addressed object is
 totally outside the current stack, this is an error.
 
 @cindex [Write-Control-Stack]
@@ -2821,21 +2866,21 @@ is outside the current binding stack.
 outside the current binding stack.
 @end table
 
-@chapter [Control Conventions]
-@node [Control-Conventions]
-@cindex [Hairy stuff]
+@node Control-Conventions
+@chapter Control Conventions
+@cindex Hairy stuff
 
-@section [Function Calls]
-@cindex [Call]
-@cindex [Call-0]
-@cindex [Call-Multiple]
+@section Function Calls
+@cindex Call
+@cindex Call-0
+@cindex Call-Multiple
 
 On the Perq function calling is done by micro-coded instructions. The
 instructions perform a large number of operations, including determining
 whether the function being called is compiled or interpreted, determining that
 a legal number of arguments are passed, and branching to the correct entry
-point in the function. To do all this on the @value(DinkyMachine) would
-involve a large amount of computation.	In the general case, it is necessary to
+point in the function. To do all this on the DinkyMachine would
+involve a large amount of computation.  In the general case, it is necessary to
 do all this, but in some common cases, it is possible to short circuit most of
 this work.
 
@@ -2869,7 +2914,7 @@ current frame.
 @end enumerate
 
 At this point, all the arguments are set up and all the registers have been
-saved.	All the code to this point is done inline. If the object being called
+saved.  All the code to this point is done inline. If the object being called
 as a function is a symbol, we get the definition from the definition cell of
 the symbol. If this definition is the trap object, an undefined symbol error
 is generated. The function calling mechanism diverges at this point depending
@@ -2990,36 +3035,36 @@ routine mentioned above. Also, during a garbage collection the
 entries in this table must be updated when a function object for a
 symbol is moved.
 
-The @value(DinkyMachine) code to perform a function call using the link table
+The DinkyMachine code to perform a function call using the link table
 becomes:
 
-@example
-	cal	CS,CS,%Frame-Size	; Alloc. space on control st.
+@smallexample
+        cal     CS,CS,%Frame-Size       ; Alloc. space on control st.
 
-	<Code to evaluate arguments to the function>
+        <Code to evaluate arguments to the function>
 
-	cau	NL1,0,high-half-word(lte(function nargs flag))
-	oil	NL1,0,low-half-word(lte(function nargs flag))
-	cal	PC,0,return-tag 	; Offset into code vector.
-       <oiu	PC,PC,#xF800		; Mark if call-multiple frame>
-	stm	L0,CS,-(%Frame-Size-4)	; Save preserved regs.
-	lm	AF,NL1,0 		; Link table entry contents.
-	bnbrx	pz,R15			; Branch to called routine.
-	cal	FP,CS,-(%Frame-Size-4)	; Get pointer to frame.
+        cau     NL1,0,high-half-word(lte(function nargs flag))
+        oil     NL1,0,low-half-word(lte(function nargs flag))
+        cal     PC,0,return-tag         ; Offset into code vector.
+       <oiu     PC,PC,#xF800            ; Mark if call-multiple frame>
+        stm     L0,CS,-(%Frame-Size-4)  ; Save preserved regs.
+        lm      AF,NL1,0                ; Link table entry contents.
+        bnbrx   pz,R15                  ; Branch to called routine.
+        cal     FP,CS,-(%Frame-Size-4)  ; Get pointer to frame.
 return-tag:
-@end example
+@end smallexample
 
 The first two instructions after the arguments are evaled get the
 address of the link table entry into a register. The two 16-bit half
 word entries are filled in at load time. The rest of the
 instructions should be fairly straight forward.
 
-@section(Returning from a Function Call)
-@node(Return)
+@node Return
+@section Returning from a Function Call
 @cindex return
 
 Returning from a function call on the Perq is done by a micro-coded
-instruction. On the @value(DinkyMachine), return has to do the following:
+instruction. On the DinkyMachine, return has to do the following:
 
 @enumerate
 
@@ -3058,20 +3103,21 @@ time it is often possible to determine that no special symbols have to be
 unbound and/or only one value is being returned. For example the code to
 perform a return when only one value is returned and it is unnecessary to
 unbind any special symbols is:
-@example
-	cas	NL1,FP,0		; Save frame register.
-	lm	L0,FP,0			; Restore all preserved regs.
-	ls	A3,AF,%function-code	; Get pointer to code vector.
-	niuo	PC,PC,#x07FF		; Make relative PC positive.
-	cas	PC,A3,PC		; Get addr. of instruction
-	bnbrx	pz,PC			; to return to and do so while
-	cas	CS,NL1,0		; updating control stack reg.
-@end example
+
+@smallexample
+        cas     NL1,FP,0                ; Save frame register.
+        lm      L0,FP,0                 ; Restore all preserved regs.
+        ls      A3,AF,%function-code    ; Get pointer to code vector.
+        niuo    PC,PC,#x07FF            ; Make relative PC positive.
+        cas     PC,A3,PC                ; Get addr. of instruction
+        bnbrx   pz,PC                   ; to return to and do so while
+        cas     CS,NL1,0                ; updating control stack reg.
+@end smallexample
 
 
-@subsection [Returning Multiple-Values]
-@node [Multi]
-@cindex [Multiple values]
+@node Multi
+@subsection Returning Multiple-Values
+@cindex Multiple values
 
 If the current frame can accept multiple values and a values marker is in
 register A0 indicating N values on top of the stack, it is necessary to copy
@@ -3088,13 +3134,13 @@ the values will be returned. If not, FOO's Return instruction will see that
 there are multiple values on the stack, but that multiple values will not be
 accepted by FOO's caller. So Return will return only the first value.
 
-@section [Non-Local Exits]
-@node [Catch]
-@cindex [Catch]
-@cindex [Throw]
-@cindex [Catch-All object]
-@cindex [Unwind-Protect]
-@cindex [Non-Local Exits]
+@node Catch
+@section Non-Local Exits
+@cindex Catch
+@cindex Throw
+@cindex Catch-All object
+@cindex Unwind-Protect
+@cindex Non-Local Exits
 
 The Catch and Unwind-Protect special forms are implemented using
 catch frames. Unwind-Protect builds a catch frame whose tag is the
@@ -3143,9 +3189,9 @@ just go with the throw. The branch PC specified by a Catch
 miscop is part of the constants area of the function object,
 much like the function's entry points.
 
-@section [Escaping to Lisp code]
-@node [Escape]
-@cindex [Escape to Lisp code convention]
+@node Escape
+@section Escaping to Lisp code
+@cindex Escape to Lisp code convention
 
 Escaping to Lisp code is fairly straight forward. If a miscop discovers that
 it needs to call a Lisp function, it creates a call frame on the control
@@ -3153,9 +3199,9 @@ stack and sets it up so that the called function returns to the function that
 called the miscop. This means it is impossible to return control to a miscop
 from a Lisp function.
 
-@section [Errors]
-@node [Errors]
-@cindex [Errors]
+@node Errors
+@section Errors
+@cindex Errors
 
 When an error occurs during the execution of a miscop, a call
 to %SP-Internal-Error is performed. This call is a break-type call,
@@ -3415,10 +3461,10 @@ A long float operation has resulted in
 overflow. The argument to the operation is passed as the third argument.
 @end table
 
-@section [Trapping to the Mach Kernel]
-@node [Trap]
-@cindex [Trapping to the kernel]
-@cindex [Kernel traps]
+@node Trap
+@section Trapping to the Mach Kernel
+@cindex Trapping to the kernel
+@cindex Kernel traps
 
 Trapping to the Mach kernel is done through one of the syscall0, syscall1,
 syscall2, syscall3, syscall4, or syscall miscops. The first argument to
@@ -3431,9 +3477,9 @@ Unix syscall. These syscalls generally return two values: the result twice
 if the syscall succeeded and a -1 and the Unix error code if the syscall
 failed.
 
-@section [Interrupts]
-@node [Interrupts]
-@cindex [Interrupts]
+@node Interrupts
+@section Interrupts
+@cindex Interrupts
 
 An interface has been built to the general signal mechanism defined by the
 Unix operating system. As mentioned in the section on function call and
@@ -3443,8 +3489,8 @@ User's Manual, Mach/IBM RT PC Edition} contains descriptions of functions
 that allow a user to set up interrupt handlers for any of the Unix signals
 from within Lisp.
 
-@appendix [Fasload File Format]
-@section [General]
+@appendix Fasload File Format
+@section General
 
 The purpose of Fasload files is to allow concise storage and rapid
 loading of Lisp data, particularly function definitions. The intent
@@ -3529,9 +3575,9 @@ Package Pretty-Print
 Compiled 31-Mar-1988 09:01:32 by some random luser
 Compiler Version 1.6, Lisp Version 3.0.
 Functions: INITIALIZE DRIVER HACK HACK1 MUNGE MUNGE1 GAZORCH
-	   MINGLE MUDDLE PERTURB OVERDRIVE GOBBLE-KEYBOARD
-	   FRY-USER DROP-DEAD HELP CLEAR-MICROCODE
-	    %AOS-TRIANGLE %HARASS-READTABLE-MAYBE
+           MINGLE MUDDLE PERTURB OVERDRIVE GOBBLE-KEYBOARD
+           FRY-USER DROP-DEAD HELP CLEAR-MICROCODE
+            %AOS-TRIANGLE %HARASS-READTABLE-MAYBE
 Macros:    PUSH POP FROB TWIDDLE
 @r[<one or more bytes of FF@-(16)>]
 
@@ -3549,8 +3595,8 @@ descriptors. Each descriptor denotes operands that follow the opcode
 in the input stream. A quantity in parentheses indicates the number
 of bytes of data from the stream making up the operand. Operands
 which implicitly come from the stack are noted in the text. The
-notation "@@PushArrow stack" means that the result is pushed onto the
-stack; "@@PushArrow table" similarly means that the result is added to the
+notation "@arrow{} stack" means that the result is pushed onto the
+stack; "@arrow{} table" similarly means that the result is added to the
 table. A construction like "@var{n}(1) @var{value}(@var{n})" means that
 first a single byte @var{n} is read from the input stream, and this
 byte specifies how many bytes to read as the operand named @var{value}.
@@ -3583,36 +3629,36 @@ existing operations may not be deleted (though new ones may be added;
 some operations codes will be reserved for that purpose).
 
 @table @code
+
 @item 0  @var{FOP-NOP}
 No operation. (This is included because it is recognized
 that some implementations may benefit from alignment of operands to some
 operations, for example to 32-bit boundaries. This operation can be used
 to pad the instruction stream to a desired boundary.)
 
-@item 1  @var{FOP-POP}  @@PushArrow  table
+@item 1  @var{FOP-POP}  @arrow{}  table
 
 One item is popped from the stack and added to the table.
 
-@item 2  @var{FOP-PUSH}  @var{index}(4)  @@PushArrow  stack
+@item 2  @var{FOP-PUSH}  @var{index}(4)  @arrow{}  stack
 
 Item number @var{index} of the table is pushed onto the stack.
 The first element of the table is item number zero.
 
-@item 3  @var{FOP-BYTE-PUSH}  @var{index}(1)  @@PushArrow  stack
+@item 3  @var{FOP-BYTE-PUSH}  @var{index}(1)  @arrow{}  stack
 
 Item number @var{index} of the table is pushed onto the stack.
 The first element of the table is item number zero.
 
-@item 4  @var{FOP-EMPTY-LIST}  @@PushArrow  stack
+@item 4  @var{FOP-EMPTY-LIST}  @arrow{}  stack
 
 The empty list (@var{()}) is pushed onto the stack.
 
-@item 5  @var{FOP-TRUTH}  @@PushArrow  stack
+@item 5  @var{FOP-TRUTH}  @arrow{}  stack
 
 The standard truth value (@var{T}) is pushed onto the stack.
 
-6  @var{FOP-SYMBOL-SAVE}  @var{n}(4)  @var{name}(@var{n})
-@item  @@PushArrow  stack & table
+@item 6  @var{FOP-SYMBOL-SAVE}  @var{n}(4)  @var{name}(@var{n}) @arrow{}  stack & table
 
 The four-byte operand @var{n} specifies the length of the print name
 of a symbol. The name follows, one character per byte,
@@ -3620,7 +3666,7 @@ with the first byte of the print name being the first read.
 The name is interned in the default package,
 and the resulting symbol is both pushed onto the stack and added to the table.
 
-@item 7  @var{FOP-SMALL-SYMBOL-SAVE}  @var{n}(1)  @var{name}(@var{n})  @@PushArrow  stack & table
+@item 7  @var{FOP-SMALL-SYMBOL-SAVE}  @var{n}(1)  @var{name}(@var{n})  @arrow{}  stack & table
 
 The one-byte operand @var{n} specifies the length of the print name
 of a symbol. The name follows, one character per byte,
@@ -3628,9 +3674,8 @@ with the first byte of the print name being the first read.
 The name is interned in the default package,
 and the resulting symbol is both pushed onto the stack and added to the table.
 
-8  @var{FOP-SYMBOL-IN-PACKAGE-SAVE}  @var{index}(4)
- @var{n}(4)  @var{name}(@var{n})
-@item  @@PushArrow  stack & table
+@item 8  @var{FOP-SYMBOL-IN-PACKAGE-SAVE}  @var{index}(4)
+       @var{n}(4)  @var{name}(@var{n}) @arrow{}  stack & table
 
 The four-byte @var{index} specifies a package stored in the table.
 The four-byte operand @var{n} specifies the length of the print name
@@ -3639,9 +3684,9 @@ with the first byte of the print name being the first read.
 The name is interned in the specified package,
 and the resulting symbol is both pushed onto the stack and added to the table.
 
-9  @var{FOP-SMALL-SYMBOL-IN-PACKAGE-SAVE}   @var{index}(4)
- @var{n}(1)  @var{name}(@var{n}) 
-@item @@PushArrow  stack & table
+@item 9  @var{FOP-SMALL-SYMBOL-IN-PACKAGE-SAVE} @var{index}(4)
+         @var{n}(1)  @var{name}(@var{n}) 
+         @item @arrow{}  stack & table
 
 The four-byte @var{index} specifies a package stored in the table.
 The one-byte operand @var{n} specifies the length of the print name
@@ -3650,9 +3695,9 @@ with the first byte of the print name being the first read.
 The name is interned in the specified package,
 and the resulting symbol is both pushed onto the stack and added to the table.
 
-10  @var{FOP-SYMBOL-IN-BYTE-PACKAGE-SAVE}  @var{index}(1)
+@item 10  @var{FOP-SYMBOL-IN-BYTE-PACKAGE-SAVE}  @var{index}(1)
  @var{n}(4)  @var{name}(@var{n})
-@item  @@PushArrow  stack & table
+@arrow{}  stack & table
 
 The one-byte @var{index} specifies a package stored in the table.
 The four-byte operand @var{n} specifies the length of the print name
@@ -3661,9 +3706,9 @@ with the first byte of the print name being the first read.
 The name is interned in the specified package,
 and the resulting symbol is both pushed onto the stack and added to the table.
 
-11 @var{FOP-SMALL-SYMBOL-IN-BYTE-PACKAGE-SAVE}  @var{index}(1)
+@item 11 @var{FOP-SMALL-SYMBOL-IN-BYTE-PACKAGE-SAVE}  @var{index}(1)
  @var{n}(1)  @var{name}(@var{n}) 
-@item @@PushArrow  stack & table
+@arrow{}  stack & table
 
 The one-byte @var{index} specifies a package stored in the table.
 The one-byte operand @var{n} specifies the length of the print name
@@ -3672,7 +3717,7 @@ with the first byte of the print name being the first read.
 The name is interned in the specified package,
 and the resulting symbol is both pushed onto the stack and added to the table.
 
-12 Unused.
+@item 12 Unused.
 
 @item 13  @var{FOP-DEFAULT-PACKAGE}  @var{index}(4)
 
@@ -3681,12 +3726,12 @@ the default package for future @var{FOP-SYMBOL} and @var{FOP-SMALL-SYMBOL}
 interning operations. (These package FOPs may change or disappear
 as the package system is determined.)
 
-@item 14  @var{FOP-PACKAGE}  @@PushArrow  table
+@item 14  @var{FOP-PACKAGE}  @arrow{}  table
 
-An item is popped from the stack; it must be a symbol.	The package of
+An item is popped from the stack; it must be a symbol.  The package of
 that name is located and pushed onto the table.
 
-@item 15  @var{FOP-LIST}  @var{length}(1)  @@PushArrow  stack
+@item 15  @var{FOP-LIST}  @var{length}(1)  @arrow{}  stack
 
 The unsigned operand @var{length} specifies a number of
 operands to be popped from the stack. These are made into a list
@@ -3698,11 +3743,11 @@ the empty list and perform "pop an item and cons it onto the list"
 (Lists of length greater than 255 can be made by using @var{FOP-LIST*}
 repeatedly.)
 
-@item 16  @var{FOP-LIST*}  @var{length}(1)  @@PushArrow  stack
+@item 16  @var{FOP-LIST*}  @var{length}(1)  @arrow{}  stack
 
 This is like @var{FOP-LIST} except that the constructed list is terminated
 not by @var{()} (the empty list), but by an item popped from the stack
-before any others are.	Therefore @var{length}+1 items are popped in all.
+before any others are.  Therefore @var{length}+1 items are popped in all.
 Hence an iterative loop can start with
 a popped item and perform "pop an item and cons it onto the list"
 @var{length}+1 times.
@@ -3719,75 +3764,75 @@ Measurements need to be made to determine the useful values of @var{k}.
 following it. These exist purely to reduce the size of Fasload files.
 Measurements need to be made to determine the useful values of @var{k}.
 
-33  @var{FOP-INTEGER}  @var{n}(4)  @var{value}(@var{n}) 
-@item @@PushArrow  stack
+@item 33  @var{FOP-INTEGER}  @var{n}(4)  @var{value}(@var{n}) 
+ @arrow{}  stack
 
 A four-byte unsigned operand specifies the number of following
-bytes.	These bytes define the value of a signed integer in two's-complement
+bytes.  These bytes define the value of a signed integer in two's-complement
 form. The first byte of the value is the least significant byte.
 
-34  @var{FOP-SMALL-INTEGER}  @var{n}(1)  @var{value}(@var{n})
-@item  @@PushArrow  stack
+@item 34  @var{FOP-SMALL-INTEGER}  @var{n}(1)  @var{value}(@var{n})
+  @arrow{}  stack
 
 A one-byte unsigned operand specifies the number of following
-bytes.	These bytes define the value of a signed integer in two's-complement
+bytes.  These bytes define the value of a signed integer in two's-complement
 form. The first byte of the value is the least significant byte.
 
-@item 35  @var{FOP-WORD-INTEGER}  @var{value}(4)  @@PushArrow  stack
+@item 35  @var{FOP-WORD-INTEGER}  @var{value}(4)  @arrow{}  stack
 
 A four-byte signed integer (in the range -2@+[31] to 2@+[31]-1) follows the
 operation code. A LISP integer (fixnum or bignum) with that value
 is constructed and pushed onto the stack.
 
-@item 36  @var{FOP-BYTE-INTEGER}  @var{value}(1)  @@PushArrow  stack
+@item 36  @var{FOP-BYTE-INTEGER}  @var{value}(1)  @arrow{}  stack
 
 A one-byte signed integer (in the range -128 to 127) follows the
 operation code. A LISP integer (fixnum or bignum) with that value
 is constructed and pushed onto the stack.
 
-37  @var{FOP-STRING}  @var{n}(4)  @var{name}(@var{n})
-@item  @@PushArrow  stack
+@item 37  @var{FOP-STRING}  @var{n}(4)  @var{name}(@var{n})
+ @arrow{}  stack
 
 The four-byte operand @var{n} specifies the length of a string to
 construct. The characters of the string follow, one per byte.
 The constructed string is pushed onto the stack.
 
-@item 38  @var{FOP-SMALL-STRING}  @var{n}(1)  @var{name}(@var{n})  @@PushArrow  stack
+@item 38  @var{FOP-SMALL-STRING}  @var{n}(1)  @var{name}(@var{n})  @arrow{}  stack
 
 The one-byte operand @var{n} specifies the length of a string to
 construct. The characters of the string follow, one per byte.
 The constructed string is pushed onto the stack.
 
-@item 39  @var{FOP-VECTOR}  @var{n}(4)  @@PushArrow  stack
+@item 39  @var{FOP-VECTOR}  @var{n}(4)  @arrow{}  stack
 
 The four-byte operand @var{n} specifies the length of a vector of LISP objects
 to construct. The elements of the vector are popped off the stack;
 the first one popped becomes the last element of the vector.
 The constructed vector is pushed onto the stack.
 
-@item 40  @var{FOP-SMALL-VECTOR}  @var{n}(1)  @@PushArrow  stack
+@item 40  @var{FOP-SMALL-VECTOR}  @var{n}(1)  @arrow{}  stack
 
 The one-byte operand @var{n} specifies the length of a vector of LISP objects
 to construct. The elements of the vector are popped off the stack;
 the first one popped becomes the last element of the vector.
 The constructed vector is pushed onto the stack.
 
-@item 41  @var{FOP-UNIFORM-VECTOR}  @var{n}(4)  @@PushArrow  stack
+@item 41  @var{FOP-UNIFORM-VECTOR}  @var{n}(4)  @arrow{}  stack
 
 The four-byte operand @var{n} specifies the length of a vector of LISP objects
 to construct. A single item is popped from the stack and used to initialize
 all elements of the vector. The constructed vector is pushed onto the stack.
 
-@item 42  @var{FOP-SMALL-UNIFORM-VECTOR}  @var{n}(1)  @@PushArrow  stack
+@item 42  @var{FOP-SMALL-UNIFORM-VECTOR}  @var{n}(1)  @arrow{}  stack
 
 The one-byte operand @var{n} specifies the length of a vector of LISP objects
 to construct. A single item is popped from the stack and used to initialize
 all elements of the vector. The constructed vector is pushed onto the stack.
 
-43  @var{FOP-INT-VECTOR}  @var{n}(4)  @var{size}(1)  @var{count}(1) 
+@item 43  @var{FOP-INT-VECTOR}  @var{n}(4)  @var{size}(1)  @var{count}(1) 
 
 @var{data}(@var{ceiling}<@var{n}/@var{count}>@var{ceiling}<@var{size}*@var{count}/8>) 
-@item @@PushArrow  stack
+ @arrow{}  stack
 
 The four-byte operand @var{n} specifies the length of a vector of
 unsigned integers to be constructed.  Each integer is @var{size}
@@ -3819,8 +3864,8 @@ and another can read it meaningfully; by checking at the beginning
 for good cases, loading can still proceed quickly.)
 The constructed vector is pushed onto the stack.
 
-44  @var{FOP-UNIFORM-INT-VECTOR}  @var{n}(4)  @var{size}(1) 
-@item @var{value}(@var{ceiling}<@var{size}/8>)  @@PushArrow  stack
+@item 44  @var{FOP-UNIFORM-INT-VECTOR}  @var{n}(4)  @var{size}(1) 
+ @var{value}(@var{ceiling}<@var{size}/8>)  @arrow{}  stack
 
 The four-byte operand @var{n} specifies the length of a vector of unsigned
 integers to construct.
@@ -3828,8 +3873,8 @@ Each integer is @var{size} bits big, and is initialized to the value
 of the operand @var{value}.
 The constructed vector is pushed onto the stack.
 
-45  @var{FOP-FLOAT}  @var{n}(1)  @var{exponent}(@var{ceiling}<@var{n}/8>) 
-@item @var{m}(1)  @var{mantissa}(@var{ceiling}<@var{m}/8>)  @@PushArrow  stack
+@item 45  @var{FOP-FLOAT}  @var{n}(1)  @var{exponent}(@var{ceiling}<@var{n}/8>) 
+@var{m}(1)  @var{mantissa}(@var{ceiling}<@var{m}/8>)  @arrow{}  stack
 
 The first operand @var{n} is one unsigned byte, and describes the number of
 @var{bits} in the second operand @var{exponent}, which is a signed
@@ -3843,12 +3888,12 @@ which is the smallest (most compact) provided by the implementation which
 nevertheless provides enough accuracy to represent both the exponent
 and the mantissa correctly.
 
-46-51 Unused
+@item 46-51 Unused
 
 @item 52  @var{FOP-ALTER}  @var{index}(1)
 
 Two items are popped from the stack; call the first @var{newval} and
-the second @var{object}.	The component of @var{object} specified by
+the second @var{object}.        The component of @var{object} specified by
 @var{index} is altered to contain @var{newval}. The precise operation
 depends on the type of @var{object}:
 
@@ -3880,7 +3925,7 @@ in a given implementation:
  Alter character number @var{index} of the string.
 @end table
 
-@item 53  @var{FOP-EVAL}  @@PushArrow  stack
+@item 53  @var{FOP-EVAL}  @arrow{}  stack
 
 Pop an item from the stack and evaluate it (give it to @var{EVAL}).
 Push the result back onto the stack.
@@ -3890,7 +3935,7 @@ Push the result back onto the stack.
 Pop an item from the stack and evaluate it (give it to @var{EVAL}).
 The result is ignored.
 
-@item 55  @var{FOP-FUNCALL}  @var{nargs}(1)  @@PushArrow  stack
+@item 55  @var{FOP-FUNCALL}  @var{nargs}(1)  @arrow{}  stack
 
 Pop @var{nargs}+1 items from the stack and apply the last one popped
 as a function to
@@ -3921,11 +3966,11 @@ So far the following code format identifiers are defined:
 
 @item 1 @tab VAX
 
-@item3 @tab @value(DinkyMachine)
+@item3 @tab DinkyMachine
 @end multitable
 
-58  @var{FOP-CODE}  @var{nitems}(4)  @var{size}(4) 
-@item @var{code}(@var{size})  @@PushArrow  stack
+@item 58  @var{FOP-CODE}  @var{nitems}(4)  @var{size}(4) 
+@var{code}(@var{size})  @arrow{}  stack
 
 A compiled function is constructed and pushed onto the stack.
 This object is in the format specified by the most recent
@@ -3934,8 +3979,8 @@ The operand @var{nitems} specifies a number of items to pop off
 the stack to use in the "boxed storage" section. The operand @var{code}
 is a string of bytes constituting the compiled executable code.
 
-59  @var{FOP-SMALL-CODE}  @var{nitems}(1)  @var{size}(2) 
-@item @var{code}(@var{size})  @@PushArrow  stack
+@item 59  @var{FOP-SMALL-CODE}  @var{nitems}(1)  @var{size}(2) 
+@var{code}(@var{size})  @arrow{}  stack
 
 A compiled function is constructed and pushed onto the stack.
 This object is in the format specified by the most recent
@@ -3975,15 +4020,15 @@ end of every group, if not more often.
 
 @item 64  @var{FOP-END-GROUP}
 
-This is the last operation of a group.	If this is not the
+This is the last operation of a group.  If this is not the
 last byte of the file, then a new group follows; the next
 nine bytes must be "@var{FASL FILE}".
 
-@item 65  @var{FOP-POP-FOR-EFFECT}  stack  @@PushArrow 
+@item 65  @var{FOP-POP-FOR-EFFECT}  stack  @arrow{} 
 
 One item is popped from the stack.
 
-@item 66  @var{FOP-MISC-TRAP}  @@PushArrow  stack
+@item 66  @var{FOP-MISC-TRAP}  @arrow{}  stack
 
 A trap object is pushed onto the stack.
 
@@ -3995,77 +4040,77 @@ but its print name (a string) may be.
 This command is of an advisory nature; implementations with no
 read-only heap can ignore it, or use a static heap.)
 
-@item 68  @var{FOP-CHARACTER}  @var{character}(3)  @@PushArrow  stack
+@item 68  @var{FOP-CHARACTER}  @var{character}(3)  @arrow{}  stack
 
 The three bytes specify the 24 bits of a CMU Common Lisp character object.
 The bytes, lowest first, represent the code, control, and font bits.
 A character is constructed and pushed onto the stack.
 
-69  @var{FOP-SHORT-CHARACTER}  @var{character}(1) 
-@item @@PushArrow  stack
+@item 69  @var{FOP-SHORT-CHARACTER}  @var{character}(1) 
+@arrow{}  stack
 
 The one byte specifies the lower eight bits of a CMU Common Lisp character
 object (the code). A character is constructed with zero control
 and zero font attributes and pushed onto the stack.
 
-@item 70  @var{FOP-RATIO}  @@PushArrow  stack
+@item 70  @var{FOP-RATIO}  @arrow{}  stack
 
 Creates a ratio from two integers popped from the stack.
 The denominator is popped first, the numerator second.
 
-@item 71  @var{FOP-COMPLEX}  @@PushArrow  stack
+@item 71  @var{FOP-COMPLEX}  @arrow{}  stack
 
 Creates a complex number from two numbers popped from the stack.
 The imaginary part is popped first, the real part second.
 
-72  @var{FOP-LINK-ADDRESS-FIXUP}  @var{nargs}(1)  @var{restp}(1)
-@item  @var{offset}(4)  @@PushArrow  stack
+@item 72  @var{FOP-LINK-ADDRESS-FIXUP}  @var{nargs}(1)  @var{restp}(1)
+  @var{offset}(4)  @arrow{}  stack
 
 Valid only for when FOP-CODE-FORMAT corresponds to the Vax or the
-@value(DinkyMachine).
+DinkyMachine.
 This operation pops a symbol and a code object from the stack and pushes
 a modified code object back onto the stack according to the needs of the
-runtime code linker on the Vax or @value(DinkyMachine).
+runtime code linker on the Vax or DinkyMachine.
 
-73  @var{FOP-LINK-FUNCTION-FIXUP}  @var{offset}(4) 
-@item @@PushArrow  stack
+@item 73  @var{FOP-LINK-FUNCTION-FIXUP}  @var{offset}(4) 
+@arrow{}  stack
 
 Valid only for when FOP-CODE-FORMAT corresponds to the Vax or the
-@value(DinkyMachine).
+DinkyMachine.
 This operation pops a symbol and a code object from the stack and pushes
 a modified code object back onto the stack according to the needs of the
-runtime code linker on the Vax or the @value(DinkyMachine).
+runtime code linker on the Vax or the DinkyMachine.
 
 @item 74  @var{FOP-FSET} 
 
 Pops the top two things off of the stack and uses them as arguments to FSET
 (i.e. SETF of SYMBOL-FUNCTION).
 
-128  @var{FOP-LINK-ADDRESS-FIXUP}  @var{nargs}  @var{flag} 
-@item @var{offset} 
+@item 128  @var{FOP-LINK-ADDRESS-FIXUP}  @var{nargs}  @var{flag} 
+@var{offset} 
 Valid only when FOP-CODE-FORMAT corresponds to the
-@value(DinkyMachine). This operation pops a symbol and a function object
+DinkyMachine. This operation pops a symbol and a function object
 off the stack. The code vector in the function object is modified
-according to the needs of the runtime code linker of the @value(DinkyMachine)
+according to the needs of the runtime code linker of the DinkyMachine
 and pushed back on the stack. This FOP links in calls to other functions.
 
 @item 129  @var{FOP-MISCOP-FIXUP}  @var{index}(2)  @var{offset}(4) 
 
-Valid only when FOP-CODE-FORMAT corresponds to the @value(DinkyMachine).
+Valid only when FOP-CODE-FORMAT corresponds to the DinkyMachine.
 This operation pops a code object from the stack and pushes a
 modified code object back onto the stack according to the needs of
-the runtime code linker on the @value(DinkyMachine). This FOP links in
+the runtime code linker on the DinkyMachine. This FOP links in
 calls to the assembler language support routines.
 
 @item 130  @var{FOP-ASSEMBLER-ROUTINE}  @var{code-length} 
 
-Valid only when FOP-CODE-FORMAT corresponds to the @value(DinkyMachine).
+Valid only when FOP-CODE-FORMAT corresponds to the DinkyMachine.
 This operation loads assembler code into the assembler code space of the
 currently running Lisp.
 
 @item 131  @var{FOP-FIXUP-MISCOP-ROUTINE} 
 Valid only when FOP-CODE-FORMAT
-corresponds to the @value(DinkyMachine). This operation pops a list of
+corresponds to the DinkyMachine. This operation pops a list of
 external references, a list of external labels defined, the name, and the
 code address off the stack. This information is saved, so that after
 everything is loaded, all the external references can be resolved.
@@ -4667,3 +4712,5 @@ cause any serious trouble.
 If you build a bad core file over an existing one and can't back up, it is
 possible that you may not be able to recover from a serious error.
 @end itemize
+
+

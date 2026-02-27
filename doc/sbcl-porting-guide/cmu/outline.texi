@@ -1,3 +1,4 @@
+@chapter Outline
 Todo:
 fasl.tex
 In good shape.
@@ -17,8 +18,15 @@ back.tex
 Pack and assembler need more info.  General cleanup.
 
 
-compiler-overview.tex
-Adapt introductory material from /../fred/usr/ram/comp.mss, pap:talk.mss
+@file{compiler-overview.tex}
+
+Adapt introductory material from:
+
+@table @file
+@item /../fred/usr/ram/comp.mss
+@item pap:talk.mss
+@end table
+
 Division between ICR overview and ICR convert needs work.
 
 debugger.tex

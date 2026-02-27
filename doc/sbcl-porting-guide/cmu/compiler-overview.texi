@@ -48,14 +48,17 @@ listed after ``Files: ''.
 @item ICR conversion
 Convert the source into ICR, doing macroexpansion and simple
 source-to-source transformation. All names are resolved at this time,
-so we don't have to worry about name conflicts later on.
-
-Files:
-
-@file{@/ir1opt.lisp, @/ir1report.lisp,
-@/ir1tran-lambda.lisp, @/ir1tran.lisp, @/ir1-translators.lisp,
-@/ir1util.lisp, @/srctran, @/typetran}
-
+so we don't have to worry about name conflicts later on. Files:
+@table @file
+@item ir1opt.lisp
+@item ir1report.lisp
+@item ir1tran-lambda.lisp
+@item ir1tran.lisp
+@item ir1-translators.lisp
+@item ir1util.lisp
+@item srctran.lisp
+@item typetran.lisp
+@end table
 
 @item Local call analysis
 Find calls to local functions and convert them to local calls to the
@@ -75,12 +78,15 @@ A grab-bag of all the non-flow ICR optimizations. Fold constant
 functions, propagate types and eliminate code that computes unused
 values. Special-case calls to some known global functions by replacing
 them with a computed function. Merge blocks and eliminate
-IF-IFs. Substitute let variables.
+IF-IFs. Substitute let variables. Files:
 
-Files:
-
-@file{ir1opt.lisp, @/ir1tran.lisp, @/typetran.lisp, @/seqtran.lisp,
-@/generic/vm-tran.lisp}
+@table @file
+@item ir1opt.lisp
+@item ir1tran.lisp
+@item typetran.lisp
+@item seqtran.lisp
+@item generic/vm-tran.lisp
+@end table
 
 @item Type constraint propagation
 Use global flow analysis to propagate information about lexical
@@ -205,7 +211,7 @@ function. Files: @file{debug-dump.lisp}, @file{dump.lisp},
 
 
 @unnumbered The Implicit Continuation Representation
-@cindex The Implicit Continuation Representation
+@cindex implicit continuation representation
 
 The set of special forms recognized is exactly that specified in the
 Common Lisp manual. Everything that is described as a macro in CLTL is
@@ -234,7 +240,7 @@ In ICR, computation is represented by Nodes. These are the node types:
 Represents all conditionals.
 
 @item set
-Represents a @ref{setq}.
+Represents a @code{setq}.
 
 @item ref
 Represents a constant or variable reference.
@@ -243,8 +249,8 @@ Represents a constant or variable reference.
 Represents a normal function call.
 
 @item mv-combination
-Represents a @ref{multiple-value-call}. This is used to implement all
-multiple value receiving forms except for @ref{multiple-value-prog1},
+Represents a @code{multiple-value-call}. This is used to implement all
+multiple value receiving forms except for @code{multiple-value-prog1},
 which is implicit.
 
 @item bind
@@ -514,12 +520,14 @@ the degenerate case: we just emit no code (like a no-var @code{let}).
 
 We represent CATCH using the lexical exit mechanism. We do a transformation
 like this:
+
 @lisp
-   (catch 'foo xxx)  ==>
-   (block #:foo
-     (%catch #'(lambda () (return-from #:foo (%unknown-values))) 'foo)
-     (%within-cleanup :catch
-       xxx))
+(catch 'foo xxx)  ==>
+(block #:foo
+  (%catch #'(lambda () (return-from #:foo (%unknown-values)))
+          'foo)
+  (%within-cleanup :catch
+    @var{xxx}))
 @end lisp
 
 @code{%catch} just sets up the catch frame which points to the exit
@@ -541,17 +549,18 @@ We use a similar hack in @code{unwind-protect} to represent the fact
 that the cleanup forms can be invoked at arbitrarily random times.
 
 @lisp
-    (unwind-protect p c)  ==>
-    (flet ((#:cleanup () c))
-      (block #:return
-	(multiple-value-bind
-	    (#:next #:start #:count)
-	    (block #:unwind
-              (%unwind-protect #'(lambda (x) (return-from #:unwind x)))
-              (%within-cleanup :unwind-protect
-		(return-from #:return p)))
-	  (#:cleanup)
-          (%continue-unwind #:next #:start #:count))))
+(unwind-protect p c)  ==>
+(flet ((#:cleanup () c))
+  (block #:return
+    (multiple-value-bind
+        (#:next #:start #:count)
+        (block #:unwind
+          (%unwind-protect
+           #'(lambda (x) (return-from #:unwind x)))
+          (%within-cleanup :unwind-protect
+            (return-from #:return p)))
+      (#:cleanup)
+      (%continue-unwind #:next #:start #:count))))
 @end lisp
 
 We use the block @code{#:unwind} to represent the entry to cleanup

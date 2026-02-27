@@ -280,7 +280,7 @@ the expense of space and safety.
 
 
 
-@node Lisp Objects
+@node VM Lisp Objects
 @section Lisp Objects
 @cindex lisp object
 

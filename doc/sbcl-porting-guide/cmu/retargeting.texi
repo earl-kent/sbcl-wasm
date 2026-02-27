@@ -17,20 +17,23 @@ anyway.
 
 Have a way for template conversion to special-case constant arguments?  
 How about:
-    If an arg restriction is (:satisfies [$<$predicate function$>$]), and the
-    corresponding argument is constant, with the constant value satisfying the
-    predicate, then (if any other restrictions are satisfied), the template
-    will be emitted with the literal value passed as an info argument. If the
-    predicate is omitted, then any constant will do.
+@itemize
+@item If an arg restriction is @code{(:satisfies [<predicate
+function>])}, and the corresponding argument is constant, with the
+constant value satisfying the predicate, then (if any other
+restrictions are satisfied), the template will be emitted with the
+literal value passed as an info argument. If the predicate is omitted,
+then any constant will do. We could sugar this up a bit by allowing
+@code{(:member <object>*)} for @code{(:satisfies (lambda (x) (member x
+'(<object>*))))}
+@end itemize
 
-    We could sugar this up a bit by allowing (:member $<$object$>$*) for
-    (:satisfies (lambda (x) (member x '($<$object$>$*))))
-
-We could allow this to be translated into a Lisp type by adding a new Constant
-type specifier. This could only appear as an argument to a function type.
-To satisfy (Constant $<$type$>$), the argument must be a compile-time constant of
-the specified type. Just Constant means any constant (i.e. (Constant *)).
-This would be useful for the type constraints on ICR transforms.
+We could allow this to be translated into a Lisp type by adding a new
+Constant type specifier. This could only appear as an argument to a
+function type.  To satisfy @{(Constant <type>)}, the argument must be
+a compile-time constant of the specified type. Just Constant means any
+constant (i.e. @code{(constant *)}).  This would be useful for the
+type constraints on ICR transforms.
 
 
 Constant TNs: we count on being able to indirect to the leaf, and don't try to

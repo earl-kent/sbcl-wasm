@@ -1,5 +1,7 @@
-%  					-*- Dictionary: design; Package: C -*-
-\chapter{Debugger}
+
+@node Debugger
+@chapter Debugger
+
 Two classes of errors are handled by the Lisp debugger.  These are
 synchronous errors caused by something erring in program code and
 asynchronous errors caused by some external context of execution
@@ -82,11 +84,11 @@ the real LRA for the function, and also an indication if the
 known-return convention is used for this function.
 
 The bogus LRA object contains a function-end breakpoint
-(\verb+trap_FunctionEndBreakpoint+).  When it's executed the trap
+@code{(+trap_FunctionEndBreakpoint+)}.  When it's executed the trap
 handler handles this breakpoint.  It figures out where this trap come
-from and calls \verb+HANDLE-BREAKPOINT+ to handle it.
-\verb+HANDLE-BREAKPOINT+ returns and the trap handler arranges it so
-that this bogus LRA returns to the real LRA.  
+from and calls @code{+handle-breakpoint+} to handle it.
+@code{+handle-breakpoint+} returns and the trap handler arranges it so
+that this bogus LRA returns to the real LRA.
 
 Thus, we can do something when a Lisp function returns, like printing
 out the return value for the function for tracing.
@@ -96,9 +98,10 @@ overview of how this works.  For more info, look at
 \verb+code/debug-int.lisp+ and \verb+lisp/breakpoint.c+, and, of
 course, the various \verb+<foo>-arch.c+ files.
 
-\chapter{Debugger Information}
-\index{debugger information}
-\label{debug-info}
+@node Debugger Information
+@chapter Debugger Information
+@cindex debugger information
+
 
 Although the compiler's great freedom in choice of function call conventions
 and variable representations has major efficiency advantages, it also has

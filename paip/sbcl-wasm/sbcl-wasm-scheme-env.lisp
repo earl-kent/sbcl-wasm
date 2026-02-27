@@ -5,7 +5,7 @@
 
 
 ;; for now test with
-;; (ql:quickload :sbcl-wasm)(in-package :sbcl-wasm)(load-go "/home/rett/dev/cmu-perq/sbcl-wasm.git/paip/lisp/book-code/ch1.scm")
+;; (ql:quickload :sbcl-wasm)(in-package :sbcl-wasm)(load-go "/home/rett/dev/cmu-perq/sbcl-wasm.git/paip/sb/book-code/ch1.scm")
 
 
 (defvar *primitive-fns*)
@@ -18,7 +18,7 @@
     (new-fn :name 'exit :args '(val) :code '((HALT))))
   (set-global-var! 'call/cc
     (new-fn :name 'call/cc :args '(f)
-            :code '((ARGS 1) (CC) (LVAR 0 0 ";" f)
+            :code '((ARGS 1) (CC) (:LVAR 0 0 ";" f)
 		    (CALLJ 1)))) ; *** Bug fix, gat, 11/9/92
   (dolist (prim *primitive-fns*)
     (set-global-var! (prim-symbol prim)
@@ -55,11 +55,19 @@
 	  (concatenate 'list *shared-primitive-fns* *scheme-primitive-fns*)))
     (init-scheme-comp)
     (with-open-file (*scheme-current-load-file-stream* filename :direction :input)
-      (let ((*readtable* *scheme-readtable*))
+      (let ((*readtable* *scheme-readtable*)
+	    (*package* (find-package :sbcl-wasm)))
 	(scheme-load-file *scheme-current-load-file-stream*)))))
 
 (defun scheme ()
   "A compiled Scheme read-eval-print loop"
+  (let ((*primitive-fns*
+	  (concatenate 'list *shared-primitive-fns* *scheme-primitive-fns*)))
+    (init-scheme-comp)
+    (machine (compiler +scheme-top-level+))))
+
+(defun vm-cl ()
+  "A compiled common lisp read-eval-print loop"
   (let ((*primitive-fns*
 	  (concatenate 'list *shared-primitive-fns* *scheme-primitive-fns*)))
     (init-scheme-comp)

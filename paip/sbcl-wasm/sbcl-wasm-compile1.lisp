@@ -81,7 +81,7 @@
 ;;; ==============================
 
 (defun gen (opcode &rest args)
-  "Return a one-element list of the specified instruction."
+  "Code generation: one-element instruction formatted list, e.g. '((ARGS 3))"
   (list (cons opcode args)))
 
 (defun seq (&rest code)
@@ -98,7 +98,7 @@
   "Generate an instruction to reference a variable's value."
   (let ((p (in-env-p var env)))
     (if p
-        (gen 'LVAR (first p) (second p) ";" var)
+        (gen :LVAR (first p) (second p) ";" var)
         (gen 'GVAR var))))
 
 (defun gen-set (var env)

@@ -19,15 +19,16 @@
 
 (setup-tests)
 
+(deftests
+  ((= 486 486) => t)
 
-(assert '(= 486 486))
+  ((+ 137 349) => 486)
 
-(assert '(= (+ 137 349) 486))
+  ((- 1000 334) => 666)
 
-(assert '(= (- 1000 334) 666))
+  ((+ 1 (call/cc (lambda (cc) (+ 20 300)))) => 321)
+  ((+ 1 (call/cc (lambda (cc) (+ 20 (cc 300))))) => 301))
 
-(assert '(and (= (+ 1 (call/cc (lambda (cc) (+ 20 300)))) 321)
-	      (= (+ 1 (call/cc (lambda (cc) (+ 20 (cc 300))))) 301)))
 
 
 
@@ -819,4 +820,4 @@
 ;;EXERCISE 1.43
 ;: ((repeated square 2) 5)
 
-(print-tests)
+;;(do-tests)

@@ -2,7 +2,7 @@
 
 
 (asdf:defsystem #:sbcl-wasm
-  :depends-on (:iterate :uiop)
+  :depends-on (iterate uiop fiveam)
   :components
   ((:module "sbcl-wasm"
     :components
@@ -16,6 +16,9 @@
      (:file sbcl-wasm-compile3)
      (:file sbcl-wasm-scheme-defs)
      (:file sbcl-wasm-scheme-env)
+     (:file sbcl-wasm-cl-defs)
+     (:file sbcl-wasm-cl-compiler)
+     (:file sbcl-wasm-cl-compiler-tests)
      ;; (:file sbcl-wasm-util)
      ;; (:file sbcl-wasm)
      ;; (:file sbcl-wasm-env-access)

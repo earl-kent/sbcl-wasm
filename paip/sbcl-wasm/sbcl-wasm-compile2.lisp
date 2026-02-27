@@ -66,6 +66,8 @@
 
 (defun comp-const (x val? more?)
   "Compile a constant expression."
+  (format t "comp-const  (x=~s val?=~s more?=~s~%)"
+	  x val? more?)
   (if val? (seq (if (member x '(t nil -1 0 1 2))
                     (gen x)
                     (gen 'CONST x))

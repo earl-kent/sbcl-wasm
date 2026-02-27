@@ -104,11 +104,13 @@
          (instr nil))
     (loop
        (setf instr (elt code pc))
-       (incf pc)
+      (incf pc)
+      (format t "pc=~s env=~s stack=~s n-args=~s instr=~s~%"
+	      pc env stack n-args instr)
        (case (opcode instr)
 
          ;; Variable/stack manipulation instructions:
-         (LVAR   (push (elt (elt env (arg1 instr)) (arg2 instr))
+         (:LVAR   (push (elt (elt env (arg1 instr)) (arg2 instr))
                        stack))
          (LSET   (setf (elt (elt env (arg1 instr)) (arg2 instr))
                        (top stack)))
@@ -167,8 +169,8 @@
          (SET-CC (setf stack (top stack)))
          (CC     (push (make-fn
                          :env (list (vector stack))
-                         :code '((ARGS 1) (LVAR 1 0 ";" stack) (SET-CC)
-                                 (LVAR 0 0) (RETURN)))
+                         :code '((ARGS 1) (:LVAR 1 0 ";" stack) (SET-CC)
+                                 (:LVAR 0 0) (RETURN)))
                        stack))
 
          ;; Nullary operations:

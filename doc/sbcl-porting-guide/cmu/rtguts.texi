@@ -148,7 +148,7 @@ Pointer and Forwarding Types:
 
 
 @section [Table of Space Codes]
-@cindex [Space codes]
+@cindex space codes
 
 @verbatim
 
@@ -173,7 +173,7 @@ Code    Space           Explanation
 28-bit two's complement integer. The sign bit is stored redundantly
 in the top 5 bits of the word.
 
-@cindex [Short float format]
+@cindex short float format
 @item Short-Float
 The sign bit is stored as part of the type code,
 allowing a 28 bit signed short float format. The format of short floating
@@ -199,7 +199,7 @@ therefore truncated. Long floating point numbers are also available if
 you need more accuracy and better error propagation properties.
 
 
-@cindex [Character object]
+@cindex character object
 @item Character
 A character object holding a character code, control bits, and font
 in the following format:
@@ -216,26 +216,26 @@ in the following format:
 
 @table @code
 
-@cindex [Values-Marker]
+@cindex values-marker
 @item Values-Marker
 Used to mark the presence of multiple values on the stack. The
 low 16 bits indicate how many values are being returned. Note that only 65535
 values can be returned from a multiple-values producing form. These are pushed
 onto the stack in order, and the Values-Marker is returned in register A0.
 
-@cindex [Catch-All object]
+@cindex catch-all object
 @item Catch-All
 Object used as the catch tag for unwind-protects. Special things
 happen when a catch frame with this as its tag is encountered during a throw.
 See section @ref{Catch} for details.
 
-@cindex [Trap]
-@cindex [Illegal object trap]
+@cindex trap
+@cindex illegal object trap
 @item Trap
 Illegal object trap. This value is used in symbols to signify an
 undefined value or definition.
 
-@cindex [Interruptible Marker]
+@cindex interruptible marker
 @item Interruptible-Marker
 Object used to mark a miscop as interruptible. This
 object is put in one of the registers and signals to the interrupt handler
@@ -251,8 +251,8 @@ may wait indefinitely) are marked this way.
 
 
 @section [Pointer-Type Objects and Spaces]
-@cindex [Pointer object format]
-@cindex [Virtual memory]
+@cindex pointer object format
+@cindex virtual memory
 
 Each of the pointer-type lisp objects points into a different space in virtual
 memory. There are separate spaces for Bit-Vectors, Symbols, Lists, and so on.
@@ -263,7 +263,7 @@ DinkyMachine is a byte-addressed machine, the two low-order
 bits are 0. In effect we have carved a 30-bit space into a fixed set
 of 23-bit subspaces, not all of which are used.
 
-@cindex [Space codes]
+@cindex space codes
 The space code divides each of the type spaces into four sub-spaces,
 as shown in the table above. At any given time, one of the dynamic
 spaces is considered newspace, while the other is oldspace.
@@ -271,8 +271,8 @@ During a stop and copy garbage collection, a ``flip'' can be done, turning the
 old newspace into the new oldspace. All type-spaces are flipped at once.
 Allocation of new dynamic objects always occurs in newspace.
 
-@cindex [Static space]
-@cindex [Read-only space]
+@cindex static space
+@cindex read-only space
 Optionally, the user (or system functions) may allocate objects in
 static or read-only space. Such objects are never reclaimed once they
 are allocated -- they occupy the space in which they were initially
@@ -304,14 +304,14 @@ The format of objects in each space are as follows:
 
 
 @table @code
-@cindex [Symbol]
-@cindex [Value cell]
-@cindex [Definition cell]
-@cindex [Property list cell]
-@cindex [Plist cell]
-@cindex [Print name cell]
-@cindex [Pname cell]
-@cindex [Package cell]
+@cindex symbol
+@cindex value cell
+@cindex definition cell
+@cindex property list cell
+@cindex plist cell
+@cindex print name cell
+@cindex pname cell
+@cindex package cell
 @item Symbol
 Each symbol is represented as a
 fixed-length block of boxed Lisp cells. The number of cells
@@ -324,13 +324,13 @@ per symbol is 5, in the following order:
 4  Package: the obarray holding this symbol.
 @end verbatim
 
-@cindex [List cell]
+@cindex list cell
 @item List
 A fixed-length block of two boxed Lisp cells, the CAR and the CDR.
 
-@cindex [General-Vector format]
-@cindex [G-Vector format]
-@cindex [Vector format]
+@cindex general-vector format
+@cindex g-vector format
+@cindex vector format
 @item General-Vector
 Vector of lisp objects, any length. The first word is a fixnum
 giving the number of words allocated for the vector (up to 24 bits). The
@@ -339,9 +339,9 @@ and additional entries are allocated contiguously in virtual memory. General
 vectors are sometimes called G-Vectors. (See section @ref{Vectors} for further
 details.)
 
-@cindex [Integer-Vector format]
-@cindex [I-Vector format]
-@cindex [Vector format]
+@cindex integer-vector format
+@cindex i-vector format
+@cindex vector format
 @item Integer-Vector
 Vector of integers, any length. The 24 low bits of the first
 word give the allocated length in 32-bit words. The low-order 28 bits of the
@@ -354,13 +354,13 @@ Bits per entry will normally be powers of 2, so they will fit neatly into
 end of each word. Integer vectors are sometimes called I-Vectors. (See
 section @ref{Vectors} for details.)
 
-@cindex [Bit-Vector format]
-@cindex [Vector format]
+@cindex bit-vector format
+@cindex vector format
 @item Bit-Vector
 Vector of bits, any length. Bit-Vectors are represented in a form
 identical to I-Vectors, but live in a different space for efficiency reasons.
 
-@cindex [Bignum format]
+@cindex bignum format
 @item Bignum
 Bignums are infinite-precision integers, represented in a format
 identical to G-Vectors. Each bignum is stored as a series of 32-bit words,
@@ -369,9 +369,9 @@ but the sign of the number is redundantly encoded in the type field of the
 fixnum in the header word. If this fixnum is non-negative, then so is the
 bignum, if it is negative, so is the bignum.
 
-@cindex [Flonum format]
-@cindex [Flonum formats]
-@cindex [Floating point formats]
+@cindex flonum format
+@cindex flonum formats
+@cindex floating point formats
 @item Floats
 Floats are stored as two or more consecutive words of bits, in the
 following format:
@@ -390,17 +390,17 @@ will be represented in whatever format the DinkyMachine expects. The
 extra header word is needed so that a valid floating point number is not
 mistaken for a gc-forward pointer during a garbage collection.
 
-@cindex [Ratio format]
+@cindex ratio format
 @item Ratio
 Ratios are stored as two consecutive words of Lisp objects, which should
 both be integers.
 
-@cindex [Complex number format]
+@cindex complex number format
 @item Complex
 Complex numbers are stored as two consecutive words of Lisp objects,
 which should both be numbers.
 
-@cindex [Array format]
+@cindex array format
 @item Array
 This is actually a header which holds the accessing and
 other information about the array. The actual array contents are held in a
@@ -408,7 +408,7 @@ vector (either an I-Vector or G-Vector) pointed to by an entry in
 the header. The header is identical in format to a G-Vector. For
 details on what the array header contains, see section @ref{Arrays}.
 
-@cindex [String format]
+@cindex string format
 @item String
 A vector of bytes. Identical in form to I-Vectors with the access type
 always 8-Bit. However, instead of accepting and returning fixnums, string
@@ -416,7 +416,7 @@ accesses accept and return character objects. Only the 8-bit code field is
 actually stored, and the returned character object always has bit and font
 values of 0.
 
-@cindex [Function object format]
+@cindex function object format
 @item Function
 A compiled CMU Common Lisp function consists of both lisp
 objects and raw bits for the code. The Lisp objects are stored in
@@ -431,10 +431,10 @@ and a number of lisp objects used as constants by the function.
 
 
 @section [Forwarding Pointers]
-@cindex [Forwarding pointers]
+@cindex forwarding pointers
 
 @table @code
-@cindex [GC-Forward pointer]
+@cindex gc-forward pointer
 @item GC-Forward
 When a data structure is transported into newspace, a GC-Forward
 pointer is left behind in the first word of the oldspace object. This points
@@ -444,11 +444,11 @@ pointers are only found in oldspace.
 @end table
 
 @section [System and Stack Spaces]
-@cindex [System table space]
-@cindex [Stack spaces]
-@cindex [Control stack space]
-@cindex [Binding stack space]
-@cindex [Special binding stack space]
+@cindex system table space
+@cindex stack spaces
+@cindex control stack space
+@cindex binding stack space
+@cindex special binding stack space
 
 The virtual addresses below 08000000@-[16] are not occupied by Lisp objects,
 since Lisp objects with type code 0 are positive fixnums. Some of this space
@@ -492,7 +492,7 @@ multi-dimensional arrays in CMU Common Lisp are complex arrays, so
 references to these are always through a header structure.
 
 @subsubsection [General Vectors]
-@cindex [General-Vector format]
+@cindex general-vector format
 
 G-Vectors contain Lisp objects. The format is as follows:
 
@@ -510,8 +510,8 @@ the vector, one entry per 32-bit word.  The header word is of type fixnum. It
 contains a 3-bit subtype field, which is used to indicate several special types
 of general vectors. At present, the following subtype codes are defined:
 
-@cindex [DEFSTRUCT]
-@cindex [Hash tables]
+@cindex defstruct
+@cindex hash tables
 
 @itemize @bullet{}
 0 Normal. Used for assorted things.
@@ -544,17 +544,17 @@ a general vector is 2@+[24]-2 entries, and that can't fit in the available
 space.  The maximum length is 2@+[23]-2 entries, and that is only possible if
 no other general vectors are present in the space.
 
-@cindex [Bignum Format]
+@cindex bignum format
 Bignums are identical in format to G-Vectors although each entry is a 32-bit
 integer, and thus only assembler routines should ever access an entry.
 
-@cindex [Function object format]
-@cindex [Array format]
+@cindex function object format
+@cindex array format
 Objects of type Function and Array are identical in format to
 general vectors, though they have their own spaces.
 
 @subsubsection [Integer Vectors]
-@cindex [Integer-Vector format]
+@cindex integer-vector format
 
 I-Vectors contain unboxed items of data, and their format is more complex. The
 data items come in a variety of lengths, but are of constant length within a
@@ -593,7 +593,7 @@ Once a vector is allocated, it can be reduced in size but not increased.
 The Shrink-Vector miscop changes both the allocated length field
 and the number-of-entries field of an integer vector.
 
-@cindex [Access-type codes]
+@cindex access-type codes
 The high-order 4 bits of the second word contain an access-type code
 which indicates how many bits are occupied by each item (and therefore
 how many items are packed into a 32-bit word).  The encoding is as follows:
@@ -623,7 +623,7 @@ As with G-Vectors, it is not an error to create an I-Vector of length
 maximum possible length of an I-Vector is 2@+[28]-1 entries or
 2@+[23]-3 words, whichever is smaller.
 
-@cindex [String format]
+@cindex string format
 Objects of type String are identical in format to I-Vectors, though they have
 their own space. Strings always have subtype 0 and access-type 3 (8-Bit).
 Strings differ from normal I-Vectors in that the accessing miscops accept
@@ -639,7 +639,7 @@ total length field (this is the length of the array header, not of the vector
 that holds the data). At present, the subtype code is always 0. The entries
 in the header-vector are interpreted as follows:
 
-@cindex [Array header format]
+@cindex array header format
 
 @table @emph
 @item 0 Data Vector
@@ -699,7 +699,7 @@ These symbols are listed here. All of these symbols are in static space,
 so they will not move around.
 
 @table @code
-@cindex [NIL]
+@cindex nil
 
 @item NIL
 94000000@-[16] The value of NIL is always NIL; it is an error
@@ -716,235 +716,235 @@ DinkyMachine is:
         bz      IsNIL   or bnz  IsNotNIL
 @end example
 
-@cindex [T]
+@cindex t
 @item T
 8C000000@-[16]  The value of T is always T; it is an error
 to alter it. A similar sequence of code as for NIL above can test for T,
 if necessary.
 
-@cindex [%SP-Internal-Apply]
+@cindex %sp-internal-apply
 @item %SP-Internal-Apply
 8C000014@-[16] The function stored in the definition cell
 of this symbol is called by an assembler routine whenever compiled code calls
 an interpreted function.
 
-@cindex [%SP-Internal-Error]
+@cindex %sp-internal-error
 @item %SP-Internal-Error
 8C000028@-[16] The function stored in the definition cell
 of this symbol is called whenever an error is detected during the execution of
 an assembler routine. See section @ref{Errors} for details.
 
-@cindex [%SP-Software-Interrupt-Handler]
+@cindex %sp-software-interrupt-handler
 @item %SP-Software-Interrupt-Handler
 8C00003C@-[16] The function stored in the
 definition cell of this symbol is called whenever a software interrupt occurs.
 See section @ref{Interrupts} for details.
 
-@cindex [%SP-Internal-Throw-Tag]
+@cindex %sp-internal-throw-tag
 @item %SP-Internal-Throw-Tag
 8C000050@-[16] This symbol is bound to the tag being
 thrown when a Catch-All frame is encountered on the stack. See section
 @ref{Catch} for details.
 
-@cindex [%Initial-function]
+@cindex %initial-function
 @item %Initial-function
 8c000064@-[16] This symbol's function cell should contain
 a function that is called when the initial core image is started. This
 function should initialize all the data structures that Lisp needs to run.
 
-@cindex [%Link-table-header]
+@cindex %link-table-header
 @item %Link-table-header
 8c000078@-[16] This symbol's value cell contains a pointer
 to the link table information.
 
-@cindex [Current-allocation-space]
+@cindex current-allocation-space
 @item Current-allocation-space
 8c00008c@-[16] This symbol's value cell contains
 an encoded form of the current space that new lisp objects are to be allocated
 in.
 
-@cindex [%SP-bignum/fixnum]
+@cindex %sp-bignum/fixnum
 @item %SP-bignum/fixnum
 8c0000a0@-[16] This function is invoked by the miscops
 when a division of a bignum by a fixnum results in a ratio.
 
-@cindex [%SP-fixnum/bignum]
+@cindex %sp-fixnum/bignum
 @item %SP-bignum/bignum
 8c0000b4@-[16] This
 function is invoked by the miscops when a division of a fixnum by a
 bignum results in a ratio.
 
-@cindex [%SP-bignum/bignum]
+@cindex %sp-bignum/bignum
 @item %SP-bignum/bignum
 8c0000c8@-[16] This function is invoked by the miscops
 when a division of a bignum by a bignum results in a ratio.
 
-@cindex [%SP-abs-ratio]
+@cindex %sp-abs-ratio
 @item %SP-abs-ratio
 8c0000dc@-[16] This function is invoked by the miscops
 when the absolute value of a ratio is taken.
 
-@cindex [%SP-abs-complex]
+@cindex %sp-abs-complex
 @item %SP-abs-complex
 8c0000f0@-[16] This function is invoked by the miscops
 when the absolute value of a complex is taken.
 
-@cindex [%SP-negate-ratio]
+@cindex %sp-negate-ratio
 @item %SP-negate-ratio
 8c000104@-[16] This function is invoked by the miscops
 when a ratio is to be negated.
 
-@cindex [%SP-negate-complex]
+@cindex %sp-negate-complex
 @item %SP-negate-ratio
 8c000118@-[16] This function is invoked by the miscops
 when a complex is to be negated.
 
-@cindex [%SP-integer+ratio]
+@cindex %sp-integer+ratio
 @item %SP-integer+ratio
 8c00012c@-[16] This function is invoked by the miscops
 when a fixnum or bignum is added to a ratio.
 
-@cindex [%SP-ratio+ratio]
+@cindex %sp-ratio+ratio
 @item %SP-ratio+ratio
 8c000140@-[16] This function is invoked by the miscops
 when a ratio is added to a ratio.
 
-@cindex [%SP-complex+number]
+@cindex %sp-complex+number
 @item %SP-complex+number
 8c000154@-[16] This function is invoked by the miscops
 when a complex is added to a number.
 
-@cindex [%SP-number+complex]
+@cindex %sp-number+complex
 @item %SP-number+complex
 8c000168@-[16] This function is invoked by the miscops
 when a number is added to a complex.
 
-@cindex [%SP-complex+complex]
+@cindex %sp-complex+complex
 @item %SP-complex+complex
 8c00017c@-[16] This function is invoked by the miscops
 when a number is added to a complex.
 
-@cindex [%SP-1+ratio]
+@cindex %sp-1+ratio
 @item %SP-1+ratio
 8c000190@-[16] This function is invoked by the miscops when
 1 is added to a ratio.
 
-@cindex [%SP-1+complex]
+@cindex %sp-1+complex
 @item %SP-1+complex
 8c000190@-[16] This function is invoked by the miscops when
 1 is added to a complex.
 
-@cindex [%SP-ratio-integer]
+@cindex %sp-ratio-integer
 @item %SP-ratio-integer
 8c0001b8@-[16] This function is invoked by the miscops
 when an integer is subtracted from a ratio.
 
-@cindex [%SP-ratio-ratio]
+@cindex %sp-ratio-ratio
 @item %SP-ratio-ratio
 8c0001cc@-[16] This function is invoked by the miscops
 when an ratio is subtracted from a ratio.
 
-@cindex [%SP-complex-number]
+@cindex %sp-complex-number
 @item %SP-complex-number
 8c0001e0@-[16] This function is invoked by the miscops
 when a complex is subtracted from a number.
 
-@cindex [%SP-number-complex]
+@cindex %sp-number-complex
 @item %SP-number-complex
 8c0001f4@-[16] This function is invoked by the miscops
 when a number is subtracted from a complex.
 
-@cindex [%SP-complex-complex]
+@cindex %sp-complex-complex
 @item %SP-complex-complex
 8c000208@-[16] This function is invoked by the miscops
 when a complex is subtracted from a complex.
 
-@cindex [%SP-1-complex]
+@cindex %sp-1-complex
 @item %SP-1-complex
 8c000230@-[16] This function is invoked by the miscops when
 1 is subtracted from a complex.
 
-@cindex [%SP-ratio*ratio]
+@cindex %sp-ratio*ratio
 @item %SP-ratio*ratio
 8c000244@-[16] This function is invoked by the miscops to
 multiply two ratios.
 
-@cindex [%SP-number*complex]
+@cindex %sp-number*complex
 @item %SP-number*complex
 8c000258@-[16] This function is invoked by the miscops to
 multiply a number by a complex.
 
-@cindex [%SP-complex*number]
+@cindex %sp-complex*number
 @item %SP-complex*number
 8c00026c@-[16] This function is invoked by the miscops to
 multiply a complex by a number.
 
-@cindex [%SP-complex*complex]
+@cindex %sp-complex*complex
 @item %SP-complex*complex
 8c000280@-[16] This function is invoked by the miscops
 to multiply a complex by a complex.
 
-@cindex [%SP-integer/ratio]
+@cindex %sp-integer/ratio
 @item %SP-integer/ratio
 8c000294@-[16] This function is invoked by the miscops to
 divide an integer by a ratio.
 
-@cindex [%SP-ratio/integer]
+@cindex %sp-ratio/integer
 @item %SP-ratio/integer
 8c0002a8@-[16] This function is invoked by the miscops to
 divide a ratio by an integer.
 
-@cindex [%SP-ratio/ratio]
+@cindex %sp-ratio/ratio
 @item %SP-ratio/ratio
 8c0002bc@-[16] This function is invoked by the miscops to
 divide a ratio by a ratio.
 
-@cindex [%SP-number/complex]
+@cindex %sp-number/complex
 @item %SP-number/complex
 8c0002d0@-[16] This function is invoked by the miscops to
 divide a number by a complex.
 
-@cindex [%SP-complex/number]
+@cindex %sp-complex/number
 @item %SP-complex/number
 8c0002e4@-[16] This function is invoked by the miscops to
 divide a complex by a number.
 
-@cindex [%SP-complex/complex]
+@cindex %sp-complex/complex
 @item %SP-complex/complex
 8c0002f8@-[16] This function is invoked by the miscops
 to divide a complex by a complex.
 
-@cindex [%SP-integer-truncate-ratio]
+@cindex %sp-integer-truncate-ratio
 @item %SP-integer-truncate-ratio
 8c00030c@-[16] This function is invoked by the
 miscops to truncate an integer by a ratio.
 
-@cindex [%SP-ratio-truncate-integer]
+@cindex %sp-ratio-truncate-integer
 @item %SP-ratio-truncate-integer
 8c000320@-[16] This function is invoked by the
 miscops to truncate a ratio by an integer.
 
-@cindex [%SP-ratio-truncate-ratio]
+@cindex %sp-ratio-truncate-ratio
 @item %SP-ratio-truncate-ratio
 8c000334@-[16] This function is invoked by the
 miscops to truncate a ratio by a ratio.
 
-@cindex [%SP-number-truncate-complex]
+@cindex %sp-number-truncate-complex
 @item %SP-number-truncate-complex
 8c000348@-[16] This function is invoked by the
 miscops to truncate a number by a complex.
 
-@cindex [%SP-complex-truncate-number]
+@cindex %sp-complex-truncate-number
 @item %SP-complex-truncate-number
 8c00035c@-[16] This function is invoked by the
 miscops to truncate a complex by a number.
 
-@cindex [%SP-complex-truncate-complex]
+@cindex %sp-complex-truncate-complex
 @item %SP-complex-truncate-complex
 8c000370@-[16] This function is invoked by
 the miscops to truncate a complex by a complex.
 
-@cindex [maybe-gc]
+@cindex maybe-gc
 @item Maybe-GC
 8c000384@-[16] This function may be invoked by any miscop that
 does allocation. This function determines whether it is time to garbage
@@ -952,31 +952,31 @@ collect or not. If it is it performs a garbage collection. Whether it
 invokes a garbage collection or not, it returns the single argument passed
 to it.
 
-@cindex [Lisp-environment-list]
+@cindex lisp-environment-list
 @item Lisp-environment-list
 8c000398@-[16] The value of this symbol is
 set to the a list of the Unix environment strings passed into the Lisp
 process. This list by Lisp to obtain various environment information, such
 as the user's home directory, etc.
 
-@cindex [Call-lisp-from-c]
+@cindex call-lisp-from-c
 @item Call-lisp-from-C
 8c0003ac@-[16] This function is called whenever a
 C function called by Lisp tries to call a Lisp function.
 
-@cindex [Lisp-command-line-list]
+@cindex lisp-command-line-list
 @item Lisp-command-line-list
 8c0003c0@-[16] The value of this symbol is
 set to the list of strings passed into the Lisp process as the command
 line.
 
-@cindex [*Nameserverport*]
+@cindex *nameserverport*
 @item *Nameserverport*
 8c0003d4@-[16] The value of this symbol is set to
 the C global variable name_server_port. This allows Lisp to access the
 name server.
 
-@cindex [*Ignore-Floating-Point-Underflow*]
+@cindex *ignore-floating-point-underflow*
 @item *Ignore-Floating-Point-Underflow*
 8c0003e8@-[16] If the the value of this
 symbol is NIL then an error is signalled when floating point underflow
@@ -999,59 +999,59 @@ about the allocation of the 16 32-bit general purpose registers provided
 by the DinkyMachine.
 
 @table @code
-@cindex [Program-Counter register]
+@cindex program-counter register
 @item Program-Counter (PC) [R15]
 This register contains an index into the current
 code vector when a Lisp function is about to be called. When a miscop is
 called, it contains the return address. It may be used as a super temporary
 between miscop and function calls.
 
-@cindex [Active-Function-Pointer register]
+@cindex active-function-pointer register
 @item Active-Function-Pointer (AF) [R14]
 This register contains a pointer to the
 active function object. It is used to access the symbol and constant area for
 the currently running function.
 
-@cindex [Active-Frame-Pointer register]
+@cindex active-frame-pointer register
 @item Active-Frame-Pointer (FP) [R13]
 This register contains a pointer to the
 current active frame on the control stack. It is used to access the arguments
 and local variables stored on the control stack.
 
-@cindex [Binding-Stack-Pointer register]
+@cindex binding-stack-pointer register
 @item Binding-Stack-Pointer (BS) [R12]
 This register contains the current binding
 stack pointer.  The binding stack is a downward growing stack and follows
 a decrement-write/increment-read discipline.
 
-@cindex [Local registers]
+@cindex local registers
 @item Local registers (L0-L4) [R7-R11]
 These registers contain locals and saved
 arguments for the currently executing function. Functions may use these
 registers, so that stack accesses can be reduced, since a stack access is
 relatively expensive compared to a register access.
 
-@cindex [Argument registers]
+@cindex argument registers
 @item Argument register (A0, A1, A2) [R1, R3, R5]
 These registers contain arguments
 to a function or miscop that has just been called. On entry to a function
 or miscop, they contain the first three arguments. The first thing a function
 does is to move the contents of these registers into the local registers.
 
-@cindex [Miscop argument register]
+@cindex miscop argument register
 @item Miscop argument register (A3) [R4]
 This register is used to pass a fourth
 argument to miscops requiring four or more arguments. It is also used as a
 super temporary by the compiler.
 
-@cindex [Control-Stack-Pointer register]
+@cindex control-stack-pointer register
 @item Control-Stack-Pointer (CS) [R6]
 The stack pointer for the control stack, an
 object of type Control-Stack-Pointer. Points to the last used word in
 Control-Stack space; this upward growing stack uses a
 increment-write/read-decrement discipline.
 
-@cindex [Non-Lisp temporary registers]
+@cindex non-lisp temporary registers
 @item Non-Lisp temporary registers (NL0, NL1) [R0, R2]
 These registers are used to
 contain non-Lisp values. They will normally be used during miscop calls, but
@@ -1077,8 +1077,8 @@ should depend on this; some applications may create, compile, and
 destroy functions often enough to make dynamic allocation of function
 objects worthwhile.
 
-@cindex [Code vector]
-@cindex [Constants in code] The function object contains a vector of
+@cindex code vector
+@cindex constants in code the function object contains a vector of
 header information needed by the function-calling mechanism: a
 pointer to the I-Vector that holds the actual code. Following this
 is the so-called ``symbols and constants'' area. The first few
@@ -1234,8 +1234,8 @@ currently active.
 
 
 @subsubsection [Catch Frames]
-@cindex [Catch]
-@cindex [Catch frames]
+@cindex catch
+@cindex catch frames
 
 Catch frames contain much of the same information that call frames
 do, and have a very similar format. A catch frame holds the function
@@ -1258,7 +1258,7 @@ The conventions used to manipulate call and catch frames are described in
 chapter @ref{Control-Conventions}.
 
 @section [Binding-Stack Format]
-@cindex [Binding stack format]
+@cindex binding stack format
 
 Each entry of the binding-stack consists of two boxed (32-bit) words. Pushed
 first is a pointer to the symbol being bound. Pushed second is the symbol's
@@ -1270,8 +1270,8 @@ popped.
 @cindex Storage management
 @cindex Garbage Collection
 
-@cindex [Free-Storage pointer]
-@cindex [Clean-Space pointer]
+@cindex free-storage pointer
+@cindex clean-space pointer
 New objects are allocated from the lowest unused addresses within the specified
 space.  Each allocation call specifies how many words are wanted, and a
 Free-Storage pointer is incremented by that amount. There is one of these
@@ -1325,7 +1325,7 @@ A Lisp-level GC function returns the oldspace pages to Mach.
 
 
 
-@cindex [Transporter]
+@cindex transporter
 @section [The Transporter]
 The transporter moves objects from oldspace to newspace. It is given an
 address @i[A], which contains the object to be transported, @i[B]. If @i[B] is
@@ -1352,7 +1352,7 @@ before any access is made.
 
 
 
-@cindex [Scavenger]
+@cindex scavenger
 @section [The Scavenger] The scavenger looks through an area of
 pointers for pointers into oldspace, transporting the objects they
 point to into newspace. The stacks and static spaces need to be
@@ -1460,80 +1460,80 @@ allocation space is restored to some safe value.
 
 
 @table @code
-@cindex [Get-Allocation-Space]
+@cindex get-allocation-space
 @item Get-Allocation-Space (@i[])
 returns 0, 2, or 3 if the current allocation
 space is dynamic, static, or read-only, respectively.
 
-@cindex [Set-Allocation-Space]
+@cindex set-allocation-space
 @item Set-Allocation-Space (@i[X])
 sets the current allocation space to dynamic,
 static, or read-only if @i[X] is 0, 2, or 3 respectively. Returns @i[X].
 
-@cindex [Alloc-Bit-Vector]
+@cindex alloc-bit-vector
 @item Alloc-Bit-Vector (Length)
 returns a new bit-vector @i[Length] bits long,
 which is allocated in the current allocation space. @i[Length] must be a
 positive fixnum.
 
-@cindex [Alloc-I-Vector]
+@cindex alloc-i-vector
 @item Alloc-I-Vector (@i[Length A])
 returns a new I-Vector @i[Length]
 bytes long, with the access code specified by @i[A]. @i[Length] and
 @i[A] must be positive fixnums.
 
-@cindex [Alloc-String]
+@cindex alloc-string
 @item Alloc-String (@i[Length])
  returns a new string @i[Length] characters long.
 @i[Length] must be a fixnum.
 
-@cindex [Alloc-Bignum]
+@cindex alloc-bignum
 @item Alloc-Bignum (@i[Length])
 returns a new bignum @i[Length] 32-bit words long.
 @i[Length] must be a fixnum.
 
-@cindex [Make-Complex]
+@cindex make-complex
 @item Make-Complex (@i[Realpart Imagpart])
 returns a new complex number with the
 specified @i[Realpart] and @i[Imagpart]. @i[Realpart] and @i[Imagpart] should
 be the same type of non-complex number.
 
-@cindex [Make-Ratio]
+@cindex make-ratio
 @item Make-Ratio (@i[Numerator Denominator])
 returns a new ratio with the
 specified @i[Numerator] and @i[Denominator]. @i[Numerator] and
 @i[Denominator] should be integers.
 
-@cindex [Alloc-G-Vector]
+@cindex alloc-g-vector
 @item Alloc-G-Vector (@i[Length Initial-Element])
 returns a new G-Vector
 with @i[Length] elements initialized to @i[Initial-Element].
 @i[Length] should be a fixnum.
 
-@cindex [Static-Alloc-G-Vector]
+@cindex static-alloc-g-vector
 @item Static-G-Vector (@i[Length Initial-Element])
 returns a new G-Vector in
 static allocation space with @i[Length] elements initialized to
 @i[Initial-Element].
 
-@cindex [Vector]
+@cindex vector
 @item Vector (@i[Elt@-[0] Elt@-[1] ... Elt@-[Length - 1] Length])
 returns a new
 G-Vector containing the specified @i[Length] elements.  @i[Length] should be a
 fixnum and is passed in register A0. The rest of the arguments are passed on
 the stack.
 
-@cindex [Alloc-Function]
+@cindex alloc-function
 @item Alloc-Function (@i[Length])
 returns a new function with @i[Length] elements.
 @i[Length] should be a fixnum.
 
-@cindex [Alloc-Array]
+@cindex alloc-array
 @item Alloc-Array (@i[Length])
 returns a new array with @i[Length] elements.
 @i[Length] should be a fixnum.
 
-@cindex [Alloc-Symbol]
+@cindex alloc-symbol
 @item Alloc-Symbol (@i[Print-Name])
 returns a new symbol with the print-name as
 @i[Print-Name]. The value is initially Trap, the definition is Trap,
@@ -1541,18 +1541,18 @@ the property list and the package are initially NIL. The symbol is
 not interned by this operation -- that is done in Lisp code.
 @i[Print-Name] should be a simple-string.
 
-@cindex [Cons]
+@cindex cons
 @item Cons (@i[Car Cdr])
 returns a new cons with the specified @i[Car] and @i[Cdr].
 
-@cindex [List]
+@cindex list
 @item List (@i[Elt@-[0] Elt@-[1] ... Elt@-[CE - 1] Length])
 returns a new list
 containing the @i[Length] elements. @i[Length] should be fixnum and is
 passed in register NL0. The first three arguments are passed in A0, A1, and
 A2. The rest of the arguments are passed on the stack.
 
-@cindex [List*]
+@cindex list*
 @item List* (@i[Elt@-[0] Elt@-[1] ... Elt@-[CE - 1] Length])
 returns a list* formed
 by the @i[Length-1] elements. The last element is placed in the cdr of the
@@ -1560,7 +1560,7 @@ last element of the new list formed. @i[Length] should be a fixnum and is
 passed in register NL0. The first three arguments are passed in A0, A1, and
 A2. The rest of the arguments are passed on the stack.
 
-@cindex [mv-list]
+@cindex mv-list
 @item MV-List (@i[Elt@-<0> Elt@-<1> ... Elt@-<CE - 1> Length])
 returns a list
 formed from the elements, all of which are on the stack. @i[Length] is
@@ -1572,32 +1572,32 @@ a function call are formed into a list.
 
 
 @table @code
-@cindex [Push]
+@cindex push
 @item Push (@i[E])
 pushes E on to the control stack.
 
-@cindex [Pop]
+@cindex pop
 @item Pop (@i[E])
 pops the top item on the control stack into @i[E].
 
-@cindex [NPop]
+@cindex npop
 @item NPop (@i[N])
 If @i[N] is positive, @i[N] items are popped off of the stack.
 If @i[N] is negative, NIL is pushed onto the stack -@i[N] times. @i[N] must be
 a fixnum.
 
-@cindex [Bind-Null]
+@cindex bind-null
 @item Bind-Null (@i[E])
 pushes @i[E] (which must be a symbol) and its current value
 onto the binding stack, and sets the value of @i[E] to NIL. Returns NIL.
 
-@cindex [Bind]
+@cindex bind
 @item Bind (Value Symbol)
 pushes @i[Symbol] (which must be a symbol) and its current
 value onto the binding stack, and sets the value cell of @i[Symbol] to
 @i[Value]. Returns @i[Symbol].
 
-@cindex [Unbind]
+@cindex unbind
 @item Unbind (@i[N])
 undoes the top @i[N] bindings on the binding stack.
 @end table
@@ -1605,46 +1605,46 @@ undoes the top @i[N] bindings on the binding stack.
 @subsubsection [List Manipulation]
 
 @table @code
-@cindex [Car]
-@cindex [Cdr]
-@cindex [Caar]
-@cindex [Cadr]
-@cindex [Cdar]
-@cindex [Cddr]
+@cindex car
+@cindex cdr
+@cindex caar
+@cindex cadr
+@cindex cdar
+@cindex cddr
 @item Car, Cdr, Caar, Cadr, Cdar, Cddr (@i[E])
 returns the car, cdr, caar, cadr,
 cdar, or cddr of @i[E] respectively.
 
-@cindex [Set-Cdr]
-@cindex [Set-Cddr]
+@cindex set-cdr
+@cindex set-cddr
 @item Set-Cdr, Set-Cddr (@i[E])
 The cdr or cddr of the contents of @i[E] is stored
 in @i[E]. The contents of @i[E] should be either a list or NIL.
 
-@cindex [Set-Lpop]
+@cindex set-lpop
 @item Set-Lpop (@i[E])
 The car of the contents of @i[E] is returned;
 the cdr of the contents of @i[E] is stored in @i[E]. The contents of @i[E]
 should be a list or NIL.
 
-@cindex [Spread]
+@cindex spread
 @item Spread (@i[E])
 pushes the elements of the list @i[E] onto the stack in
 left-to-right order.
 
-@cindex [Replace-Car]
-@cindex [Replace-Cdr]
+@cindex replace-car
+@cindex replace-cdr
 @item Replace-Car, Replace-Cdr (@i[List Value])
 sets the car or cdr of the @i[List]
 to @i[Value] and returns @i[Value].
 
-@cindex [Endp]
+@cindex endp
 @item Endp (X)
 sets the condition code eq bit to 1 if @i[X] is NIL, or 0 if @i[X] is
 a cons cell. Otherwise an error is signalled.
 
-@cindex [Assoc]
-@cindex [Assq]
+@cindex assoc
+@cindex assq
 @item Assoc, Assq (@i[List Item])
 returns the first cons in the association-list
 @i[List] whose car is EQL to @i[Item]. If the = part of the EQL comparison
@@ -1652,8 +1652,8 @@ bugs out (and it can if the numbers are too complicated), a Lisp-level Assoc
 function is called with the current cdr of the @i[List]. Assq returns the
 first cons in the association-list @i[List] whose car is EQ to @i[Item].
 
-@cindex [Member]
-@cindex [Memq]
+@cindex member
+@cindex memq
 @item Member, Memq (@var{List Item})
 returns the first cons in
 the list @var{List} whose car is EQL to @var{Item}. If the = part of the
@@ -1661,7 +1661,7 @@ EQL comparison bugs out, a Lisp-level Member function is called with
 the current cdr of the @var{List}. Memq returns the first cons in
 @var{List} whose car is EQ to the @var{Item}.
 
-@cindex [GetF]
+@cindex getf
 
 @item GetF (@var{List Indicator Default})
 searches for the @var{Indicator} in
@@ -1676,66 +1676,66 @@ Most of the symbol manipulation miscops are compiled in-line rather than
 actual calls.
 
 @table @code
-@cindex [Get-Value]
+@cindex get-value
 @item Get-Value (@var{Symbol})
 returns the value of @var{Symbol} (which must be a
 symbol). An error is signalled if @var{Symbol} is unbound.
 
-@cindex [Set-Value]
+@cindex set-value
 @item Set-Value (@var{Symbol Value})
 sets the value cell of the symbol @var{Symbol} to
 @var{Value}. @var{Value} is returned.
 
-@cindex [Get-Definition]
+@cindex get-definition
 @item Get-Definition (@var{Symbol})
 returns the definition of the symbol
 @var{Symbol}. If @var{Symbol} is undefined, an error is signalled.
 
-@cindex [Set-Definition]
+@cindex set-definition
 @item Set-Definition (@var{Symbol Definition})
 sets the definition of the symbol
 @var{Symbol} to @var{Definition}. @var{Definition} is returned.
 
-@cindex [Get-Plist]
+@cindex get-plist
 @item Get-Plist (@var{Symbol})
 returns the property list of the symbol @var{Symbol}.
 
-@cindex [Set-Plist] 
+@cindex set-plist 
 @item Set-Plist (@var{Symbol Plist})
 sets the property
 list of the symbol @var{Symbol} to
 @var{Plist}. @var{Plist} is returned.
 
-@cindex [Get-Pname]
+@cindex get-pname
 @item Get-Pname (@var{Symbol})
 returns the print name of the symbol @var{Symbol}.
 
-@cindex [Get-Package]
+@cindex get-package
 @item Get-Package (@var{Symbol})
 returns the package cell of the symbol @var{Symbol}.
 
-@cindex [Set-Package]
+@cindex set-package
 @item Set-Package (@var{Symbol Package})
 sets the package cell of the symbol
 @var{Symbol} to @var{Package}. @var{Package} is returned.
 
-@cindex [Boundp]
+@cindex boundp
 @item Boundp (@var{Symbol})
 sets the eq condition code bit to 1 if the symbol
 @var{Symbol} is bound; sets it to 0 otherwise.
 
-@cindex [FBoundp]
+@cindex fboundp
 @item FBoundp (@var{Symbol})
 sets the eq condition code bit to 1 if the symbol
 @var{Symbol} is defined; sets it to 0 otherwise.
 
-@cindex [Get]
+@cindex get
 @item Get (@var{Symbol} @var{Indicator} @var{Default})
 searches the property list of
 @var{Symbol} for @var{Indicator} and returns the associated value. If
 @var{Indicator} is not found, @var{Default} is returned.
 
-@cindex [Put]
+@cindex put
 @item Put (@var{Symbol} @var{Indicator} @var{Value})
 searches the property list of
 @var{Symbol} for @var{Indicator} and replaces the associated value with @var{Value}.
@@ -1758,10 +1758,10 @@ CMU Common Lisp array; similar remarks apply for ``complex-string'' and so
 forth.
 
 @table @code
-@cindex [Vector-Length]
-@cindex [G-Vector-Length]
-@cindex [Simple-String-Length]
-@cindex [Simple-Bit-Vector-Length] Vector-Length
+@cindex vector-length
+@cindex g-vector-length
+@cindex simple-string-length
+@cindex simple-bit-vector-length vector-length
 @item (@var{Vector})
 returns the length of the one-dimensional Common Lisp array
 @var{Vector}. G-Vector-Length, Simple-String-Length, and
@@ -1769,22 +1769,22 @@ Simple-Bit-Vector-Length return the lengths of G-Vectors, CMU Common Lisp
 strings, and CMU Common Lisp Bit-Vectors respectively. @var{Vector} should
 be a vector of the appropriate type.
 
-@cindex [Get-Vector-Subtype]
+@cindex get-vector-subtype
 @item Get-Vector-Subtype (@var{Vector})
 returns the subtype field of the vector
 @var{Vector} as an integer. @var{Vector} should be a vector of some sort.
 
-@cindex [Set-Vector-Subtype]
+@cindex set-vector-subtype
 @item Set-Vector-Subtype (@var{Vector A})
 sets the subtype field of the vector
 @var{Vector} to @var{A}, which must be a fixnum.
 
-@cindex [Get-Vector-Access-Code]
+@cindex get-vector-access-code
 @item Get-Vector-Access-Code (@var{Vector})
 returns the access code of the I-Vector
 (or Bit-Vector) @var{Vector} as a fixnum.
 
-@cindex [Shrink-Vector]
+@cindex shrink-vector
 @item Shrink-Vector (@var{Vector Length})
 sets the length field and the
 number-of-entries field of the vector @var{Vector} to @var{Length}. If the vector
@@ -1792,30 +1792,30 @@ contains Lisp objects, entries beyond the new end are set to Trap.
 Returns the shortened vector. @var{Length} should be a fixnum. One cannot
 shrink array headers or function headers.
 
-@cindex [Typed-Vref]
+@cindex typed-vref
 @item Typed-Vref (@var{A Vector I})
 returns the @var{I}'th element of the I-Vector
 @var{Vector} by indexing into it as if its access-code were @var{A}. @var{A} and
 @var{I} should be fixnums.
 
-@cindex [Typed-Vset]
+@cindex typed-vset
 @item Typed-Vset (@var{A Vector I Value})
 sets the @var{I}'th element of the I-Vector
 @var{Vector} to @var{Value} indexing into @var{Vector} as if its access-code were
 @var{A}.        @var{A}, @var{I}, and @var{Value} should be fixnums.    @var{Value} is returned.
 
-@cindex [Header-Length]
+@cindex header-length
 @item Header-Length (@var{Object})
 returns the number of Lisp objects in the header of
 the function or array @var{Object}. This is used to find the number of
 dimensions of an array or the number of constants in a function.
 
-@cindex [Header-Ref]
+@cindex header-ref
 @item Header-Ref (@var{Object I})
 returns the @var{I}'th element of the function or
 array header @var{Object}. @var{I} must be a fixnum.
 
-@cindex [Header-Set]
+@cindex header-set
 @item Header-Set (@var{Object I Value})
 sets the @var{I}'th element of the function of
 array header @var{Object} to @var{Value}, and pushes @var{Value}. @var{I} must be a
@@ -1831,20 +1831,20 @@ The names of setting functions are derived by replacing ``ref'' with ``set'',
 ``char'' with ``charset'', and ``bit'' with ``bitset.''
 
 @table @code
-@cindex [Aref1]
-@cindex [SVref]
-@cindex [SChar]
-@cindex [SBit]
+@cindex aref1
+@cindex svref
+@cindex schar
+@cindex sbit
 @item Aref1, SVref, SChar, SBit (@var{Array I})
 returns the @var{I}'th element of the
 one-dimensional
 array @var{Array}. SVref pushes an element of a G-Vector; SChar an element of a
 string; Sbit an element of a Bit-Vector. @var{I} should be a fixnum.
 
-@cindex [Aset1]
-@cindex [SVset]
-@cindex [SCharset]
-@cindex [SBitset]
+@cindex aset1
+@cindex svset
+@cindex scharset
+@cindex sbitset
 @item Aset1, SVset, SCharset, SBitset (@var{Array I Value})
 sets the @var{I}'th element
 of the one-dimensional
@@ -1852,22 +1852,22 @@ array @var{Array} to @var{Value}. SVset sets an element of a G-Vector; SCharset 
 element of a string; SBitset an element of a Bit-Vector. @var{I} should be a
 fixnum and @var{Value} is returned.
 
-@cindex [CAref2]
-@cindex [CAref3]
+@cindex caref2
+@cindex caref3
 @item CAref2, CAref3 (@var{Array I1 I2})
 returns the element (@var{I1}, @var{I2}) of the
 two-dimensional array @var{Array}. @var{I1} and @var{I2} should be
 fixnums. CAref3 pushes the element (@var{I1}, @var{I2}, @var{I3}).
 
-@cindex [CAset2]
-@cindex [CAset3]
+@cindex caset2
+@cindex caset3
 @item CAset2, CAset3 (@var{Array I1 I2 Value})
 sets the element (@var{I1}, @var{I2}) of
 the two-dimensional array @var{Array} to @var{Value} and returns @var{Value}.
 @var{I1} and @var{I2} should be fixnums. CAset3 sets the element (@var{I1}, @var{I2},
 @var{I3}).
 
-@cindex [Bit-Bash]
+@cindex bit-bash
 @item Bit-Bash (@var{V1 V2 V3 Op})
 @var{V1}, @var{V2}, and @var{V3} should be bit-vectors
 and @var{Op} should be a fixnum.        The elements of the bit vector @var{V3} are
@@ -1881,7 +1881,7 @@ string operations.      Where an operand is referred to as a string, it may
 actually be an 8-bit I-Vector or system area pointer.
 
 @table @code
-@cindex [Byte-BLT]
+@cindex byte-blt
 @item Byte-BLT (@var{Src-String Src-Start Dst-String Dst-Start Dst-End})
 
 moves bytes from @var{Src-String} into @var{Dst-String} between @var{Dst-Start}
@@ -1890,7 +1890,7 @@ moved.  If the substrings specified overlap, ``the right thing happens,'' i.e.
 all the characters are moved to the right place. This miscop corresponds
 to the Common Lisp function REPLACE when the sequences are simple-strings.
 
-@cindex [Find-Character]
+@cindex find-character
 @item Find-Character (@var{String Start End Character})
 
 searches @var{String} for the @var{Character} from @var{Start} to @var{End}. If the
@@ -1898,7 +1898,7 @@ character is found, the corresponding index into @var{String} is returned,
 otherwise NIL is returned. This miscop corresponds to the Common Lisp
 function FIND when the sequence is a simple-string.
 
-@cindex [Find-Character-With-Attribute]
+@cindex find-character-with-attribute
 @item Find-Character-With-Attribute (@var{String Start End Table Mask})
 
 The codes of the characters of @var{String} from @var{Start} to @var{End} are used as
@@ -1906,7 +1906,7 @@ indices into the @var{Table}, which is an I-Vector of 8-bit bytes. When the
 number picked up from the table bitwise ANDed with @var{Mask} is non-zero, the
 current index into the @var{String} is returned.
 
-@cindex [SXHash-Simple-String]
+@cindex sxhash-simple-string
 @item SXHash-Simple-String (@var{String Length})
 Computes the hash code of the first
 @var{Length} characters of @var{String} and pushes it on the stack. This
@@ -1931,127 +1931,127 @@ predicates, one which sets the eq condition code bit, and one which returns T
 or NIL. This is especially true if space becomes an issue.
 
 @table @code
-@cindex [Bit-Vector-P]
+@cindex bit-vector-p
 @item Bit-Vector-P (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is
 a Common Lisp bit-vector or 0 if it is not.
 
-@cindex [Simple-Bit-Vector-P]
+@cindex simple-bit-vector-p
 @item Simple-Bit-Vector-P (@var{Object})
 sets the eq condition code bit to 1 if
 @var{Object} is a CMU Common Lisp bit-vector or 0 if it is not.
 
-@cindex [Simple-Integer-Vector-P]
+@cindex simple-integer-vector-p
 @item Simple-Integer-Vector-P (@var{Object})
 sets the eq condition code bit to 1
 if @var{Object} is a CMU Common Lisp I-Vector or 0 if it is not.
 
-@cindex [StringP]
+@cindex stringp
 @item StringP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 Common Lisp string or 0 if it is not.
 
-@cindex [Simple-String-P]
+@cindex simple-string-p
 @item Simple-String-P (@var{Object})
 sets the eq condition code bit to 1 if
 @var{Object} is a CMU Common Lisp string or 0 if it is not.
 
-@cindex [BignumP]
+@cindex bignump
 @item BignumP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 bignum or 0 if it is not.
 
-@cindex [Long-Float-P]
+@cindex long-float-p
 @item Long-Float-P (@var{Object})
 sets the eq condition code bit to 1 if
 @var{Object} is a long-float or 0 if it is not.
 
-@cindex [ComplexP]
+@cindex complexp
 @item ComplexP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 complex number or 0 if it is not.
 
-@cindex [RatioP]
+@cindex ratiop
 @item RatioP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 ratio or 0 if it is not.
 
-@cindex [IntegerP]
+@cindex integerp
 @item IntegerP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 fixnum or bignum or 0 if it is not.
 
-@cindex [RationalP]
+@cindex rationalp
 @item RationalP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 fixnum, bignum, or ratio or 0 if it is not.
 
-@cindex [FloatP]
+@cindex floatp
 @item FloatP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 short-float or long-float or 0 if it is not.
 
-@cindex [NumberP]
+@cindex numberp
 @item NumberP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 number or 0 if it is not.
 
-@cindex [General-Vector-P]
+@cindex general-vector-p
 @item General-Vector-P (@var{Object})
 sets the eq condition code bit to 1 if
 @var{Object} is a Common Lisp general vector or 0 if it is not.
 
-@cindex [Simple-Vector-P]
+@cindex simple-vector-p
 @item Simple-Vector-P (@var{Object})
 sets the eq condition code bit to 1 if @var{Object}
 is a CMU Common Lisp G-Vector or 0 if it is not.
 
-@cindex [Compiled-Function-P]
+@cindex compiled-function-p
 @item Compiled-Function-P (@var{Object})
 sets the eq condition code bit to 1 if
 @var{Object} is a compiled function or 0 if it is not.
 
-@cindex [ArrayP]
+@cindex arrayp
 @item ArrayP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 Common Lisp array or 0 if it is not.
 
-@cindex [VectorP]
+@cindex vectorp
 @item VectorP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 Common Lisp vector of 0 if it is not.
 
-@cindex [Complex-Array-P]
+@cindex complex-array-p
 @item Complex-Array-P (@var{Object})
 sets the eq condition code bit to 1 if @var{Object}
 is a CMU Common Lisp array or 0 if it is not.
 
-@cindex [SymbolP]
+@cindex symbolp
 @item SymbolP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 symbol or 0 if it is not.
 
-@cindex [ListP]
+@cindex listp
 @item ListP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a cons
 or NIL or 0 if it is not.
 
-@cindex [ConsP]
+@cindex consp
 @item ConsP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a cons
 or 0 if it is not.
 
-@cindex [FixnumP]
+@cindex fixnump
 @item FixnumP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is a
 fixnum or 0 if it is not.
 
-@cindex [Single-Float-P]
+@cindex single-float-p
 @item Single-Float-P (@var{Object})
 sets the eq condition code bit to 1 if @var{Object}
 is a single-float or 0 if it is not.
 
-@cindex [CharacterP]
+@cindex characterp
 @item CharacterP (@var{Object})
 sets the eq condition code bit to 1 if @var{Object} is
 a character or 0 if it is not.
@@ -2060,50 +2060,50 @@ a character or 0 if it is not.
 @subsubsection [Arithmetic]
 
 @table @code
-@cindex [Integer-Length]
+@cindex integer-length
 @item Integer-Length (@var{Object})
 returns the integer-length (as defined in the
 Common Lisp manual) of the integer @var{Object}.
 
-@cindex [Logcount]
+@cindex logcount
 @item Logcount (@var{Object})
 returns the number of 1's if @var{object} is a
 positive integer, the number of 0's if @var{object} is a negative integer,
 and signals an error otherwise.
 
-@cindex [Float-Short]
+@cindex float-short
 @item Float-Short (@var{Object})
 returns a short-float corresponding to the number
 @var{Object}.
 
-@cindex [Float-Long]
+@cindex float-long
 @item Float-Long (@var{Number})
 returns a long float formed by coercing @var{Number} to
 a long float. This corresponds to the Common Lisp function Float when given a
 long float as its second argument.
 
-@cindex [Realpart]
+@cindex realpart
 @item Realpart (@var{Number})
 returns the realpart of the @var{Number}.
 
-@cindex [Imagpart]
+@cindex imagpart
 @item Imagpart (@var{Number})
 returns the imagpart of the @var{Number}.
 
-@cindex [Numerator]
+@cindex numerator
 @item Numerator (@var{Number})
 returns the numerator of the rational @var{Number}.
 
-@cindex [Denominator]
+@cindex denominator
 @item Denominator (@var{Number})
 returns the denominator of the rational @var{Number}.
 
-@cindex [Decode-Float]
+@cindex decode-float
 @item Decode-Float (@var{Number})
 performs the Common Lisp Decode-Float function,
 returning 3 values.
 
-@cindex [Scale-Float]
+@cindex scale-float
 @item Scale-Float (@var{Number X})
 performs the Common Lisp Scale-Float function,
 returning the result.
@@ -2117,7 +2117,7 @@ returning the result.
 
 @table @code
 
-@cindex [=]
+@cindex =
 @item = (@var{X Y})
 sets the condition codes according to whether @var{X} is equal
 to @var{Y}. Both @var{X} and @var{Y} must be numbers, otherwise an error is
@@ -2127,7 +2127,7 @@ with a long flonum, the short flonum is converted to a long flonum.
 Flonums must be exactly equal (after conversion) for the condition codes to
 be set to equality. This miscop also deals with complex numbers.
 
-@cindex [Compare]
+@cindex compare
 @item Compare (@var{X Y})
 sets the condition codes according to
 whether @var{X} is less than, equal to, or greater than @var{Y}. @var{X}
@@ -2138,7 +2138,7 @@ effectively. The value of < and > as defined for the Perq are
 only generated if necessary, i.e., the result is saved. If @var{X} or @var{Y}
 is a complex number, an error is signalled.
 
-@cindex [Truncate]
+@cindex truncate
 @item Truncate (@var{N X})
 performs the Common Lisp TRUNCATE operation. There are 3
 cases depending on @var{X}:
@@ -2163,51 +2163,51 @@ rules as for +. The value of the remainder is equal to @var{N} - @var{X} *
 On the DinkyMachine, the integer part is returned in register A0, and
 the remainder in A1.
 
-@cindex [+]
-@cindex [-]
-@cindex [*]
-@cindex [/]
+@cindex +
+@cindex -
+@cindex *
+@cindex /
 @item +, -, *, / (@var{N X})
 returns  @var{N} + @var{X}. -, *, and / are similar.
 
-@cindex [Fixnum*Fixnum]
-@cindex [Fixnum/Fixnum]
+@cindex fixnum*fixnum
+@cindex fixnum/fixnum
 @item Fixnum*Fixnum, Fixnum/Fixnum (@var{N X})
 returns @var{N} * @var{X}, where
 both @var{N} and @var{X} are fixnums. Fixnum/ is similar.
 
-@cindex [1+]
+@cindex 1+
 @item 1+ (@var{E})
 returns @var{E} + 1.
 
-@cindex [1-]
+@cindex 1-
 @item 1- (@var{E})
 returns @var{E} - 1.
 
-@cindex [Negate]
+@cindex negate
 @item Negate (@var{N})
 returns -@var{N}.
 
-@cindex [Abs]
+@cindex abs
 @item Abs (@var{N})
 returns |@var{N}|.
 
-@cindex [GCD]
+@cindex gcd
 @item GCD (@var{N X})
 returns the greatest common divisor of the integers @var{N} and @var{X}.
 
-@cindex [Logand]
-@cindex [Logior]
-@cindex [Logxor]
+@cindex logand
+@cindex logior
+@cindex logxor
 @item Logand (@var{N X})
 returns the bitwise and of the integers @var{N} and @var{X}.
 Logior and Logxor are analogous.
 
-@cindex [Lognot]
+@cindex lognot
 @item Lognot (@var{N})
 returns the bitwise complement of @var{N}.
 
-@cindex [Boole]
+@cindex boole
 
 @item Boole (@var{Op X Y})
 performs the Common Lisp Boole operation @var{Op} on @var{X},
@@ -2232,39 +2232,39 @@ and @var{Y}. The Boole constants for CMU Common Lisp are these:
         boole-orc2      15
 @end verbatim
 
-@cindex [Ash]
+@cindex ash
 
 @item Ash (@var{N X})
 performs the Common Lisp ASH operation on @var{N} and @var{X}.
 
-@cindex [Ldb]
+@cindex ldb
 @item Ldb (@var{S P N})
 All args are integers; @var{S} and @var{P} are non-negative.
 Performs the Common Lisp LDB operation with @var{S} and @var{P} being the size and
 position of the byte specifier.
 
-@cindex [Mask-Field]
+@cindex mask-field
 @item Mask-Field (@var{S P N})
 performs the Common Lisp Mask-Field operation with
 @var{S} and @var{P} being the size and position of the byte specifier.
 
-@cindex [Dpb]
+@cindex dpb
 @item Dpb (@var{V S P N})
 performs the Common Lisp DPB operation with @var{S} and @var{P}
 being the size and position of the byte specifier.
 
-@cindex [Deposit-Field]
+@cindex deposit-field
 @item Deposit-Field (@var{V S P N})
 performs the Common Lisp Deposit-Field operation
 with @var{S} and @var{P} as the size and position of the byte specifier.
 
-@cindex [Lsh]
+@cindex lsh
 @item Lsh (@var{N X})
 returns a fixnum that is @var{N} shifted left by @var{X} bits, with
 0's shifted in on the right. If @var{X} is negative, @var{N} is shifted to the
 right with 0's coming in on the left. Both @var{N} and @var{X} should be fixnums.
 
-@cindex [Logldb]
+@cindex logldb
 @item Logldb (@var{S P N})
 All args are fixnums. @var{S} and @var{P} specify a ``byte''
 or bit-field of any length within @var{N}. This is extracted and is returned
@@ -2274,17 +2274,17 @@ specified field. @var{P} = 0 means that the field starts at bit 0 of @var{N}, an
 so on.  It is an error if the specified field is not entirely within the 26
 bits of @var{N}
 
-@cindex [Logdpb]
+@cindex logdpb
 @item Logdpb (@var{V S P N})
 All args are fixnums. Returns a number equal to @var{N},
 but with the field specified by @var{P} and @var{S} replaced by the @var{S} low-order
 bits of @var{V}.        It is an error if the field does not fit into the 26 bits of
 @var{N}.
 
-@cindex [Sin]
-@cindex [Cos]
-@cindex [Tan]
-@cindex [Atan]
+@cindex sin
+@cindex cos
+@cindex tan
+@cindex atan
 @item Sin(@var{X}), Cos(@var{X}), Tan(@var{X}), and Atan(@var{X})
 accept a single number
 @var{X} as argument and return the sine, cosine, tangent, and arctangent of
@@ -2292,19 +2292,19 @@ the number respectively. These miscops take advantage of the hardware
 support provided on the IBM RT PC if it is available, otherwise they escape
 to Lisp code to calculate the appropriate result.
 
-@cindex [Log]
+@cindex log
 @item Log(@var{X})
 returns the natural log of the number @var{X}. This miscop uses
 the hardware operation if it is available, otherwise it escapes to Lisp
 code to calculate the result.
 
-@cindex [Exp]
+@cindex exp
 @item Exp(@var{X})
 returns e raised to the power @var{X}. This miscop uses the
 hardware operation if it is available, otherwise it escapes to Lisp code to
 calculate the result.
 
-@cindex [Sqrt]
+@cindex sqrt
 @item Sqrt(@var{X})
 returns the square root of @var{X}. This miscop uses the
 hardware operation if it is available, otherwise it escapes to Lisp code to
@@ -2319,24 +2319,24 @@ a branch which tests the appropriate condition code bit is generated.
 @subsubsection [Function Call and Return]
 
 @table @code
-@cindex [Call]
+@cindex call
 @item Call()
 A call frame for a function is opened.  This is explained in
 more detail in the next chapter.
 
-@cindex [Call-0]
+@cindex call-0
 @item Call-0 (@var{F})
 @var{F} must be an executable function, but is a
 function of 0 arguments. Thus, there is no need to collect arguments.   The
 call frame is opened and activated in a single miscop.
 
-@cindex [Call-Multiple]
+@cindex call-multiple
 @item Call-Multiple ()
 Just like a Call miscop, but it marks the frame
 to indicate that multiple values will be accepted. See
 section @ref{Multi}.
 
-@cindex [Set-Up-Apply-Args]
+@cindex set-up-apply-args
 @item Set-Up-Apply-Args ()
 is called to handle the last argument of a
 function called by apply. All the other arguments will have been
@@ -2348,7 +2348,7 @@ being passed to the function. When Set-up-apply-args returns, all the
 arguments to the function being applied are in their correct
 locations, and the function can be invoked normally.
 
-@cindex [Start-Call-Interpreter]
+@cindex start-call-interpreter
 @item Start-Call-Interpreter (@var{NArgs})
 is called from the interpreter to
 start a function call. It accepts the number of arguments that are
@@ -2358,18 +2358,18 @@ preserved registers. This miscop sets up the argument registers
 correctly, moves any other arguments down on the stack to their
 proper place, and invokes the function.
 
-@cindex [Invoke1]
+@cindex invoke1
 @item Invoke1 (@var{Function} @var{Argument})
 is similar to Start-Call-Interpreter,
 but is simpler, since the @var{Function} is being called with only a
 single @var{Argument}.
 
-@cindex [Invoke1*]
+@cindex invoke1*
 @item Invoke1* (@var{Function} @var{Argument})
 is similar to Invoke1, but the
 @var{Function} being called is called for one value, rather than multiple ones.
 
-@cindex [Start-call-mc]
+@cindex start-call-mc
 @item Start-call-mc ()
 is called when the compiler generates code for the
 form multiple-value-call. Register A0 contains the function to be
@@ -2379,34 +2379,34 @@ the stack. The argument registers are set up correctly, and the
 excess values moved down on the stack if necessary. Finally, the
 function is actually invoked.
 
-@cindex [Push-Last]
+@cindex push-last
 @item Push-Last ()
 closes the currently open call frame, and initiates a function
 call.
 
-@cindex [Return]
+@cindex return
 @item Return (@var{X})
 Return from the current function call.  After the current
 frame is popped off the stack, @var{X} is returned in register A0 as the result
 Being returned. See section @ref{Return} for more details.
 
-@cindex [Return-From]
+@cindex return-from
 @item Return-From (@var{X} @var{F})
 is similar to Return, except it accepts the frame
 to return from as an additional argument.
 
-@cindex [Return-1-Value-Any-Bind]
+@cindex return-1-value-any-bind
 @item Return-1-Value-Any-Bind (@var{X})
 is similar to return, except only
 one value is returned. Any number of bindings are undone during the
 return operation.
 
-@cindex [Return-Mult-Value-0-Bind]
+@cindex return-mult-value-0-bind
 @item Return-Mult-Value-0-Bind (@var{X})
 is similar to return, except multiple values
 may be returned, but the binding stack does not have to be popped.
 
-@cindex [Link-Address-Fixup]
+@cindex link-address-fixup
 @item Link-Address-Fixup (@var{Symbol NArgs Code-Vector Offset})
 finds the
 correct link table entry for @var{Symbol} with @var{NArgs} (@var{NArgs}
@@ -2414,13 +2414,13 @@ specifies the fixed number of arguments and a flag if more may be
 passed). It smashes the @var{Code-Vector} at @var{Offset} to generate
 code to point at the absolute address of the link table entry.
 
-@cindex [Miscop-Fixup]
+@cindex miscop-fixup
 @item Miscop-Fixup (@var{Code-Vector Offset Index})
 smashes @var{Code-Vector} at
 @var{Offset} with the correct value for the miscop specified by @var{Index} in a
 transfer vector of all the miscops.
 
-@cindex [Make-Compiled-Closure]
+@cindex make-compiled-closure
 @item Make-Compiled-Closure (@var{env fcn offset})
 returns a new function object
 that is a copy of the function object @var{fcn} which has the @var{env}
@@ -2428,7 +2428,7 @@ information stored at @var{offset}. Compiled lexical closures are now
 represented as real function objects rather than as lists. This miscop is
 necessary to support this change.
 
-@cindex [Reset-link-table]
+@cindex reset-link-table
 @item Reset-link-table (@var{function})
 resets all the link table entries for
 @var{function} to the default action. This is necessary because Portable
@@ -2436,7 +2436,7 @@ Commonloops updates generic function objects by copying new information
 into the function object. The link table must be updated to reflect this
 or the wrong function will be called.
 
-@cindex [Interrupt-Handler]
+@cindex interrupt-handler
 
 
 @item Interrupt-Handler (@var{Signal Code Signal-Context})
@@ -2505,7 +2505,7 @@ may have moved the function. Once this information is stored,
 interrupt-routine invokes the Lisp function %sp-software-interrupt-routine
 which moves the processing of the interrupt to Lisp code.
 
-@cindex [Break-Return]
+@cindex break-return
 @item Break-Return (@var{})
 returns from a function called by the
 interrupt-routine miscop. The only function that should ever do this is
@@ -2513,34 +2513,34 @@ interrupt-routine miscop. The only function that should ever do this is
 format that is generated during an interrupt and should not be used for
 anything else.
 
-@cindex [Catch]
+@cindex catch
 @item Catch (@var{Tag PC})
 builds a catch frame. @var{Tag} is the tag caught by this
 catch frame, @var{PC} is a saved-format PC (i.e., an index into the current code
 vector). See section @ref{Catch} for details.
 
-@cindex [Catch-Multiple]
+@cindex catch-multiple
 @item Catch-Multiple (@var{Tag PC})
 builds a multiple-value catch frame. @var{Tag} is
 the tag caught by this catch frame, and @var{PC} is a saved-format PC. See
 section @ref{Catch} for details.
 
-@cindex [Catch-All]
+@cindex catch-all
 @item Catch-All (@var{PC})
 builds a catch frame whose tag is the special Catch-All
 object. @var{PC} is the saved-format PC, which is the address to branch to if
 this frame is thrown through. See section @ref{Catch} for details.
 
-@cindex [Throw]
+@cindex throw
 @item Throw (@var{X Tag})
 @var{Tag} is the throw-tag, normally a symbol. @var{X} is the
 value to be returned. See section @ref{Catch} for a description of how this
 miscop works.
 
-@cindex [Rest-Entry-0]
-@cindex [Rest-Entry-1]
-@cindex [Rest-Entry-2]
-@cindex [Rest-Entry]
+@cindex rest-entry-0
+@cindex rest-entry-1
+@cindex rest-entry-2
+@cindex rest-entry
 @item Rest-Entry-0, Rest-Entry-1, Rest-Entry-2, Rest-Entry
 are miscops
 that do the processing for a function at its &rest entry point.
@@ -2553,7 +2553,7 @@ appropriate values. In particular, the non-&rest arguments are copied
 into preserved registers, and the &rest arg list is built and stored
 in the appropriate preserved register or on the stack as appropriate.
 
-@cindex [Call-Foreign]
+@cindex call-foreign
 @item Call-Foreign (@var{C-Function Arguments NArgs})
 establishes the C
 environment so that C code can be called correctly. @var{C-Function} is a
@@ -2565,7 +2565,7 @@ through R5 respectively, the rest are moved onto the C stack in the proper
 location. When the C function returns, Call-Foreign restores the Lisp
 environment and returns as its value the integer in R2.
 
-@cindex [Call-Lisp]
+@cindex call-lisp
 @item Call-Lisp (@var{Arg@-<1> ... Arg@-<2>})
 is a Lisp miscop that gets control
 when a C function needs to call a Lisp function. Lisp provides a mechanism
@@ -2578,7 +2578,7 @@ correct places for a call to a Lisp function and then invokes the special
 Lisp function call-lisp-from-c. This Lisp function actually invokes the
 correct Lisp function. Call-Lisp never regains control.
 
-@cindex [Return-To-C]
+@cindex return-to-c
 @item Return-To-C (@var{C-Stack-Pointer Value})
 is used in the
 function call-lisp-from-c to return control to C from a Lisp function
@@ -2589,14 +2589,14 @@ environment to what it was at the time the call to Lisp was made.
 register R2. Currently, it is not possible to return other than a single
 32 bit quantity.
 
-@cindex [Reset-C-Stack]
+@cindex reset-c-stack
 @item Reset-C-Stack ()
 is invoked when a Lisp function called by C throws out
 past where it should return to C. Reset-C-Stack restores the C stack to
 what it was before the original call to C happened. This is so that in the
 future, the C stack will not contain any garbage that should not be there.
 
-@cindex [Set-C-Procedure-Pointer]
+@cindex set-c-procedure-pointer
 @item Set-C-Procedure-Pointer (@var{Sap} @var{I} @var{Proc})
 sets the @var{I/2}'th
 element of @var{sap} to be the data part of the statically allocated g-vector
@@ -2608,41 +2608,41 @@ block that is passed to call-foreign.
 @subsubsection [Miscellaneous]
 
 @table @code
-@cindex [Eq]
+@cindex eq
 @item Eq (@var{X Y})
 sets the eq condition code bit to 1 if @var{X} and @var{Y} are the
 same object, 0 otherwise.
 
-@cindex [Eql]
+@cindex eql
 @item Eql (@var{X Y})
 sets the eq condition code bit to 1 if @var{X} and @var{Y} are the
 same object or if
 @var{X} and @var{Y} are numbers of the same type with the same value, 0 otherwise.
 
-@cindex [Make-Predicate]
+@cindex make-predicate
 @item Make-Predicate (@var{X})
 returns NIL if @var{X} is NIL or T if it is not.
 
-@cindex [Not-Predicate]
+@cindex not-predicate
 @item Not-Predicate (@var{X})
 returns T if @var{X} is NIL or NIL if it is not.
 
-@cindex [Values-To-N]
+@cindex values-to-n
 @item Values-To-N (@var{V})
 @var{V} must be a Values-Marker. Returns the number
 of values indicated in the low 24 bits of @var{V} as a fixnum.
 
-@cindex [N-To-Values]
+@cindex n-to-values
 @item N-To-Values (@var{N})
 @var{N} is a fixnum. Returns a Values-Marker with the
 same low-order 24 bits as @var{N}.
 
-@cindex [Force-Values]
+@cindex force-values
 @item Force-Values (@var{VM})
 If the @var{VM} is a Values-Marker, do
 nothing; if not, push @var{VM} and return a Values-Marker 1.
 
-@cindex [Flush-Values]
+@cindex flush-values
 @item Flush-Values (@var{})
 is a no-op for the DinkyMachine, since the only
 time that a Flush-Values miscop is generated is in some well-defined cases
@@ -2653,79 +2653,79 @@ where all the values are wanted on the stack.
 @subsubsection System Hacking
 
 @table @code
-@cindex [Get-Type]
+@cindex get-type
 @item Get-Type (@var{Object})
 returns the five type bits of the @var{Object} as a
 fixnum.
 
-@cindex [Get-Space]
+@cindex get-space
 @item Get-Space (@var{Object})
 returns the two space bits of @var{Object} as a
 fixnum.
 
-@cindex [Make-Immediate-Type]
+@cindex make-immediate-type
 @item Make-Immediate-Type (@var{X A})
 returns an object whose type bits are the
 integer @var{A} and whose other bits come from the immediate object or pointer
 @var{X}.        @var{A} should be an immediate type code.
 
-@cindex [8bit-System-Ref]
+@cindex 8bit-system-ref
 @item 8bit-System-Ref (@var{X I})
 @var{X} must be a system area pointer, returns
 the @var{I}'th byte of @var{X}, indexing into @var{X} directly. @var{I}
 must be a fixnum.
 
-@cindex [8bit-System-Set]
+@cindex 8bit-system-set
 @item 8bit-System-Set (@var{X I V})
 @var{X} must be a system area pointer, sets the
 @var{I}'th element of @var{X} to @var{V}, indexing into @var{X} directly.
 
-@cindex [16bit-System-Ref]
+@cindex 16bit-system-ref
 @item 16bit-System-Ref (@var{X I})
 @var{X} must be a system area pointer, returns the
 @var{I}'th 16-bit word of @var{X}, indexing into @var{X} directly.
 
-@cindex [Signed-16bit-System-Ref]
+@cindex signed-16bit-system-ref
 @item Signed-16bit-System-Ref (@var{X I})
 @var{X} must be a system area pointer,
 returns the @var{I}'th 16-bit word of @var{X} extending the high order bit as
 the sign bit.
 
-@cindex [16bit-System-Set]
+@cindex 16bit-system-set
 @item 16bit-System-Set (@var{X I V})
 @var{X} must be a system area pointer, sets the
 @var{I}'th element of @var{X} to @var{V}, indexing into @var{X} directly.
 
-@cindex [Signed-32bit-System-Ref]
+@cindex signed-32bit-system-ref
 @item Signed-32bit-System-Ref (@var{X I})
 @var{X} must be a system area pointer and
 @var{I} an even fixnum, returns the @var{I}/2'th 32 bit word as a signed
 quantity.
 
-@cindex [Unsigned-32bit-System-Ref]
+@cindex unsigned-32bit-system-ref
 @item Unsigned-32bit-System-Ref (@var{X I})
 @var{X} must be a system area pointer and
 @var{I} an even fixnum, returns the @var{I}/2'th 32 bit word as an unsigned
 quantity.
 
-@cindex [Signed-32bit-System-Set]
+@cindex signed-32bit-system-set
 @item Signed-32bit-System-Set (@var{X I V})
 @var{X} must be a system area pointer,
 @var{I} an even fixnum, and @var{V} an integer, sets the @var{I}/2'th element of
 @var{X} to @var{V}.
 
-@cindex [Sap-System-Ref]
+@cindex sap-system-ref
 @item Sap-System-Ref (@var{X I})
 @var{X} must be a system area pointer and @var{I} and
 even fixnum, returns the @var{I}/2'th element of @var{X} as a system area
 pointer.
 
-@cindex [Sap-System-Set]
+@cindex sap-system-set
 @item Sap-System-Set (@var{X I V})
 @var{X} and @var{V} must be a system area pointers
 and @var{I} an even fixnum, sets the @var{I}/2'th element of @var{X} to @var{V}.
 
-@cindex [Pointer-System-Set]
+@cindex pointer-system-set
 @item Pointer-System-Set (@var{X I})
 @var{X} must be a system area pointer, @var{I} an
 even fixnum, and @var{V} a pointer (either system area pointer or Lisp
@@ -2733,39 +2733,39 @@ pointer), sets the @var{I}/2'th element of @var{X} to the pointer @var{V}. If
 the pointer is a Lisp pointer, the pointer stored is to the first word of
 data (i.e., the header word(s) are bypassed).
 
-@cindex [Sap-Int]
+@cindex sap-int
 @item Sap-Int (@var{X})
 @var{X} should be a system area pointer, returns a Lisp
 integer containing the system area pointer. This miscop is useful when it
 is necessary to do arithmetic on system area pointers.
 
-@cindex [Int-Sap]
+@cindex int-sap
 @item Int-Sap (@var{X})
 @var{X} should be an integer (fixnum or bignum), returns a
 system area pointer. This miscop performs the inverse operation of sap-int.
 
-@cindex [Check-<=]
+@cindex check-<=
 @item Check-<= (@var{X} @var{Y})
 checks to make sure that @var{X} is less than or
 equal to @var{Y}. If not, then check-<= signals an error, otherwise it just
 returns.
 
-@cindex [Collect-Garbage]
+@cindex collect-garbage
 @item Collect-Garbage (@var{})
 causes a stop-and-copy GC to be performed.
 
-@cindex [Purify]
+@cindex purify
 @item Purify (@var{})
 is similar to collect-garbage, except it copies Lisp objects
 into static or read-only space. This miscop needs Lisp level code to get
 the process started by putting some root structures into the correct space.
 
-@cindex [Newspace-Bit]
+@cindex newspace-bit
 @item Newspace-Bit (@var{})
 returns 0 if newspace is currently space 0 or 1 if it is
 1.
 
-@cindex [Save]
+@cindex save
 @item Save (@var{*current-alien-free-pointer*} @var{Checksum} @var{memory})
 Save takes
 a snap short of the current state of the Lisp computation. The value of
@@ -2777,12 +2777,12 @@ parameter @var{memory} should be be a pointer to a block of memory where the
 saved core image will be stored. Save returns the size of the core image
 generated.
 
-@cindex [Syscall0]
-@cindex [Syscall1]
-@cindex [Syscall2]
-@cindex [Syscall3]
-@cindex [Syscall4]
-@cindex [Syscall]
+@cindex syscall0
+@cindex syscall1
+@cindex syscall2
+@cindex syscall3
+@cindex syscall4
+@cindex syscall
 Syscall0 Syscall1 Syscall2 Syscall3 Syscall4 Syscall (@var{number}
 @item @var{arg@-<1> ... arg@-<n>})
 is for making syscalls to the Mach kernel. The
@@ -2790,21 +2790,21 @@ argument @var{number} should be the number of the syscall. Syscall0 accepts
 no arguments to the syscall; syscall1 accepts one argument to the syscall,
 etc. Syscall accepts five or more arguments to the syscall.
 
-@cindex [Unix-write]
+@cindex unix-write
 @item Unix-Write (@var{fd buffer offset length})
 performs a Unix write syscall to
 the file descriptor @var{fd}. @var{Buffer} should contain the data to be
 written;  @var{Offset} should be an offset into buffer from which to start
 writing; and @var{length} is the number of bytes of data to write.
 
-@cindex [Unix-fork]
+@cindex unix-fork
 @item Unix-Fork ()
 performs a Unix fork operation returning one or two values.
 If an error occurred, the value -1 and the error code is returned. If no
 error occurred, 0 is returned in the new process and the process id of the
 child process is returned in the parent process.
 
-@cindex [Arg-In-Frame]
+@cindex arg-in-frame
 
 @item Arg-In-Frame (@var{N F})
 @var{N} is a fixnum, @var{F} is a
@@ -2812,40 +2812,40 @@ control stack pointer as returned by the Active-Call-Frame miscop. It
 returns the item in slot @var{N} of the args-and-locals area of call frame
 @var{F}.
 
-@cindex [Active-Call-Frame]
+@cindex active-call-frame
 @item Active-Call-Frame (@var{})
 returns a control-stack pointer to the start of the
 currently active call frame. This will be of type Control-Stack-Pointer.
 
-@cindex [Active-Catch-Frame]
+@cindex active-catch-frame
 @item Active-Catch-Frame (@var{})
 returns the control-stack pointer to the start of
 the currently active catch frame. This is Nil if there is no active catch.
 
-@cindex [Set-Call-Frame]
+@cindex set-call-frame
 @item Set-Call-Frame (@var{P})
 @var{P} must be a control stack pointer.        This becomes
 the current active call frame pointer.
 
-@cindex [Current-Stack-Pointer]
+@cindex current-stack-pointer
 @item Current-Stack-Pointer (@var{})
 returns the Control-Stack-Pointer that points
 to the current top of the stack (before the result of this operation is
 pushed). Note: by definition, this points to the
 to the last thing pushed.
 
-@cindex [Current-Binding-Pointer]
+@cindex current-binding-pointer
 @item Current-Binding-Pointer (@var{})
 returns a Binding-Stack-Pointer that points
 to the first word above the current top of the binding stack.
 
-@cindex [Read-Control-Stack]
+@cindex read-control-stack
 @item Read-Control-Stack (@var{F})
 @var{F} must be a control stack pointer. Returns
 the Lisp object that resides at this location.  If the addressed object is
 totally outside the current stack, this is an error.
 
-@cindex [Write-Control-Stack]
+@cindex write-control-stack
 @item Write-Control-Stack (@var{F V})
 @var{F} is a stack pointer, @var{V} is any Lisp
 object. Writes @var{V} into the location addressed. If the addressed cell is
@@ -2853,13 +2853,13 @@ totally outside the current stack, this is an error. Obviously, this should
 only be used by carefully written and debugged system code, since you can
 destroy the world by using this miscop.
 
-@cindex [Read-Binding-Stack]
+@cindex read-binding-stack
 @item Read-Binding-Stack (@var{B})
 @var{B} must be a binding stack pointer. Reads and
 returns the Lisp object at this location. An error if the location specified
 is outside the current binding stack.
 
-@cindex [Write-Binding-Stack]
+@cindex write-binding-stack
 @item Write-Binding-Stack (@var{B V})
 @var{B} must be a binding stack pointer. Writes
 @var{V} into the specified location. An error if the location specified is
@@ -3489,9 +3489,20 @@ User's Manual, Mach/IBM RT PC Edition} contains descriptions of functions
 that allow a user to set up interrupt handlers for any of the Unix signals
 from within Lisp.
 
-@appendix Fasload File Format
+
+
+@node Fasload File Format
+@chapter Fasload File Format
+
+
 @section General
 
+@emph{Note:} This section is obviously obsolete in SBCL. But the CMU
+CL FASL load process sheds light into how CMU CL talks about internal
+CL objects.
+
+@sp
+@noindent
 The purpose of Fasload files is to allow concise storage and rapid
 loading of Lisp data, particularly function definitions. The intent
 is that loading a Fasload file has the same effect as loading the

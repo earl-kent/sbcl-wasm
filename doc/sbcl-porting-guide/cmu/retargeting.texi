@@ -635,33 +635,35 @@ emitted.
 
 
 VOP writers expect:
-\table @code
+@table @code
 @item move
       You write when you port the assembler.)
-@item [EMIT-LABEL]
+@item emit-label
       Assembler interface like INST. Takes a label you made and says ``stick it
       here.''
-@item GEN-LABEL]
+@item gen-label
       Returns a new label suitable for use with EMIT-LABEL exactly once and
       for referencing as often as necessary.
-@item INST]
+@item inst
       Recognizes and dispatches to instructions you defined for assembler.
-@item ALIGN]
+@item align
       This takes the number of zero bits you want in the low end of the address
       of the next instruction.
-@item ASSEMBLE]
-@item ASSEMBLE-ELSEWHERE]
+@item assemble
+@item assemble-elsewhere
       Get ready for assembling stuff. Takes a VOP and arbitrary PROGN-style
       body. Wrap these around instruction emission code announcing the first
       pass of our assembler.
-@item CURRENT-NFP-TN]
+@item current-nfp-tn
       This returns a TN for the NFP if the caller uses the number stack, or
       nil.
-@item SB-ALLOCATED-SIZE]
+@item sb-allocated-size
       This returns the size of some storage base used by the currently
       compiling component.
-@item ...]
+@item ...
 @end table
+
+
 ;;;
 ;;; VOP idioms
 ;;;

@@ -147,7 +147,7 @@ Pointer and Forwarding Types:
 @end multitable
 
 
-@section [Table of Space Codes]
+@section Table of Space Codes
 @cindex space codes
 
 @verbatim
@@ -250,7 +250,7 @@ may wait indefinitely) are marked this way.
 
 
 
-@section [Pointer-Type Objects and Spaces]
+@section Pointer-Type Objects and Spaces
 @cindex pointer object format
 @cindex virtual memory
 
@@ -430,7 +430,7 @@ and a number of lisp objects used as constants by the function.
 
 
 
-@section [Forwarding Pointers]
+@section Forwarding Pointers
 @cindex forwarding pointers
 
 @table @code
@@ -443,7 +443,7 @@ G-Vector space points to a structure in the G-Vector newspace.  GC-Forward
 pointers are only found in oldspace.
 @end table
 
-@section [System and Stack Spaces]
+@section System and Stack Spaces
 @cindex system table space
 @cindex stack spaces
 @cindex control stack space
@@ -491,7 +491,7 @@ than access to non-simple (or ``complex'') arrays. However, all
 multi-dimensional arrays in CMU Common Lisp are complex arrays, so
 references to these are always through a header structure.
 
-@subsubsection [General Vectors]
+@subsubsection General Vectors
 @cindex general-vector format
 
 G-Vectors contain Lisp objects. The format is as follows:
@@ -553,7 +553,7 @@ integer, and thus only assembler routines should ever access an entry.
 Objects of type Function and Array are identical in format to
 general vectors, though they have their own spaces.
 
-@subsubsection [Integer Vectors]
+@subsubsection Integer Vectors
 @cindex integer-vector format
 
 I-Vectors contain unboxed items of data, and their format is more complex. The
@@ -1143,24 +1143,24 @@ The defined-from string may have any of three different formats, depending
 on which of the three compiling functions compiled it:
 
 @table @code
-@item compile-file "@i[filename user-time universal-time]"
-  The @i[filename] is
+@item compile-file "@i{filename user-time universal-time}"
+  The @i{filename} is
 the namestring of the truename of the file the function was defined from.
 The time is the file-write-date of the file.
 
-@item compile "Lisp on @i[user-time], machine @i[machine universal-time]"
-The time is the time that the function was compiled. @i[Machine] is the
+@item compile "Lisp on @i{user-time}, machine @i{machine universal-time}"
+The time is the time that the function was compiled. @i{Machine} is the
 machine-instance of the machine on which the compilation was done.
 
-compile-from-stream "@i[stream] on @i[user-time], machine @i[machine-instance
-@item universal-time]"
-@i[Stream] is the printed representation of the stream
+compile-from-stream "@i{stream} on @i{user-time}, machine @i{machine-instance
+@item universal-time}"
+@i{Stream} is the printed representation of the stream
 compiled from. The time is the time the compilation started.
 @end table
 
 
-An example of the format of @i[user-time] is 6-May-86 1:04:44. The
-@i[universal-time] is the same time represented as a decimal integer.
+An example of the format of @i{user-time} is 6-May-86 1:04:44. The
+@i{universal-time} is the same time represented as a decimal integer.
 It should be noted that in each case, the universal time is the last
 thing in the string.
 
@@ -1233,7 +1233,7 @@ The first slot is pointed to by the Active-Frame register if this frame is
 currently active.
 
 
-@subsubsection [Catch Frames]
+@subsubsection Catch Frames
 @cindex catch
 @cindex catch frames
 
@@ -1257,7 +1257,7 @@ catch frame looks like this:
 The conventions used to manipulate call and catch frames are described in
 chapter @ref{Control-Conventions}.
 
-@section [Binding-Stack Format]
+@section Binding-Stack Format
 @cindex binding stack format
 
 Each entry of the binding-stack consists of two boxed (32-bit) words. Pushed
@@ -1326,23 +1326,23 @@ A Lisp-level GC function returns the oldspace pages to Mach.
 
 
 @cindex transporter
-@section [The Transporter]
+@section The Transporter
 The transporter moves objects from oldspace to newspace. It is given an
-address @i[A], which contains the object to be transported, @i[B]. If @i[B] is
+address @i{A}, which contains the object to be transported, @i{B}. If @i{B} is
 an immediate object, a pointer into static space, a pointer into read-only
 space, or a pointer into newspace, the transporter does nothing.
 
-If @i[B] is a pointer into oldspace, the object it points to must be
+If @i{B} is a pointer into oldspace, the object it points to must be
 moved. It may, however, already have been moved. Fetch the first
-word of @i[B], and call it @i[C]. If @i[C] is a GC-forwarding
-pointer, we form a new pointer with the type code of @i[B] and the
-low 27 bits of @i[C]. Write this into @i[A].
+word of @i{B}, and call it @i{C}. If @i{C} is a GC-forwarding
+pointer, we form a new pointer with the type code of @i{B} and the
+low 27 bits of @i{C}. Write this into @i{A}.
 
-If @i[C] is not a GC-forwarding pointer, we must copy the object that
-@i[B] points to. Allocate a new object of the same size in newspace,
-and copy the contents. Replace @i[C] with a GC-forwarding pointer to
+If @i{C} is not a GC-forwarding pointer, we must copy the object that
+@i{B} points to. Allocate a new object of the same size in newspace,
+and copy the contents. Replace @i{C} with a GC-forwarding pointer to
 the new structure, and write the address of the new structure back
-into @i[A].
+into @i{A}.
 
 Hash tables maintained with an EQ relation need special treatment by the
 transporter. Whenever a G-Vector with subtype 2 or 3 is transported to
@@ -1353,7 +1353,7 @@ before any access is made.
 
 
 @cindex scavenger
-@section [The Scavenger] The scavenger looks through an area of
+@section The Scavenger The scavenger looks through an area of
 pointers for pointers into oldspace, transporting the objects they
 point to into newspace. The stacks and static spaces need to be
 scavenged once, but the new dynamic spaces need to be scavenged
@@ -1385,7 +1385,7 @@ once a full system is built. Most of the functions in the system, however,
 will be used after initialization. Rather than bend over backwards to make
 the compiler dump some functions in read-only space and others in dynamic
 space (which involves dumping their constants in the proper spaces, also),
-@i[everything] is dumped into dynamic space. A purify miscop is provided
+@i{everything} is dumped into dynamic space. A purify miscop is provided
 that does a garbage collection and moves accessible information in dynamic
 space into read-only or static space.
 
@@ -1446,7 +1446,7 @@ list manipulation, symbol manipulation, array manipulation, type predicate,
 arithmetic and logical, function call and return,
 miscellaneous, and system hacking.
 
-@subsubsection [Allocation]
+@subsubsection Allocation
 
 All non-immediate objects are allocated in the ``current allocation
 space,'' which is dynamic space, static space, or read-only space. The
@@ -1461,148 +1461,148 @@ allocation space is restored to some safe value.
 
 @table @code
 @cindex get-allocation-space
-@item Get-Allocation-Space (@i[])
+@item Get-Allocation-Space (@i{})
 returns 0, 2, or 3 if the current allocation
 space is dynamic, static, or read-only, respectively.
 
 @cindex set-allocation-space
-@item Set-Allocation-Space (@i[X])
+@item Set-Allocation-Space (@i{X})
 sets the current allocation space to dynamic,
-static, or read-only if @i[X] is 0, 2, or 3 respectively. Returns @i[X].
+static, or read-only if @i{X} is 0, 2, or 3 respectively. Returns @i{X}.
 
 @cindex alloc-bit-vector
 @item Alloc-Bit-Vector (Length)
-returns a new bit-vector @i[Length] bits long,
-which is allocated in the current allocation space. @i[Length] must be a
+returns a new bit-vector @i{Length} bits long,
+which is allocated in the current allocation space. @i{Length} must be a
 positive fixnum.
 
 @cindex alloc-i-vector
-@item Alloc-I-Vector (@i[Length A])
-returns a new I-Vector @i[Length]
-bytes long, with the access code specified by @i[A]. @i[Length] and
-@i[A] must be positive fixnums.
+@item Alloc-I-Vector (@i{Length A})
+returns a new I-Vector @i{Length}
+bytes long, with the access code specified by @i{A}. @i{Length} and
+@i{A} must be positive fixnums.
 
 @cindex alloc-string
-@item Alloc-String (@i[Length])
- returns a new string @i[Length] characters long.
-@i[Length] must be a fixnum.
+@item Alloc-String (@i{Length})
+ returns a new string @i{Length} characters long.
+@i{Length} must be a fixnum.
 
 @cindex alloc-bignum
-@item Alloc-Bignum (@i[Length])
-returns a new bignum @i[Length] 32-bit words long.
-@i[Length] must be a fixnum.
+@item Alloc-Bignum (@i{Length})
+returns a new bignum @i{Length} 32-bit words long.
+@i{Length} must be a fixnum.
 
 @cindex make-complex
-@item Make-Complex (@i[Realpart Imagpart])
+@item Make-Complex (@i{Realpart Imagpart})
 returns a new complex number with the
-specified @i[Realpart] and @i[Imagpart]. @i[Realpart] and @i[Imagpart] should
+specified @i{Realpart} and @i{Imagpart}. @i{Realpart} and @i{Imagpart} should
 be the same type of non-complex number.
 
 @cindex make-ratio
-@item Make-Ratio (@i[Numerator Denominator])
+@item Make-Ratio (@i{Numerator Denominator})
 returns a new ratio with the
-specified @i[Numerator] and @i[Denominator]. @i[Numerator] and
-@i[Denominator] should be integers.
+specified @i{Numerator} and @i{Denominator}. @i{Numerator} and
+@i{Denominator} should be integers.
 
 @cindex alloc-g-vector
-@item Alloc-G-Vector (@i[Length Initial-Element])
+@item Alloc-G-Vector (@i{Length Initial-Element})
 returns a new G-Vector
-with @i[Length] elements initialized to @i[Initial-Element].
-@i[Length] should be a fixnum.
+with @i{Length} elements initialized to @i{Initial-Element}.
+@i{Length} should be a fixnum.
 
 @cindex static-alloc-g-vector
-@item Static-G-Vector (@i[Length Initial-Element])
+@item Static-G-Vector (@i{Length Initial-Element})
 returns a new G-Vector in
-static allocation space with @i[Length] elements initialized to
-@i[Initial-Element].
+static allocation space with @i{Length} elements initialized to
+@i{Initial-Element}.
 
 @cindex vector
-@item Vector (@i[Elt@-[0] Elt@-[1] ... Elt@-[Length - 1] Length])
+@item Vector (@i{Elt@-[0] Elt@-[1] ... Elt@-[Length - 1] Length})
 returns a new
-G-Vector containing the specified @i[Length] elements.  @i[Length] should be a
+G-Vector containing the specified @i{Length} elements.  @i{Length} should be a
 fixnum and is passed in register A0. The rest of the arguments are passed on
 the stack.
 
 @cindex alloc-function
-@item Alloc-Function (@i[Length])
-returns a new function with @i[Length] elements.
-@i[Length] should be a fixnum.
+@item Alloc-Function (@i{Length})
+returns a new function with @i{Length} elements.
+@i{Length} should be a fixnum.
 
 @cindex alloc-array
-@item Alloc-Array (@i[Length])
-returns a new array with @i[Length] elements.
-@i[Length] should be a fixnum.
+@item Alloc-Array (@i{Length})
+returns a new array with @i{Length} elements.
+@i{Length} should be a fixnum.
 
 @cindex alloc-symbol
-@item Alloc-Symbol (@i[Print-Name])
+@item Alloc-Symbol (@i{Print-Name})
 returns a new symbol with the print-name as
-@i[Print-Name]. The value is initially Trap, the definition is Trap,
+@i{Print-Name}. The value is initially Trap, the definition is Trap,
 the property list and the package are initially NIL. The symbol is
 not interned by this operation -- that is done in Lisp code.
-@i[Print-Name] should be a simple-string.
+@i{Print-Name} should be a simple-string.
 
 @cindex cons
-@item Cons (@i[Car Cdr])
-returns a new cons with the specified @i[Car] and @i[Cdr].
+@item Cons (@i{Car Cdr})
+returns a new cons with the specified @i{Car} and @i{Cdr}.
 
 @cindex list
-@item List (@i[Elt@-[0] Elt@-[1] ... Elt@-[CE - 1] Length])
+@item List (@i{Elt@-[0] Elt@-[1] ... Elt@-[CE - 1] Length})
 returns a new list
-containing the @i[Length] elements. @i[Length] should be fixnum and is
+containing the @i{Length} elements. @i{Length} should be fixnum and is
 passed in register NL0. The first three arguments are passed in A0, A1, and
 A2. The rest of the arguments are passed on the stack.
 
 @cindex list*
-@item List* (@i[Elt@-[0] Elt@-[1] ... Elt@-[CE - 1] Length])
+@item List* (@i{Elt@-[0] Elt@-[1] ... Elt@-[CE - 1] Length})
 returns a list* formed
-by the @i[Length-1] elements. The last element is placed in the cdr of the
-last element of the new list formed. @i[Length] should be a fixnum and is
+by the @i{Length-1} elements. The last element is placed in the cdr of the
+last element of the new list formed. @i{Length} should be a fixnum and is
 passed in register NL0. The first three arguments are passed in A0, A1, and
 A2. The rest of the arguments are passed on the stack.
 
 @cindex mv-list
-@item MV-List (@i[Elt@-<0> Elt@-<1> ... Elt@-<CE - 1> Length])
+@item MV-List (@i{Elt@-<0> Elt@-<1> ... Elt@-<CE - 1> Length})
 returns a list
-formed from the elements, all of which are on the stack. @i[Length] is
+formed from the elements, all of which are on the stack. @i{Length} is
 passed in register A0. This miscop is invoked when multiple values from
 a function call are formed into a list.
 @end table
 
-@subsubsection [Stack Manipulation]
+@subsubsection Stack Manipulation
 
 
 @table @code
 @cindex push
-@item Push (@i[E])
+@item Push (@i{E})
 pushes E on to the control stack.
 
 @cindex pop
-@item Pop (@i[E])
-pops the top item on the control stack into @i[E].
+@item Pop (@i{E})
+pops the top item on the control stack into @i{E}.
 
 @cindex npop
-@item NPop (@i[N])
-If @i[N] is positive, @i[N] items are popped off of the stack.
-If @i[N] is negative, NIL is pushed onto the stack -@i[N] times. @i[N] must be
+@item NPop (@i{N})
+If @i{N} is positive, @i{N} items are popped off of the stack.
+If @i{N} is negative, NIL is pushed onto the stack -@i{N} times. @i{N} must be
 a fixnum.
 
 @cindex bind-null
-@item Bind-Null (@i[E])
-pushes @i[E] (which must be a symbol) and its current value
-onto the binding stack, and sets the value of @i[E] to NIL. Returns NIL.
+@item Bind-Null (@i{E})
+pushes @i{E} (which must be a symbol) and its current value
+onto the binding stack, and sets the value of @i{E} to NIL. Returns NIL.
 
 @cindex bind
 @item Bind (Value Symbol)
-pushes @i[Symbol] (which must be a symbol) and its current
-value onto the binding stack, and sets the value cell of @i[Symbol] to
-@i[Value]. Returns @i[Symbol].
+pushes @i{Symbol} (which must be a symbol) and its current
+value onto the binding stack, and sets the value cell of @i{Symbol} to
+@i{Value}. Returns @i{Symbol}.
 
 @cindex unbind
-@item Unbind (@i[N])
-undoes the top @i[N] bindings on the binding stack.
+@item Unbind (@i{N})
+undoes the top @i{N} bindings on the binding stack.
 @end table
 
-@subsubsection [List Manipulation]
+@subsubsection List Manipulation
 
 @table @code
 @cindex car
@@ -1611,46 +1611,46 @@ undoes the top @i[N] bindings on the binding stack.
 @cindex cadr
 @cindex cdar
 @cindex cddr
-@item Car, Cdr, Caar, Cadr, Cdar, Cddr (@i[E])
+@item Car, Cdr, Caar, Cadr, Cdar, Cddr (@i{E})
 returns the car, cdr, caar, cadr,
-cdar, or cddr of @i[E] respectively.
+cdar, or cddr of @i{E} respectively.
 
 @cindex set-cdr
 @cindex set-cddr
-@item Set-Cdr, Set-Cddr (@i[E])
-The cdr or cddr of the contents of @i[E] is stored
-in @i[E]. The contents of @i[E] should be either a list or NIL.
+@item Set-Cdr, Set-Cddr (@i{E})
+The cdr or cddr of the contents of @i{E} is stored
+in @i{E}. The contents of @i{E} should be either a list or NIL.
 
 @cindex set-lpop
-@item Set-Lpop (@i[E])
-The car of the contents of @i[E] is returned;
-the cdr of the contents of @i[E] is stored in @i[E]. The contents of @i[E]
+@item Set-Lpop (@i{E})
+The car of the contents of @i{E} is returned;
+the cdr of the contents of @i{E} is stored in @i{E}. The contents of @i{E}
 should be a list or NIL.
 
 @cindex spread
-@item Spread (@i[E])
-pushes the elements of the list @i[E] onto the stack in
+@item Spread (@i{E})
+pushes the elements of the list @i{E} onto the stack in
 left-to-right order.
 
 @cindex replace-car
 @cindex replace-cdr
-@item Replace-Car, Replace-Cdr (@i[List Value])
-sets the car or cdr of the @i[List]
-to @i[Value] and returns @i[Value].
+@item Replace-Car, Replace-Cdr (@i{List Value})
+sets the car or cdr of the @i{List}
+to @i{Value} and returns @i{Value}.
 
 @cindex endp
 @item Endp (X)
-sets the condition code eq bit to 1 if @i[X] is NIL, or 0 if @i[X] is
+sets the condition code eq bit to 1 if @i{X} is NIL, or 0 if @i{X} is
 a cons cell. Otherwise an error is signalled.
 
 @cindex assoc
 @cindex assq
-@item Assoc, Assq (@i[List Item])
+@item Assoc, Assq (@i{List Item})
 returns the first cons in the association-list
-@i[List] whose car is EQL to @i[Item]. If the = part of the EQL comparison
+@i{List} whose car is EQL to @i{Item}. If the = part of the EQL comparison
 bugs out (and it can if the numbers are too complicated), a Lisp-level Assoc
-function is called with the current cdr of the @i[List]. Assq returns the
-first cons in the association-list @i[List] whose car is EQ to @i[Item].
+function is called with the current cdr of the @i{List}. Assq returns the
+first cons in the association-list @i{List} whose car is EQ to @i{Item}.
 
 @cindex member
 @cindex memq
@@ -1670,7 +1670,7 @@ If @var{Indicator} is found, its associated value is returned,
 otherwise @var{Default} is returned.
 @end table
 
-@subsubsection [Symbol Manipulation]
+@subsubsection Symbol Manipulation
 
 Most of the symbol manipulation miscops are compiled in-line rather than
 actual calls.
@@ -1743,7 +1743,7 @@ If @var{Indicator} is not found, the @var{Indicator} @var{Value} pair are consed
 the front of the property list.
 @end table
 
-@subsubsection [Array Manipulation]
+@subsubsection Array Manipulation
 
 Common Lisp arrays have many manifestations in CMU Common Lisp. The CMU
 Common Lisp data types Bit-Vector, Integer-Vector, String, General-Vector,
@@ -1915,7 +1915,7 @@ simple-string.  The @var{Length} operand can be Nil, in which case the length of
 the string is calculated in assembler.
 @end table
 
-@subsubsection [Type Predicates]
+@subsubsection Type Predicates
 
 Many of the miscops described in this sub-section can be coded in-line rather
 than as miscops. In particular, all the predicates on basic types are coded
@@ -2057,7 +2057,7 @@ sets the eq condition code bit to 1 if @var{Object} is
 a character or 0 if it is not.
 @end table
 
-@subsubsection [Arithmetic]
+@subsubsection Arithmetic
 
 @table @code
 @cindex integer-length
@@ -2311,12 +2311,12 @@ hardware operation if it is available, otherwise it escapes to Lisp code to
 calculate the result.
 @end table
 
-@subsubsection [Branching]
+@subsubsection Branching
 All branching is done with DinkyMachine branch instructions.
 Instructions are generated to set the condition code bits appropriately, and
 a branch which tests the appropriate condition code bit is generated.
 
-@subsubsection [Function Call and Return]
+@subsubsection Function Call and Return
 
 @table @code
 @cindex call
@@ -2605,7 +2605,7 @@ block that is passed to call-foreign.
 
 @end table
 
-@subsubsection [Miscellaneous]
+@subsubsection Miscellaneous
 
 @table @code
 @cindex eq
@@ -3543,7 +3543,7 @@ By "finite" we mean that a definite end-of-file point can be detected
 irrespective of the content of the data stream. A Fasload file will
 be regarded as such a byte stream.
 
-@section [Strategy]
+@section Strategy
 
 A Fasload file may be regarded as a human-readable prefix followed by
 code in a funny little language. When interpreted, this code will
@@ -3597,7 +3597,7 @@ Macros:    PUSH POP FROB TWIDDLE
 The particular paragraph names and contents shown here are only intended as
 suggestions.
 
-@section [Fasload Language]
+@section Fasload Language
 
 Each operation in the binary Fasload language is an eight-bit
 (one-byte) opcode. Each has a name beginning with "@code{FOP-}". In
@@ -4195,7 +4195,7 @@ In many of the following steps, there are lines setting up search lists so that
 command files know where to find the sources. What I have done is create a
 init.lisp file that sets up these search lists for me. This file is
 automatically loaded from the user's home directory (as determined by the
-@b[HOME] environment variable) when you start up Lisp. Note that my init.lisp
+@emph{HOME} environment variable) when you start up Lisp. Note that my init.lisp
 file is included with the sources. You may have to modify it, if you change
 where the lisp sources are.
 
@@ -4590,8 +4590,8 @@ you into the User package which is the package you should be in when the
 full core is first started up. It is necessary to add this line, because
 the current package is rebound while a file is loaded. The last line loads
 in a file that loads in the compiler, hemlock, and some other files not yet
-loaded. The open call is @b[essential] otherwise when the full core is
-started up, load will try to close the file and probably invalidate memory
+loaded. The open call is @emph{essential} otherwise when the full core is
+started up, load will try0 to close the file and probably invalidate memory
 that is needed. When load is passed a stream, it does not automatically
 close the stream. With a file name it now does after a recent bug fix.
 This file prompts for the versions of the Lisp system, the compiler, and

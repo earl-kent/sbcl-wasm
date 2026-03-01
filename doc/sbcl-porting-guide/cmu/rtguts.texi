@@ -1,6 +1,6 @@
+@chapter Internal Design of CMU CL on the IBM RT PC
 
-
-@chapter Introduction
+@section Introduction
 
 
 Internal Design of CMU Common Lisp 
@@ -79,7 +79,7 @@ radices will be indicated by a subscript (as in 77@-[8]) or by a clear
 statement of what radix is in use.
 
 @node Data Types and Object Formats
-@chapter Data Types and Object Formats
+@subsection Data Types and Object Formats
 
 @node Lisp Objects
 @section Lisp Objects
@@ -491,7 +491,7 @@ than access to non-simple (or ``complex'') arrays. However, all
 multi-dimensional arrays in CMU Common Lisp are complex arrays, so
 references to these are always through a header structure.
 
-@subsection [General Vectors]
+@subsubsection [General Vectors]
 @cindex [General-Vector format]
 
 G-Vectors contain Lisp objects. The format is as follows:
@@ -553,7 +553,7 @@ integer, and thus only assembler routines should ever access an entry.
 Objects of type Function and Array are identical in format to
 general vectors, though they have their own spaces.
 
-@subsection [Integer Vectors]
+@subsubsection [Integer Vectors]
 @cindex [Integer-Vector format]
 
 I-Vectors contain unboxed items of data, and their format is more complex. The
@@ -630,7 +630,7 @@ Strings differ from normal I-Vectors in that the accessing miscops accept
 and return objects of type Character rather than Fixnum.
 
 @node Arrays
-@subsection Arrays
+@subsubsection Arrays
 @cindex arrays
 
 An array header is identical in form to a G-Vector. Like any G-Vector, its
@@ -987,7 +987,7 @@ occurs, otherwise the operation quietly returns zero.
 
 
 @node Runtime
-@chapter Runtime Environment
+@subsection Runtime Environment
 @cindex Runtime Environment
 
 @section Register Allocation
@@ -1173,7 +1173,7 @@ information for function calls, are intermixed with catch frames, which hold
 information used for non-local exits. In addition, the control stack is used
 as a scratchpad for random computations.
 
-@subsection Call Frames
+@subsubsection Call Frames
 @cindex Open frame
 @cindex Active frame
 
@@ -1233,7 +1233,7 @@ The first slot is pointed to by the Active-Frame register if this frame is
 currently active.
 
 
-@subsection [Catch Frames]
+@subsubsection [Catch Frames]
 @cindex [Catch]
 @cindex [Catch frames]
 
@@ -1266,7 +1266,7 @@ old value (any boxed item) that is to be restored when the binding stack is
 popped.
 
 @node Alloc-Chapter
-@chapter Storage Management
+@subsection Storage Management
 @cindex Storage management
 @cindex Garbage Collection
 
@@ -1394,7 +1394,7 @@ space into read-only or static space.
 
 
 @node Instr-Chapter
-@chapter Assembler Support Routines
+@subsection Assembler Support Routines
 @cindex assembler support routines
 
 To support compiled Common Lisp code many hand coded assembler
@@ -1446,7 +1446,7 @@ list manipulation, symbol manipulation, array manipulation, type predicate,
 arithmetic and logical, function call and return,
 miscellaneous, and system hacking.
 
-@subsection [Allocation]
+@subsubsection [Allocation]
 
 All non-immediate objects are allocated in the ``current allocation
 space,'' which is dynamic space, static space, or read-only space. The
@@ -1568,7 +1568,7 @@ passed in register A0. This miscop is invoked when multiple values from
 a function call are formed into a list.
 @end table
 
-@subsection [Stack Manipulation]
+@subsubsection [Stack Manipulation]
 
 
 @table @code
@@ -1602,7 +1602,7 @@ value onto the binding stack, and sets the value cell of @i[Symbol] to
 undoes the top @i[N] bindings on the binding stack.
 @end table
 
-@subsection [List Manipulation]
+@subsubsection [List Manipulation]
 
 @table @code
 @cindex [Car]
@@ -1670,7 +1670,7 @@ If @var{Indicator} is found, its associated value is returned,
 otherwise @var{Default} is returned.
 @end table
 
-@subsection [Symbol Manipulation]
+@subsubsection [Symbol Manipulation]
 
 Most of the symbol manipulation miscops are compiled in-line rather than
 actual calls.
@@ -1743,7 +1743,7 @@ If @var{Indicator} is not found, the @var{Indicator} @var{Value} pair are consed
 the front of the property list.
 @end table
 
-@subsection [Array Manipulation]
+@subsubsection [Array Manipulation]
 
 Common Lisp arrays have many manifestations in CMU Common Lisp. The CMU
 Common Lisp data types Bit-Vector, Integer-Vector, String, General-Vector,
@@ -1915,7 +1915,7 @@ simple-string.  The @var{Length} operand can be Nil, in which case the length of
 the string is calculated in assembler.
 @end table
 
-@subsection [Type Predicates]
+@subsubsection [Type Predicates]
 
 Many of the miscops described in this sub-section can be coded in-line rather
 than as miscops. In particular, all the predicates on basic types are coded
@@ -2057,7 +2057,7 @@ sets the eq condition code bit to 1 if @var{Object} is
 a character or 0 if it is not.
 @end table
 
-@subsection [Arithmetic]
+@subsubsection [Arithmetic]
 
 @table @code
 @cindex [Integer-Length]
@@ -2311,12 +2311,12 @@ hardware operation if it is available, otherwise it escapes to Lisp code to
 calculate the result.
 @end table
 
-@subsection [Branching]
+@subsubsection [Branching]
 All branching is done with DinkyMachine branch instructions.
 Instructions are generated to set the condition code bits appropriately, and
 a branch which tests the appropriate condition code bit is generated.
 
-@subsection [Function Call and Return]
+@subsubsection [Function Call and Return]
 
 @table @code
 @cindex [Call]
@@ -2605,7 +2605,7 @@ block that is passed to call-foreign.
 
 @end table
 
-@subsection [Miscellaneous]
+@subsubsection [Miscellaneous]
 
 @table @code
 @cindex [Eq]
@@ -2650,7 +2650,7 @@ where all the values are wanted on the stack.
 @end table
 
 @node System-Hacking-Instructions
-@subsection System Hacking
+@subsubsection System Hacking
 
 @table @code
 @cindex [Get-Type]
@@ -2867,7 +2867,7 @@ outside the current binding stack.
 @end table
 
 @node Control-Conventions
-@chapter Control Conventions
+@subsection Control Conventions
 @cindex Hairy stuff
 
 @section Function Calls
@@ -3116,7 +3116,7 @@ unbind any special symbols is:
 
 
 @node Multi
-@subsection Returning Multiple-Values
+@subsubsection Returning Multiple-Values
 @cindex Multiple values
 
 If the current frame can accept multiple values and a values marker is in
@@ -4133,7 +4133,7 @@ to FOP-MISCOP-FIXUP, but is used to link in user defined miscops.
 Indicates the end of a group header, as described above.
 @end table
 
-@chapter Appendix -- Building CMU Common Lisp
+@subsection Appendix -- Building CMU Common Lisp
 
 @section(Introduction)
 This document explains how to build a working Common Lisp from source code on

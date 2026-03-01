@@ -237,11 +237,11 @@ operating environments
 Maclisp -> Spice Lisp -> CMUCL -> SBCL
 
 
+@include cmu/abbreviations.texi
+
 @include cmu/internal-design.texi
 
 @include cmu/compiler-overview.texi
-
-
 
 
 @part Compiler Front End

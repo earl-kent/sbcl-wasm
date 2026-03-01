@@ -1,9 +1,9 @@
-\part{Compiler Retargeting}
 
 @node Retargeting the Compiler
 @chapter Retargeting the Compiler
 
-@strong{[\#\#\#}
+@node Misc Notes on Storage
+@section Misc. Notes on Storage
 
 In general, it is a danger sign if a generator references a TN that
 isn't an operand or temporary, since lifetime analysis hasn't been
@@ -68,7 +68,7 @@ immediate SC.
         primitive type is used to determine the legal SCs for a TN, and is also
         used to determine which type-coercion/move VOP to use.
 
-@strong{]}
+
 
 There are basically three levels of target dependence:
 
@@ -89,52 +89,147 @@ into assembly code of all the supported VOPs.
 @end itemize
 
 
-@node Storage bases and classes
-@chapter Storage bases and classes
-@cindex storage base
-@cindex storage class
-
-Storage base 
-
-@deffn sb-allocated-size @var{name}
-The size of the @var{name} SB in the currently compiled
-component. This is useful mainly for finding the size for allocating
-stack frames.
-@end deffn
-
-@noindent
-New interface: instead of @code{current-frame-size}, have
-@code{current-sb-size} @code{\verb+<name>+} which returns the current
-element size of the named SB.
-
-@noindent
-New interface: instead of @code{current-frame-size}, have
-@code{current-sb-size} @code{\verb+<name>+} which returns the current
-element size of the named SB.
-
-
-(* 4 (sb-allocated-size 'stack))
+@node Storage Bases and Classes
+@chapter Storage Cases and Classes
+@cindex storage base (SB)
+@cindex storage class (SC)
 
 
 
 
+The following are storage classes:
+
+@itemize
+@item constant
+@item zero
+@code{(integer 0 0)}
+
+@item negative-immediate
+@code{(integer #x-1FFF #-x0001)}
+The funny lower bound guarantees that the negation of an immediate
+is still an immediate.
+
+@item immediate
+@code{(integer 0 #x1FFE)} The funny upper bound guarantees that (1+
+immediate) will fit in 16 bits.
+
+@item unsigned-immediate
+@code{(integer #x1FFF #x3FFE)} The funny upper bound guarantees that
+(1+ immediate) will fit in 16 bits.
+
+@item zero
+@item negative-immediate
+@item immediate
+@item unsigned-immediate
+
+@item @code{immediate-constant} SCs for things other than numbers.
+@itemize
+@item null
+@item immediate-base-character
+@item immediate-sap
+
+@item random-immediate
+Anything else that can be computed faster than loaded that doesn't fit
+in any of the above immediate SCs.
+@end itemize
+
+@item The stacks.
+@itemize
+@item control-stack
+Scanned by GC, control-stack
+
+@item @code{non-descriptor-stack}
+@itemize
+@item signed-stack
+@item unsigned-stack
+@item base-character-stack
+@item sap-stack
+System area pointers. @code{sap-int} and @code{int-sap}
+
+The function @code{sap-int} is used to generate an integer corresponding
+to the system area pointer, suitable for passing to the kernel
+interfaces (which want all addresses specified as integers). The
+function @code{int-sap} is used to do the opposite conversion. The integer
+representation of a SAP is the byte offset of the SAP from the start
+of the address space.
+@cindex system area pointer (SAP)
+@item single-stack
+@item double-stack 
+@end itemize
+@end itemize
+@item Things that can go in the integer registers.
+@itemize
+@item any-reg
+Immediate descriptor objects.  Don't have to be seen by GC, but
+nothing bad will happen if they are.  (fixnums, characters, header
+values, etc).
+@item descriptor-reg
+Pointer descriptor objects.  Must be seen by GC.
+@item base-character-reg
+Non-Descriptor characters
+@item sap-reg
+Non-Descriptor SAP's (arbitrary pointers into address space)
+@item signed-reg
+Non-Descriptor (signed or unsigned) numbers.
+@item unsigned-reg
+@item non-descriptor-reg registers
+Random objects that must not be seen by GC.  Used only as temporaries.
+@item interior-reg
+Pointers to the interior of objects.  Used only as an temporary.
+@end itemize
+@item Things that can go into @code{float-registers}
+@itemize
+@item single-reg
+Non-Descriptor single-floats.
+@item single-reg
+@item double-reg
+Non-Descriptor double-floats.
+Note: we don't bother with the element size, 'cause load-tn's with
+an element-size other than one don't work, and nothing can be allocated
+in the odd fp regs anyway.
+ :element-size 2
+@end itemize
+@item control-stack
+A catch or unwind block.
+@end itemize
+
+@subsection Topics on Primitive Types
 
 
-
-
-
-;; in codgen.lisp
-(defun sb-allocated-size (name)
-  "The size of the Name'd SB in the currently compiled component.  Useful
-  mainly for finding the size for allocating stack frames."
-  (finite-sb-current-size (sb-or-lose name)))
-
-@sp
-
-@noindent
 How can we have primitive types that overlap,
 i.e. @code{(unsigned-byte 32)}, @code{(signed-byte 32)},
 @code{fixnum}?
+
+@sp
+What is the relation of primitive types and base classes and storage
+classes? What is the abstraction of a primitive type? The Internal
+Design of Spice Lisp calls them ``basic types'' and lists the following:
+
+@table @code
+@item misc
+@item bit-vector
+@item integer-vector
+@item string
+@item bignum
+@item long-float
+@item complex
+@item ratio
+@item general-vector
+@item function
+@item array
+@item symbol
+@item list
+@item + fixnum
+@item - fixnum
+@item + short-float
+@item - short-float
+@item character
+@item values-marker
+@item call-header
+@item catch-header
+@item catch-all
+@item gc-forward
+@end table
 
 @sp
 
@@ -146,10 +241,10 @@ Primitive types are used for two things:
 @item Representation selection:
 which SCs can be used to represent this value?  For this purpose, it
 isn't necessary that primitive types be disjoint, since any primitive
-type can choose an arbitrary set of representations. For moves
-between the overlapping representations, the move/load operations can
-just be noops when the locations are the same (vanilla MOVE), since
-any bad moves should be caught out by type checking.
+type can choose an arbitrary set of representations. For moves between
+the overlapping representations, the move/load operations can just be
+noops when the locations are the same (vanilla MOVE), since any bad
+moves should be caught out by type checking.
 
 @item VOP selection:
 Is this operand legal for this VOP?  When ptypes overlap in
@@ -162,16 +257,18 @@ flexible VOP operand restriction mechanisms, (constant, etc.)
 
 @end itemize
 
+@sp
+
 @noindent
 Ensure that @code{load}/@code{save-operand} never need to do
 representation conversion.
 
-The PRIMITIVE-TYPE more/coerce info would be moved into the SC. This could
-perhaps go along with flushing the TN-COSTS. We would annotate the TN with
-best SC, which implies the representation (boxed or unboxed). We would still
-need to represent the legal SCs for restricted TNs somehow, and also would have to
-come up with some other way for pack to keep track of which SCs we have already
-tried.
+The @code{primitive-type} more/coerce info would be moved into the
+SC. This could perhaps go along with flushing the TN-COSTS. We would
+annotate the TN with best SC, which implies the representation (boxed
+or unboxed). We would still need to represent the legal SCs for
+restricted TNs somehow, and also would have to come up with some other
+way for pack to keep track of which SCs we have already tried.
 
 An SC would have a list of ``alternate'' SCs and a boolean SAVE-P value that
 indicates it needs to be saved across calls in some non-SAVE-P SC. A TN is
@@ -225,6 +322,68 @@ Some storage bases:
 @item Unboxed (number) stack environment
 @item Closure environment
 @end itemize
+
+
+@multitable @columnfractions 0.08 0.20 .8
+@headitem Size @tab Kind  @tab Name
+@item 32 @tab @code{:finite} @tab registers
+@item 32 @tab @code{:finite} @tab float-registers
+@item 8 @tab @code{:unbounded} @tab control-stack
+@item 0 @tab @code{:unbounded} @tab non-descriptor-stack
+@item N/A @tab @code{:non-packed} @tab constant
+@item N/A @tab @code{:non-packed} @tab immediate-constantk
+@end multitable
+
+
+
+Types of operations:
+
+@itemize
+@item make-sb — create a storage base
+@item sb-allocated-size — how much space has been consumed
+@item sb-size — total size
+@item sb-offset — compute the offset of an allocated object
+@item *sb-list* — global registry of all storage bases for the current compilation unit
+@end itemize
+
+
+
+@cindex storage base
+@cindex SB
+
+
+@deffn {} sb-allocated-size @var{name}
+The size of the @var{name} storage base (SB) in the currently compiled
+component. This is useful mainly for finding the size for allocating
+stack frames.
+@end deffn
+
+@noindent
+New interface: instead of @code{current-frame-size}, have
+@code{current-sb-size} @code{+<name>+} which returns the current
+element size of the named SB.
+
+@noindent
+New interface: instead of @code{current-frame-size}, have
+@code{current-sb-size} @code{\verb+<name>+} which returns the current
+element size of the named SB.
+
+
+(* 4 (sb-allocated-size 'stack))
+
+
+;; in codgen.lisp
+(defun sb-allocated-size (name)
+  "The size of the Name'd SB in the currently compiled component.  Useful
+  mainly for finding the size for allocating stack frames."
+  (finite-sb-current-size (sb-or-lose name)))
+
+
+
+
+
+
+
 
 @noindent
 A storage class is a potentially arbitrary set of the elements in a storage
@@ -470,36 +629,39 @@ emitted.
 \chapter{Assembler Retargeting}
 
 
-\chapter{Writing Assembly Code}
+@node Assembly Code
+@chapter Assembly Code
+@cindex assembly code
+
 
 VOP writers expect:
-\begin{Lentry}
-\item[MOVE]
+\table @code
+@item move
       You write when you port the assembler.)
-\item[EMIT-LABEL]
+@item [EMIT-LABEL]
       Assembler interface like INST. Takes a label you made and says ``stick it
       here.''
-   \item[GEN-LABEL]
+@item GEN-LABEL]
       Returns a new label suitable for use with EMIT-LABEL exactly once and
       for referencing as often as necessary.
-   \item[INST]
+@item INST]
       Recognizes and dispatches to instructions you defined for assembler.
-   \item[ALIGN]
+@item ALIGN]
       This takes the number of zero bits you want in the low end of the address
       of the next instruction.
-   \item[ASSEMBLE]
-   \item[ASSEMBLE-ELSEWHERE]
+@item ASSEMBLE]
+@item ASSEMBLE-ELSEWHERE]
       Get ready for assembling stuff. Takes a VOP and arbitrary PROGN-style
       body. Wrap these around instruction emission code announcing the first
       pass of our assembler.
-   \item[CURRENT-NFP-TN]
+@item CURRENT-NFP-TN]
       This returns a TN for the NFP if the caller uses the number stack, or
       nil.
-   \item[SB-ALLOCATED-SIZE]
+@item SB-ALLOCATED-SIZE]
       This returns the size of some storage base used by the currently
       compiling component.
-   \item[...]
-\end{Lentry}
+@item ...]
+@end table
 ;;;
 ;;; VOP idioms
 ;;;

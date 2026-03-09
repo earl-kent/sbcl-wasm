@@ -1,0 +1,58 @@
+
+
+* make.sh
+  sh make.sh --xc-host="sbcl" --arch=riscv64  > riscv64.log 2>&1
+
+** outline 
+   The make-host-*.sh scripts are run on the cross-compilation host,
+   and the make-target-*.sh scripts are run on the target machine. In
+   ordinary compilation, we just do these phases consecutively on the
+   same machine, but if you wanted to cross-compile from one machine
+   which supports Common Lisp to another which does not (yet:-)
+   support Common Lisp, you could do something like this:
+    
+*** Create copies of the source tree on both the host and the target.
+
+** make-config.sh
+   Read the make-config.sh Script carefully and emulate it by hand on
+   both machines (e.g. creating "target"-named symlinks to identify
+   the target architecture).
+
+   
+   
+** make-host-1.sh
+   On the host system: SBCL_XC_HOST=<whatever> sh make-host-1.sh
+   
+** Copy src/runtime/genesis/*.h 
+   Copy src/runtime/genesis/*.h from the host system to the target
+   system.
+
+** On the target system
+
+*** sh make-target-1.sh
+
+*** Copy output/stuff-groveled-from-headers.lisp
+    Copy output/stuff-groveled-from-headers.lisp from the target
+    system to the host system.
+    
+** On the host system:
+   SBCL_XC_HOST=<whatever> sh make-host-2.sh
+   
+** Copy output/cold-sbcl.core
+   Copy output/cold-sbcl.core from the host system to the target
+   system. 
+
+** On the target system:
+
+*** sh make-target-2.sh
+
+*** sh make-target-contrib.sh
+    Or, if you can set up the files somewhere shared (with NFS, AFS, or
+    whatever) between the host machine and the target machine, the basic
+    procedure above should still work, but you can skip the "copy" steps.
+    If you can use rsync on the host machine, you can call make-config.sh
+    with:
+    --host-location=user@host-machine:<rsync path to host sbcl directory>
+    and the make-target-*.sh scripts will take care of transferring the
+    necessary files.
+  

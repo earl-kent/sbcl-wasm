@@ -50,6 +50,9 @@
 
 ;;; some make-host-1.sh stuff
 
+
+
+
 (defun make-host-1-interactive ()
   (let ((*default-pathname-defaults* (uiop:getcwd)))
     ;; Some notes:
@@ -68,6 +71,13 @@
     ;; - create the header files (but not the core) using
     ;;   (sb-cold:genesis :c-header-dir-name "src/runtime/genesis")
     (load "make-host-1.lisp")))
+
+;; after loading make-host-1.lisp sb-xc:*features* will be populated,
+;; you will also be able to run the following:
+
+;; (sb-cold::get-stems-and-flags 1)
+;; (sb-cold::get-stems-and-flags 2)
+
 
 (defun make-host-1-omnibus ()
   (let ((*default-pathname-defaults* (uiop:getcwd)))

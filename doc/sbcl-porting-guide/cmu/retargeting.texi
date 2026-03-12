@@ -490,7 +490,7 @@ assumption]
 
 
 
-\chapter{VOP Definition}
+@chapter VOP Definition
 
 Before the operand TN-refs are passed to the emit function, the following
 stuff is done:
@@ -507,7 +507,7 @@ SC-Restriction and Preference slots, and links together the Next-Ref chain as
 appropriate.
 
 
-\section{Lifetime model}
+@section{Lifetime model}
 
 \#|
 Note in doc that the same TN may not be used as both a more operand and as any
@@ -581,8 +581,187 @@ extended forward/backward. This would in many cases eliminate the need for
 temporaries when operands are read/written out of order.
 ]
 
+@node Wired Temps
+@section Wired Temps
+
+Wired temps (in CMU CL's compiler -- Python @arrow{} IR1 @arrow{} IR2
+@arrow{} backend), are a low-level mechanism used during IR2 and VOP
+(backend instruction) generation. The are special constraint on a TN
+separate from the Lisp-level semantics. They're used for guaranteeing
+that certain intermediate values live in fixed, predetermined
+registers across a sequence of VOPs. They exist because some machine
+instructions, calling conventions, and multi-instruction sequences
+require values to be in exact registers.
+
+@subsection What Wired Temps Are
+
+A @dfn{wired temp} is a TN whose storage location is wired (fixed) to
+a specific machine register or storage class.  Unlike normal compiler
+temps:
+
+@itemize
+@item they are not register-allocated
+@item they are not spilled
+@item they do not move
+@item they are not merged with other temps
+@item they are not subject to liveness-driven allocation
+@end itemize
+
+They are essentially ``this value must live in this hardware location
+(register, memory location, etc.) for the duration of this VOP or VOP
+sequence.''  In SBCL's backend, this is expressed in VOP definitions
+using the @code{wired-tn} slot of @code{defstruct}
+@code{ir2-component}, accessed in functions like the following.
+
+
+@deffn {sb-c} make-wired-tn ptype scn offset &optional (type *universal-type*))
+
+Create a TN wired to a particular location in an SC. We set the Offset
+and flow sensitive constraint (FSC) to record where it goes, and then
+put it on the current component's Wired-TNs list. Ptype is the TN's
+primitive-type, which may be NIL in VOP temporaries.
+@end deffn
+@cindex flow sensitive constraint (FSC)
+
+
+@subsection Why Wired Temps Exist
+
+CMU CL's backend is built around VOPs (virtual operations) that map to
+machine instructions.  Many architectures require certain operands to be
+in specific registers:
+
+@itemize
+@item return values in designated registers
+@item arguments in fixed registers
+@item multiply/divide instructions that implicitly use accumulator registers
+@item instructions that clobber specific registers
+@item calling sequences that require scratch registers
+@item pseudo-atomic or GC-safe sequences that must preserve or pin registers
+@end itemize
+
+A normal compiler temp cannot satisfy these constraints because the
+register allocator might place it anywhere.  A wired temp forces the
+value into the required register.
+
+@subsection Where Wired Temps Appear in the Pipeline
+
+Wired temps appear only in the IR2 @arrow{} VOP @arrow{} machine code
+part of the compiler:
+
+@enumerate
+@item IR2 conversion. The compiler lowers IR1 to IR2, introducing
+explicit temporaries for values that will become machine operands.
+
+@item VOP selection. Each IR2 node is matched to a VOP definition.
+VOPs specify:
+
+@itemize
+@item input operands
+@item output operands
+@item register constraints
+@item clobbered registers
+@item wired temps
+@end itemize
+
+@item Register assignment. Normal temps go through the register
+allocator. Wired temps bypass it entirely.
+
+@item Code emission. The backend emits machine instructions using the
+wired registers exactly as specified.
+@end enumerate
+
+@subsection How Wired Temps Are Declared
+
+In a VOP definition, you might see something like:
+
+@lisp
+(:temporary (:scs (any-reg) :offset eax) temp)
+@end lisp
+
+or:
+
+@lisp
+(:temporary (:wired t :scs (descriptor-reg)) value)
+@end lisp
+
+This means:
+
+@itemize
+@item @code{temp} must live in the register with offset @code{eax}
+@item @code{value} must live in a descriptor register and is not subject to allocation
+@end itemize
+
+The @code{:wired} keyword is the explicit marker.
+
+@subsubsection Uses of Wired Temps in CMU CL
+
+Several backend subsystems rely on wired temps.
+
+Arithmetic sequences Some architectures require:
+
+@itemize
+@item multiply @arrow{} result in hi/lo registers
+@item divide @arrow{} dividend in accumulator registers
+@end itemize
+
+Wired temps ensure the compiler puts the operands in the correct registers.
+
+Function call sequences CMU CL's calling convention uses fixed
+registers for:
+
+@itemize
+@item argument passing
+@item return values
+@item the frame pointer
+@item the control stack pointer
+@item the pseudo-atomic flag
+@end itemize
+
+Wired temps enforce these constraints.
+
+Pseudo-atomic and GC-safe sequences The GC and interrupt system
+require certain registers to hold specific values during critical
+sections.  Wired temps ensure those registers are not repurposed.
+
+Multiple-instruction VOPs Some VOPs expand into several instructions
+that must share a register across the sequence.  A wired temp pins the
+value.
+
+@subsubsection Why Wired Temps Matter
+
+Wired temps reveal the compiler's contract with the architecture:
+
+@itemize
+@item which registers are special
+@item which instructions have implicit operands
+@item how calling conventions are enforced
+@item how GC and interrupts interact with generated code
+@item how the compiler ensures correctness across multi-instruction sequences
+@end itemize
+
+They are one of the clearest windows into the backend's design
+philosophy: CMU CL's compiler is extremely explicit about register
+semantics.
+
+@subsubsection Summary
+
+Wired temps in CMU CL are:
+
+@itemize
+@item compiler temps with fixed, non-allocatable register assignments
+@item used when machine instructions or calling conventions require specific registers
+@item declared in VOP definitions
+@item bypass the register allocator
+@item essential for arithmetic, calling sequences, GC safety, and multi-instruction VOPs
+@end itemize
+
+They are a backend mechanism for guaranteeing that certain values live in
+the exact registers required by the architecture and runtime system.
+
+
+
 
-\section{VOP Cost model}
+@section{VOP Cost model}
 
 Note that in this model, if an operand has no restrictions, it has no cost.
 This makes sense, since the purpose of the cost is to indicate the
@@ -625,8 +804,6 @@ the arg/result types and the corresponding arg/result restrictions, i.e. the
 template is not clearly impossible: more declarations might allow it to be
 emitted.
 
-
-\chapter{Assembler Retargeting}
 
 
 @node Assembly Code
@@ -637,13 +814,13 @@ emitted.
 VOP writers expect:
 @table @code
 @item move
-      You write when you port the assembler.)
+      You write when you port the assembler.
 @item emit-label
       Assembler interface like INST. Takes a label you made and says ``stick it
       here.''
 @item gen-label
-      Returns a new label suitable for use with EMIT-LABEL exactly once and
-      for referencing as often as necessary.
+      Returns a new label suitable for use with @code{emit-label}
+      exactly once and for referencing as often as necessary.
 @item inst
       Recognizes and dispatches to instructions you defined for assembler.
 @item align
@@ -664,23 +841,30 @@ VOP writers expect:
 @end table
 
 
-;;;
-;;; VOP idioms
-;;;
+@section VOP idioms
 
-\begin{Lentry}
-\item[STORE-STACK-TN]
-\item[LOAD-STACK-TN]
-   These move a value from a register to the control stack, or from the
-   control stack to a register. They take care of checking the TN types,
-   modifying offsets according to the address units per word, etc.
-\end{Lentry}
+@table @code
+@item store-stack-tn
+@item load-stack-tn
+These move a value from a register to the control stack, or from the
+control stack to a register. They take care of checking the TN types,
+modifying offsets according to the address units per word, etc.
+   
+@end table
+
 
-\chapter{Required VOPS}
+@chapter Required VOPS
+
+Note: the move VOP cannot have any wired temps. (@code{move-argument}
+also?)  This is so we can move stuff into wired TNs without stepping
+on our toes.
+
+@emph{note:}
 
 
-Note: the move VOP cannot have any wired temps. (Move-Argument also?)  This is
-so we can move stuff into wired TNs without stepping on our toes.
+
+
+
 
 
 We create set closure variables using the Value-Cell VOP, which takes a value

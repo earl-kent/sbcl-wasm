@@ -19,12 +19,29 @@
   "sbcl-source"))
 
 
-
-
 (defun pathify (subdir)
   (uiop:subpathname
    (asdf:system-source-directory 'sbcl-wasm-lab)
    subdir))
+
+;; the following runs make.sh
+
+
+(defun test ()
+  (let ((xc-host "sbcl")
+        (arch "riscv64"))
+    (let (output
+          (with-output-to-string (output-stream)
+            (let (error output
+                        (with-output-to-string (output-stream)
+                          ))))))))
+;; sh make.sh --xc-host="sbcl" --arch=riscv64  > riscv64.log 2>&1
+
+(defun make-sh (output error-output xc-host)
+  (uiop:run-program '("make.sh" "--xc-host" xc-host
+                    :output output
+                    :error-output error-output)))
+
 
 
 ;; Confirm that default evaluation strategy is :INTERPRET if

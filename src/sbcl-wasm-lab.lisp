@@ -56,6 +56,31 @@
                     :error-output error-output))
 
 
+(defun load-cross-compiler ()
+  (let ((*default-pathname-defaults* (uiop:getcwd))
+        *host-obj-prefix*
+        *target-obj-prefix*)
+    (declare (special *host-obj-prefix*)
+             (special *target-obj-prefix*)
+             (declare (ftype (host-load-stem))))
+
+    (setf *print-level* 5 *print-length* 5)
+    (load "src/cold/shared.lisp")
+    (in-package "SB-COLD")
+
+    ;; FIXME: these prefixes look like non-pathnamy ways of defining a
+    ;; relative pathname.  Investigate whether they can be made relative
+    ;; pathnames.
+    (setf *host-obj-prefix* "obj/from-host/"
+          *target-obj-prefix* "obj/from-xc/")
+    (load "src/cold/set-up-cold-packages.lisp")
+    (load "src/cold/defun-load-or-cload-xcompiler.lisp")
+    (load-or-cload-xcompiler #'host-load-stem)
+    ;; Set up the perfect hash generator for the target's value of N-FIXNUM-BITS.
+    (preload-perfect-hash-generator (perfect-hash-generator-journal :input)))
+  (in-package sbcl-wasm-lab))
+
+
 
 
 

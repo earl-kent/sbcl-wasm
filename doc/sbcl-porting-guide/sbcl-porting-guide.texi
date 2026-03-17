@@ -239,6 +239,8 @@ Maclisp -> Spice Lisp -> CMUCL -> SBCL
 
 @include cmu/abbreviations.texi
 
+@include cmu/sbcl-build-process.texi
+
 @include cmu/internal-design.texi
 
 @include cmu/compiler-overview.texi

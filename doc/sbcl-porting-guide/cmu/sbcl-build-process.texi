@@ -1,0 +1,170 @@
+
+@node SBCL Build Process
+@chapter SBCL Build Process
+
+The entry point to the bulid process is @file{make.sh} which calls the
+following scripts directly:
+
+@table @file
+@item make-config.sh 
+@item make-host-1.sh
+@item make-target-1.sh
+@item make-host-2.sh
+@item make-target-2.sh
+@item make-target-contrib.sh
+@end table
+
+
+
+@node make-config.sh
+@section @file {make-config.sh}
+@cindex make-config.sh
+
+@file{make-configu.sh} is called like the following:
+
+@command{sh make-config.sh --xc-host="sbcl" --arch=riscv64 --check-host-lisp}
+
+@sp
+@noindent
+This creates the @file{output/} directory that ordinarily contains the
+following files (and a few additional ones for Android):
+
+@table @file
+@item build-config
+
+This sets up shell environment variables: @env{GNUMAKE},
+@env{SBCL_XC_HOST}, @env{android}, @env{SBCL_CONTRIB_BLOCKLIST}, and
+@env{SBCL_HOST_LOCATION} (for rsync).
+
+@item build-id.inc
+This creates a string to designate the build, something like:
+@code{my-host-userid-2026-01-01-11-00-00}. I.e. A compbination of
+host, user id, date and time.
+
+@item dynamic-space-size.txt
+
+Used to communicate the @code{--dynamic-space-size} parameter to
+lisp, i.e., in @file{src/compiler/generic/parms.lisp}
+
+@example
+(with-open-file (f "output/dynamic-space-size.txt"
+                   :if-does-not-exist nil)
+    @dots{})
+@end example
+
+@item prefix.def
+This is contains the prefix to which SBCL will be install using the
+@file{install.sh} command, e.g. @code{SBCL_PREFIX='/usr/local'}
+
+
+@end table
+
+
+Further in the build process additional files will also be added to
+this directory. If you're performing an android cross-compile build,
+additional files like, @file{output/ndk-config} will also be added
+during @file{make-config.sh}.
+
+In addition to @file{output/}, @file{make-config.sh} also create
+@file{local-target-features.lisp-expr}, the basic lisp parameters for
+the build. It is primarily used by @file{shared.lisp}. It looks
+something like the following lambda expression:
+
+@example
+;;;; This is a machine-generated file.
+;;;; Please do not edit it by hand.
+;;;; See make-config.sh.
+(lambda (features)
+  (set-difference
+   (union features
+          (list :riscv
+                :sb-thread
+                :os-provides-clock-gettime
+                :unix
+                :linux
+                :elf
+                :64-bit
+                :little-endian
+                :os-provides-dlopen
+                :os-provides-dladdr
+                :os-provides-blksize-t
+                :os-provides-suseconds-t
+                :os-provides-getprotoby-r
+                :os-provides-poll
+                :os-provides-close-range-wrapper
+                :os-provides-posix-spawn
+                :gencgc
+                :compare-and-swap-vops
+                :memory-barrier-vops))
+   (list)))
+@end example
+The individual keyword elements are built up using a fairly elaborate
+(and perhaps not very robust), network of shell script conditionals,
+e.g.
+
+@example
+case "$sbcl_os" in
+    linux)
+        printf ' :unix :linux :elf' >> $ltf
+        case "$sbcl_arch" in
+          arm64 | ppc64 | x86 | x86-64)
+	        printf ' :gcc-tls' >> $ltf
+        esac
+        case "$sbcl_arch" in
+          arm | arm64 | ppc | ppc64 | x86 | x86-64)
+	        printf ' :use-sys-mmap' >> $ltf
+        esac
+        @dots{}
+@end example
+@noindent
+where @code{$ltf} is the @file{local-target-features.lisp-expr} file.
+
+@sp
+@noindent
+@file{make-config.sh} is also rsync aware. So, if you've specified the
+@code{--host-location} flag, it will try and rsync to the specified host.
+
+
+@example
+if [ -n "$SBCL_HOST_LOCATION" ]; then
+    echo //setting up host configuration
+    rsync --delete-after -a output/ "$SBCL_HOST_LOCATION/output/"
+    rsync -a local-target-features.lisp-expr version.lisp-expr \
+        "$SBCL_HOST_LOCATION/"
+fi
+@end example
+
+
+
+If you're cross-compiling, @file{make-config.sh} should "do the right
+thing" when run on the target machine, with the minor caveat that any
+@file{--xc-host} parameter should be suitable for the host machine
+instead of the target.
+
+
+@node make-host-1.sh
+@section @file {make-host-1.sh}
+@cindex make-host-1.sh
+
+@file{make-host-1.sh} Is called by @file{make.sh} with no parameters,
+getting it's configuration from @file{local-target-features.lisp-expr}
+read by @file{shared.lisp}. The file is a thin rapper to
+@file{make-host-1.lisp}. It compiles and loads the cross-compiler. The
+cross compiler is not actually run until @file{make-host-2.sh} But
+needs to be loaded because each file has potential dependancies on
+previous files.
+
+
+The lisp file, @file{make-host-1.lisp}, is mostly loaded for its side
+effects. The following exposition outlines it's behavior.
+
+@node Setup SB-XC:*FEATURES*
+@subsection @file {Setup SB-XC:*FEATURES*}
+@cindex sb-xc:*features*
+
+
+@file{src/cold/shared.lisp} 
+
+
+
+

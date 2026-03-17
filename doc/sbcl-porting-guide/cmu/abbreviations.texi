@@ -1,0 +1,64 @@
+
+
+
+
+@node Abbreviations
+@chapter Abbreviations This section lists the abbreviations used throughout this manual.
+@table @asis
+
+@item FSC
+@cindex FSC
+@cindex flow sensitive constraint
+@dfn{flow sensitive constraint}. 
+
+
+@item NFP
+@cindex NFP
+@cindex next frame pointer
+@dfn{Next Frame Pointer}, i.e., the caller’s frame pointer. In the
+Python compiler’s internal model:
+@table @asis
+@item FP
+The current function’s frame pointer
+
+@item NFP
+the caller’s frame pointer
+
+@item CSP
+control stack pointer
+
+@item LRA
+return address
+
+@item CODE
+pointer to the current code object
+@end table
+
+@item SAP
+@cindex SAP
+@cindex system area pointer
+@dfn{System Area Pointer}. 
+
+@item SB
+@cindex SB
+@cindex storage base
+@dfn{Storage Base}. 
+
+@item SC
+@cindex SC
+@cindex storage class
+@dfn{Storage Class}. A tree representation of program structure.
+
+@item TN
+@cindex TN
+@cindex temporary name
+@dfn{Temporary Name}. 
+
+@item VOP
+@cindex VOP
+@cindex virtual operation
+@dfn{Virtual Operation}. 
+
+
+@end table 
+

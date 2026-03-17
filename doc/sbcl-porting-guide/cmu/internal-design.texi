@@ -1,3 +1,5 @@
+@node Internal Design
+@chapter Internal Design
 
 
 ;;;; Terminology.

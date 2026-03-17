@@ -61,7 +61,7 @@ ENVADD = \
   MAKEINFO="$(MAKEINFO) $(MAKEINFO_OPTS)"
 
 DVI_TARGETS = sbcl-porting-guide.dvi
-HTML_TARGETS = eintr.html
+# HTML_TARGETS = eintr.html
 PDF_TARGETS = sbcl-porting-guide.pdf
 PS_TARGETS = sbcl-porting-guide.ps
 
@@ -73,7 +73,7 @@ srcs = ${srcdir}/sbcl-porting-guide.texi ${srcdir}/doclicense.texi \
 
 .PHONY: info dvi html pdf ps
 
-info: ${buildinfodir}/eintr.info
+# info: ${buildinfodir}/eintr.info
 dvi: $(DVI_TARGETS)
 html: $(HTML_TARGETS)
 pdf: $(PDF_TARGETS)

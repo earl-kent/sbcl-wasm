@@ -1,4 +1,32 @@
 
+;;;; This is a machine-generated file.
+;;;; Please do not edit it by hand.
+;;;; See make-config.sh.
+(lambda (features)
+  (set-difference
+   (union features
+          (list :riscv
+                :sb-thread
+                :os-provides-clock-gettime
+                :unix
+                :linux
+                :elf
+                :64-bit
+                :little-endian
+                :os-provides-dlopen
+                :os-provides-dladdr
+                :os-provides-blksize-t
+                :os-provides-suseconds-t
+                :os-provides-getprotoby-r
+                :os-provides-poll
+                :os-provides-close-range-wrapper
+                :os-provides-posix-spawn
+                :gencgc
+                :compare-and-swap-vops
+                :memory-barrier-vops))
+   (list)))
+
+
 
 
 (flet ((#:cleanup () c))

@@ -147,7 +147,7 @@ instead of the target.
 @cindex make-host-1.sh
 
 @file{make-host-1.sh} Is called by @file{make.sh} with no parameters,
-getting it's configuration from @file{local-target-features.lisp-expr}
+getting its configuration from @file{local-target-features.lisp-expr}
 read by @file{shared.lisp}. The file is a thin rapper to
 @file{make-host-1.lisp}. It compiles and loads the cross-compiler. The
 cross compiler is not actually run until @file{make-host-2.sh} But

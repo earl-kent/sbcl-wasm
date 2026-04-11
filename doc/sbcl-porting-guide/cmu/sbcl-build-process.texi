@@ -164,7 +164,18 @@ effects. The following exposition outlines it's behavior.
 
 
 Loading @file{src/cold/shared.lisp} sets @code{sb-xc:*features*} at
-the top level.
+the top level. It's also resonsible for creating the @code{sb-cold}
+package.
+
+
+@node Load @code{set-up-cold-packages.lisp}
+@subsection Load @file{set-up-cold-packages.lisp}
+@cindex set-up-cold-packages.lisp
+
+The file @file{src/cold/set-up-cold-packages.lisp} is responsible for
+setting up the package @code{sb-cold}. Quite a bit of machinery is for
+SBCL which must carefully important and expor symbols from
+@code{sb-ext}
 
 
 

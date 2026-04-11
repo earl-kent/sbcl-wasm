@@ -163,7 +163,8 @@ effects. The following exposition outlines it's behavior.
 @cindex sb-xc:*features*
 
 
-@file{src/cold/shared.lisp} 
+Loading @file{src/cold/shared.lisp} sets @code{sb-xc:*features*} at
+the top level.
 
 
 

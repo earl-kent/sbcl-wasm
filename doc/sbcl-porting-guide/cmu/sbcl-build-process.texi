@@ -177,6 +177,43 @@ setting up the package @code{sb-cold}. Quite a bit of machinery is for
 SBCL which must carefully important and expor symbols from
 @code{sb-ext}
 
+@node Load @code{defun-load-or-cload-xcompiler.lisp}
+@subsection Load @file{defun-load-or-cload-xcompiler.lisp}
+@cindex defun-load-or-cload-xcompiler.lisp
+
+@file{src/cold/defun-load-or-cload-xcompiler.lisp} 
+
+@node Load @code{ucd-filespecs.lisp-expr}
+@subsection Load @file{ucd-filespecs.lisp-expr}
+@cindex ucd-filespecs.lisp-expr
+
+@file{src/cold/ucd-filespecs.lisp-expr} 
+
+@node Load @code{ucd.lisp}
+@subsection Load @file{ucd.lisp}
+@cindex ucd.lisp
+
+@file{tools-for-build/ucd.lisp} 
+
+
+@node Load @code{corefile.lisp}
+@subsection Load @file{corefile.lisp}
+@cindex corefile.lisp
+
+@file{tools-for-build/corefile.lisp} 
+
+@node Load directory @code{genesis}
+@subsection Load directory @file{genesis}
+@cindex genesis
+
+@file{src/runtime/genesis} 
+
+
+
+
+
+
+
 
 
 

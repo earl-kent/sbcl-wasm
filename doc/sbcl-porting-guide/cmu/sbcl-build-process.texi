@@ -15,6 +15,15 @@ following scripts directly:
 @end table
 
 
+The shell script files in turn load lisp files, sometimes with
+analogous names, e.g. @file{make-host-1.sh} @arrow{}
+@file{make-host-1.lisp}. The lisp files behave in very similar way to
+the conventions of shell scripts, i.e. the loading of the file creates
+side effects, many functions are defined and called at the top level
+in sequence. But it should be noted that a single lisp session is not
+mainted throughout. In particular each shell scripts terminates any CL
+sessions it it initiated when it ends.
+
 
 @node make-config.sh
 @section @file {make-config.sh}

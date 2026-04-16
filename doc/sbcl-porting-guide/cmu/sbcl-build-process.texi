@@ -215,7 +215,31 @@ SBCL which must carefully important and expor symbols from
 @subsection Load directory @file{genesis}
 @cindex genesis
 
-@file{src/runtime/genesis} 
+Apply the function @code{sb-cold:genesis} to the files in
+@file{src/runtime/genesis}. This is used to created the header files
+that that we will use to perform the actual compile in
+@file{make-host-2.sh}
+
+@node make-host-2.sh
+@section @file{make-host-2.sh}
+@cindex make-host-2.sh
+
+@file {make-host-2.sh} is primarily responsible for two tasks:
+
+@enumerate
+@item Run @file{make-host-2.lisp} under lisp.
+@example
+(load "loader.lisp")
+(load-sbcl-file "make-host-2.lisp")
+@end example
+@item Run @file{make-genesis-2.sh} which actually creates the executable.
+@end enumerate
+
+
+@node make-host-2.lisp
+@section @file{make-host-2.lisp}
+@cindex make-host-2.lisp
+
 
 
 

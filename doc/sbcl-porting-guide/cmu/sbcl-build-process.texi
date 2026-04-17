@@ -241,6 +241,17 @@ that that we will use to perform the actual compile in
 @cindex make-host-2.lisp
 
 
+Like @file{make-host-2.lisp} load @file{src/cold/shared.lisp} sets
+@code{sb-xc:*features*} at the top level and
+@file{set-up-cold-packages.lisp} and
+@file{defun-load-or-cload-xcompiler.lisp} are loaded again as well.
+
+
+@node perfect hash generator
+@subsection Perfect Hash Generator
+@cindex Perfect Hash Generator
+
+@file{make-host-2.lisp} uses the Perfect Hash Generator extensively.
 
 
 

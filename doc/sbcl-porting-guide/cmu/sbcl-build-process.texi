@@ -253,16 +253,14 @@ Like @file{make-host-2.lisp} load @file{src/cold/shared.lisp} sets
 
 @file{make-host-2.lisp} uses the Perfect Hash Generator extensively.
 
-@node compile-cold-sbcl.lisp
-@subsection compile-cold-sbcl.lisp
-@cindex compile-cold-sbcl.lisp
+@node set-up-cold-packages.lisp
+@subsection set-up-cold-packages.lisp
+@cindex set-up-cold-packages.lisp
 
-@file{src/cold/compile-cold-sbcl.lisp}
+@file{src/cold/set-up-cold-packages.lisp} 
 
+@node perfect defun-load-or-cload-xcompiler.lisp
+@subsection defun-load-or-cload-xcompiler.lisp
+@cindex defun-load-or-cload-xcompiler.lisp
 
-
-
-
-
-
-
+@file{src/cold/defun-load-or-cload-xcompiler.lisp} 

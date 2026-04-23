@@ -264,3 +264,10 @@ Like @file{make-host-2.lisp} load @file{src/cold/shared.lisp} sets
 @cindex defun-load-or-cload-xcompiler.lisp
 
 @file{src/cold/defun-load-or-cload-xcompiler.lisp} 
+
+
+@node perfect type.after-xc.lisp
+@subsection type.after-xc.lisp
+@cindex type.after-xc.lisp
+
+@file{tests/type.after-xc.lisp} 

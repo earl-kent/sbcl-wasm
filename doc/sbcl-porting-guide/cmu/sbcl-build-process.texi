@@ -157,7 +157,7 @@ instead of the target.
 
 @file{make-host-1.sh} Is called by @file{make.sh} with no parameters,
 getting its configuration from @file{local-target-features.lisp-expr}
-read by @file{shared.lisp}. The file is a thin rapper to
+read by @file{shared.lisp}. The file is a thin wrapper to
 @file{make-host-1.lisp}. It compiles and loads the cross-compiler. The
 cross compiler is not actually run until @file{make-host-2.sh} But
 needs to be loaded because each file has potential dependancies on

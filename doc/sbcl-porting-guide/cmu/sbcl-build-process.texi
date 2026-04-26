@@ -251,11 +251,50 @@ sets @code{sb-xc:*features*} at the top level and
 @cindex set-up-cold-packages.lisp
 
 @file{src/cold/set-up-cold-packages.lisp} is responsible for a lot of
-package wizardry. It runs essentially in two modes SBCL mode in which
-some symbols in @code{sb-cold} are connected to various other SBCL
-native packages and in CL compatability mode where all symbols are
-either inheritted from common lisp or defined in the package,
-i.e. without using any implementation specific hidden system packages.
+package wizardry. It runs essentially in two modes `SBCL mode' in
+which some symbols in @code{sb-cold} are connected to various other
+SBCL native packages and in `CL compatability mode' where all symbols
+are either inheritted from common lisp or defined in the package,
+i.e. without using any implementation specific hidden system package
+definitions.
+
+
+The variable @code{*host-format-function-names*} help illuminate this  dynamic. The code has the following to say about it:
+
+``The list below contains the name of every symbol whose function
+might be called from a non-compiled format string. This is important
+only for SBCL as host lisp built prior to git revision
+6d743d78d9ba840b.  For such hosts, after giving all host packages a
+new name, we must ASAP reestablish the function bindings of these
+"missing" symbols.
+
+@itemize
+
+@item @code{print-symbol-with-prefix} was added in rev ff218a24fbd70b2e
+(2007-04-29) and later exported from @code{sb-ext} with no
+explanation.  It was occasionally invoked via SB-IMPL: which it no
+longer is.
+
+@item @code{sb-impl:print-type} and @code{sb-impl:print-type-specifier}
+were first added in rev c1b03a36ec4439c8 (2016-01-09). Newer code
+always uses them from @code{sb-impl} but older code used them from
+@code{sb-ext} as well.
+
+@end itemize
+
+The other 3 functions mentioned below have been stable in that they
+are always used from @code{sb-impl}.
+
+This list must contain names of functions used by @emph{any} past
+revision even if such function does not appear in current code.  The
+list does not need additions to it for future changes
+though. i.e. this is final.''
+
+
+
+In SBCL mode the following 
+
+
 
 
 

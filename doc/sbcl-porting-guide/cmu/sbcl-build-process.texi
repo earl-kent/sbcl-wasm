@@ -259,7 +259,8 @@ i.e. without using any implementation specific hidden system package
 definitions.
 
 
-The variable @code{*host-format-function-names*} help illuminate this  dynamic. The code has the following to say about it:
+The variable @code{*host-format-function-names*} help illuminate this
+dynamic. The code comments has the following to say about it:
 
 ``The list below contains the name of every symbol whose function
 might be called from a non-compiled format string. This is important
@@ -289,6 +290,40 @@ This list must contain names of functions used by @emph{any} past
 revision even if such function does not appear in current code.  The
 list does not need additions to it for future changes
 though. i.e. this is final.''
+
+And the following comment for @code{hide-host-packages} and @code{unhide-host-format-funs} 
+
+``Rename all host packages, but unhide the host's format functions for
+hosts that do not support renaming of internal packages.  Consider all
+situations in which functions are called via ~// directives:
+
+@itemize
+
+@item The host calls ~/PRINT-TYPE/ for itself (i.e in its compiler) while
+running make-host-1 because "our" code (being compiled) is wrong.
+Barring a host bug (such as was fixed in rev e6fd2a9635e4), the format
+string referencing this function would spell the name using a "dash"
+package. We restore the format functions into the expected package
+below.
+   
+@item The cross-compiler wants to call a ~// function while executing,
+maybe even from a macro. The format control string should spell the
+function as a "bang" package. If it didn't, the string is wrong.
+   
+@item The target wants to call a ~// function.
+That's conceptually the easiest to deal with - we've already ensured
+that cross-compiled format strings dump their symbols correctly.
+
+@end itemize''
+
+
+
+
+
+
+
+
+
 
 
 

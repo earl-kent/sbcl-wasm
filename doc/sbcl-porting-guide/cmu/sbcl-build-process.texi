@@ -262,7 +262,9 @@ definitions.
 The variable @code{*host-format-function-names*} help illuminate this
 dynamic. The code comments has the following to say about it:
 
-``The list below contains the name of every symbol whose function
+@cartouche
+@quotation
+The list below contains the name of every symbol whose function
 might be called from a non-compiled format string. This is important
 only for SBCL as host lisp built prior to git revision
 6d743d78d9ba840b.  For such hosts, after giving all host packages a
@@ -291,9 +293,16 @@ revision even if such function does not appear in current code.  The
 list does not need additions to it for future changes
 though. i.e. this is final.''
 
-And the following comment for @code{hide-host-packages} and @code{unhide-host-format-funs} 
+@end quotation
+@end cartouche
 
-``Rename all host packages, but unhide the host's format functions for
+And the following comment for @code{hide-host-packages} and
+@code{unhide-host-format-funs}. When compiled by a non-SBCL CL these
+are just empty stub functions:
+
+@cartouche
+@quotation
+Rename all host packages, but unhide the host's format functions for
 hosts that do not support renaming of internal packages.  Consider all
 situations in which functions are called via ~// directives:
 
@@ -314,9 +323,24 @@ function as a "bang" package. If it didn't, the string is wrong.
 That's conceptually the easiest to deal with - we've already ensured
 that cross-compiled format strings dump their symbols correctly.
 
-@end itemize''
+@end itemize
+@end quotation 
+@end cartouche
 
+In particular note that on occasion there are ``host functions that
+are potentially called from format strings''. This magic is
+accomplished by @code{preserving-host-function} which is a macro that
+wraps the function and @code{restore-host-function} which provides the
+machinery, again, for non-SBCL it is simply a no-op function.
 
+@code{sb-cold:*shadows*} is a list of strings that indicate the
+symbols that package @code{sb-cold} shadows. Most of them have to do
+with numbers, types and compilation. Examples: @code{floatp},
+@code{realp} @code{complexp} @code{numberp}
+@code{array-dimension-limit} @code{array-rank-limit}
+@code{array-total-size-limit} @code{char-code} @code{code-char}
+@code{compile-file} @code{compile-file-pathname}
+@code{*compile-file-pathname*}
 
 
 

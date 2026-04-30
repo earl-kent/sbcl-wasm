@@ -3,7 +3,7 @@
 @chapter SBCL Build Process
 
 The entry point to the bulid process is @file{make.sh} which calls the
-following scripts directly:
+following scripts directly and in order:
 
 @table @file
 @item make-config.sh 

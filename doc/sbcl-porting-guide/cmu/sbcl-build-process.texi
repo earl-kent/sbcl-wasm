@@ -14,15 +14,24 @@ following scripts directly and in order:
 @item make-target-contrib.sh
 @end table
 
-
+@sp
+@noindent
 The shell script files in turn load lisp files, sometimes with
 analogous names, e.g. @file{make-host-1.sh} @arrow{}
-@file{make-host-1.lisp}. The lisp files behave in very similar way to
-the conventions of shell scripts, i.e. the loading of the file creates
-side effects, many functions are defined and called at the top level
-in sequence. But it should be noted that a single lisp session is not
-mainted throughout. In particular each shell scripts terminates any CL
-sessions it it initiated when it ends.
+@file{make-host-1.lisp}. The lisp files behave in a very similar way
+to the conventions of shell scripts, i.e. the loading of the file
+creates side effects and many functions are defined at the top of the
+file and then called at the top level futher in the file. Because the
+files are only loaded once, there are no @code{eval-when}s. The
+context is always assumed to be @code{:load-toplevel}. It should also
+be noted that a single lisp session is not mainted throughout. In
+particular each shell scripts terminates any CL sessions it it
+initiated when it ends. The following is an example of the convention:
+
+@example
+echo '(load "loader.lisp") (load-sbcl-file "make-host-1.lisp")' | \
+    $SBCL_XC_HOST
+@end example
 
 
 @node make-config.sh

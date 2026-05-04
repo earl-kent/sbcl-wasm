@@ -2,6 +2,12 @@
 @node SBCL Build Process
 @chapter SBCL Build Process
 
+@node make.sh
+@section @file {make.sh}
+@cindex make.sh
+
+@file{make.sh} is the entry point of the build process. 
+
 @deffn Shell make.sh @option{-h} @option{--help} @option{--prefix=@var{path}}
        @option{--dynamic-space-size=@var{size}} @option{--with-@var{feature}}
        @option{--without-@var{feature}} @option{--fancy}
@@ -9,207 +15,116 @@
        @option{--host-location=@var{string}}
 @end deffn
 
-
-@table @code
-@item -v
-@itemx --verbose
-Enable verbose output to track script progress in detail.
-
-@item -o @var{file}
-@itemx --output=@var{file}
-Direct the output to @var{file} instead of the default standard output.
-
-@item -r
-Perform the operation recursively on directories.
-@end table
+Important: make.sh does not currently control the entirety of the
+build: configuration file customize-target-features.lisp and certain
+environment variables play a role as well. see file INSTALL for
+details.
 
 Options:
-  -h, --help           Display this help and exit.
 
-  --prefix=<path>      Specify the install location.
+@table @code
+@item  -h
+@itemx --help
+Display this help and exit.
 
-      Script install.sh installs SBCL under the specified prefix
-      path: runtime as prefix/bin/sbcl, additional files under
-      prefix/lib/sbcl, and documentation under prefix/share.
+@item  --prefix=@var{path}
+Specify the install location.
 
-      This option also affects the binaries: built-in default for
-      SBCL_HOME is: prefix/lib/sbcl/
+Script install.sh installs SBCL under the specified prefix path:
+runtime as @file{prefix/bin/sbcl}, additional files under @file{prefix/lib/sbcl},
+and documentation under prefix/share.
 
-      Default prefix is: /usr/local
+This option also affects the binaries: built-in default for
+SBCL_HOME is: @file{prefix/lib/sbcl/}
 
-  --dynamic-space-size=<size> Default dynamic-space size for target.
+Default prefix is: @file{/usr/local}
 
-      This specifies the default dynamic-space size for the SBCL
-      being built. If you need to control the dynamic-space size
-      of the host SBCL, use the --xc-host option.
+@item --dynamic-space-size=@var{size}
+Default dynamic-space size for target.
 
-      If not provided, the default is platform-specific. <size> is
-      taken to be megabytes unless explicitly suffixed with Gb in
-      order to specify the size in gigabytes.
+This specifies the default dynamic-space size for the SBCL being
+built. If you need to control the dynamic-space size of the host SBCL,
+use the @code{--xc-host} option.
 
-  --with-<feature>     Build with specified feature.
-  --without-<feature>  Build wihout the specfied feature.
+If not provided, the default is platform-specific. @var{size} is taken
+to be megabytes unless explicitly suffixed with Gb in order to specify
+the size in gigabytes.
 
-  --fancy              Build with several optional features:
+@item --with-@var{feature}
+Build with specified feature.
 
-                           $FANCY_FEATURES
-
-                       Plus threading on platforms which support it.
-
-  --arch=<string>      Specify the architecture to build for.
-
-      Mainly for doing x86 builds on x86-64.
-
-  --xc-host=<string>   Specify the Common Lisp compilation host.
-
-      The string provided should be a command to invoke the
-      cross-compilation Lisp system in such a way, that it reads
-      commands from standard input, and terminates when it reaches end
-      of file on standard input.
-
-      Examples:
-
-       "sbcl --disable-debugger --no-sysinit --no-userinit"
-                  Use an existing SBCL binary as a cross-compilation
-                  host even though you have stuff in your
-                  initialization files which makes it behave in such a
-                  non-standard way that it keeps the build from
-                  working. Also disable the debugger instead of
-                  waiting endlessly for a programmer to help it out
-                  with input on *DEBUG-IO*. (This is the default.)
-
-       "sbcl"
-                  Use an existing SBCL binary as a cross-compilation
-                  host, including your initialization files and
-                  building with the debugger enabled. Not recommended
-                  for casual users.
-
-       "lisp -noinit -batch"
-                  Use an existing CMU CL binary as a cross-compilation
-                  host when you have weird things in your .cmucl-init
-                  file.
-
-  --host-location=<string> Location of the source directory on compilation host
-
-      The string is passed to the command rsync to transfer the
-      necessary files between the target and host directories during
-      the make-target-*.sh steps of cross-compilation (cf. make.sh)
-
-      Examples:
-
-       user@@host-machine:/home/user/sbcl
-                  Transfer the files to/from directory /home/user/sbcl
-                  on host-machine.
-
-EOF
+@item --withou-@var{feature}
+Build wihout the specfied feature.
 
 
-Usage: $0 [OPTION]...
+@item --fancy
 
-  Important: make.sh does not currently control the entirety of the
-  build: configuration file customize-target-features.lisp and certain
-  environment variables play a role as well. see file INSTALL for
-  details.
+Build with several optional features:
 
+@code{$FANCY_FEATURES}
 
+Plus threading on platforms which support it.
 
+@item --arch=@var{string}
+Specify the architecture to build for.
 
-perform_host_lisp_check=no
-fancy=false
-some_options=false
-android=false
-if [ -z "$ANDROID_API" ]; then
-    ANDROID_API=21
-fi
-for option
-do
-  optarg_ok=true
-  # Split --foo=bar into --foo and bar.
-  case $option in
-      *=*)
-        # For ease of scripting skip valued options with empty
-        # values.
-        optarg=`expr "X$option" : '[^=]*=\(.*\)'` || optarg_ok=false
-        option=`expr "X$option" : 'X\([^=]*=\).*'`
-        ;;
-      --with*)
-        optarg=`expr "X$option" : 'X--[^-]*-\(.*\)'` \
-            || bad_option "Malformed feature toggle: $option"
-        option=`expr "X$option" : 'X\(--[^-]*\).*'`
-        ;;
-      *)
-        optarg=""
-        ;;
-  esac
+Mainly for doing x86 builds on x86-64.
 
-  case $option in
-      --help | -help | -h)
-        print_help="yes" ;;
-      --prefix=)
-        $optarg_ok && SBCL_PREFIX=$optarg
-        ;;
-      --arch=)
-        $oparg_ok && SBCL_ARCH=$optarg
-        ;;
-      --xc-host=)
-        $optarg_ok && SBCL_XC_HOST=$optarg
-        ;;
-      --host-location=)
-        $optarg_ok && SBCL_HOST_LOCATION=$optarg
-        ;;
-      --target-location=)
-        $optarg_ok && SBCL_TARGET_LOCATION=$optarg
-        ;;
-      --dynamic-space-size=)
-        $optarg_ok && SBCL_DYNAMIC_SPACE_SIZE=$optarg
-	;;
-      --with)
-        WITH_FEATURES="$WITH_FEATURES :$optarg"
-        if [ "$optarg" = "android" ]
-        then
-            android=true
-        fi
-        ;;
-      --without)
-        WITHOUT_FEATURES="$WITHOUT_FEATURES :$optarg"
-        case $CONTRIBS
-        in *"$optarg"*)
-               SBCL_CONTRIB_BLOCKLIST="$SBCL_CONTRIB_BLOCKLIST $optarg"
-        ;; esac
-	;;
-      --android-api=)
-        $optarg_ok && ANDROID_API=$optarg
-        ;;
-      --ndk=)
-        $optarg_ok && NDK=$optarg
-        ;;
-      --fancy)
-        WITH_FEATURES="$WITH_FEATURES $FANCY_FEATURES"
-        # Lower down we add :sb-thread for platforms where it can be built.
-        fancy=true
-        ;;
-      --check-host-lisp)
-        perform_host_lisp_check=yes
-        ;;
-      -*)
-        bad_option "Unknown command-line option to $0: \"$option\""
-        ;;
-      *)
-        if $some_options
-        then
-            bad_option "Unknown command-line option to $0: \"$option\""
-        else
-            SBCL_XC_HOST=$option
-        fi
-        ;;
-  esac
-  some_options=true
-done
+@item --xc-host=@var{string}
+
+Specify the Common Lisp compilation host.
+
+The string provided should be a command to invoke the
+cross-compilation Lisp system in such a way, that it reads commands
+from standard input, and terminates when it reaches end of file on
+standard input.
+
+Examples:
+
+@table @code
+
+@item sbcl --disable-debugger --no-sysinit --no-userinit
+
+Use an existing SBCL binary as a cross-compilation host even though
+you have stuff in your initialization files which makes it behave in
+such a non-standard way that it keeps the build from working. Also
+disable the debugger instead of waiting endlessly for a programmer to
+help it out with input on *DEBUG-IO*. (This is the default.)
+
+@item sbcl
+
+Use an existing SBCL binary as a cross-compilation host, including
+your initialization files and building with the debugger enabled. Not
+recommended for casual users.
+
+@item lisp -noinit -batch
+
+Use an existing CMU CL binary as a cross-compilation host when you
+have weird things in your .cmucl-init file.
+@end table
+
+@item --host-location=@{var{string}
+
+Location of the source directory on compilation host
+
+The string is passed to the command rsync to transfer the necessary
+files between the target and host directories during the
+make-target-*.sh steps of cross-compilation (cf. make.sh)
+
+Examples:
+
+@file{user@@host-machine:/home/user/sbcl}
+
+Transfer the files to/from directory @file{/home/user/sbcl} on host-machine.
+
+@end table
 
 
 
-The entry point to the bulid process is @file{make.sh} which calls the
-following scripts directly and in order:
+
+
+
+
 
 @table @file
 @item make-config.sh 

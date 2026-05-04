@@ -123,9 +123,8 @@ Transfer the files to/from directory @file{/home/user/sbcl} on host-machine.
 
 @end table
 
-
-
-
+@noindent
+@file{make.sh} calls the following scripts in order:
 
 
 
@@ -144,14 +143,16 @@ Transfer the files to/from directory @file{/home/user/sbcl} on host-machine.
 The shell script files in turn load lisp files, sometimes with
 analogous names, e.g. @file{make-host-1.sh} @arrow{}
 @file{make-host-1.lisp}. The lisp files behave in a very similar way
-to the conventions of shell scripts, i.e. the loading of the file
+to the conventions of shell scripts, e.g. the loading of the file
 creates side effects and many functions are defined at the top of the
-file and then called at the top-level futher in the file. Because the
-files are only loaded once, there are no @code{eval-when}s. The
-context is always assumed to be @code{:load-toplevel}. It should also
-be noted that a single lisp session is not mainted throughout. In
-particular each shell scripts terminates any CL sessions it it
-initiated when it ends. The following is an example of the convention:
+file and then called at the lisp top-level futher on in the
+file. Because the files are only loaded once, there are no
+@code{eval-when}s. The context is always assumed to be
+@code{:load-toplevel}. It should also be noted that a single lisp
+session is not mainted throughout. In particular each shell script
+terminates any CL sessions it it initiated when it ends. The following
+is an example of the calling convention in which the lisp file is
+loaded:
 
 @example
 echo '(load "loader.lisp") (load-sbcl-file "make-host-1.lisp")' | \
@@ -160,22 +161,21 @@ echo '(load "loader.lisp") (load-sbcl-file "make-host-1.lisp")' | \
 
 
 @node make-config.sh
-@section @file {make-config.sh}
+@section @file{make-config.sh}
 @cindex make-config.sh
 
-@deffn Shell make-config.sh --check-host-lisp
-Move point forward @var{nchars} characters.
-@end deffn
-
-
-@file{make-configu.sh} is called like the following:
-
-@command{sh make-config.sh --xc-host="sbcl" --arch=riscv64 --check-host-lisp}
+@file{make-config.sh} is responsible for creating a configuration file
+loaded by lisp that captured the parameters provided to
+@file{make.sh}. To accomplish this it is called from @code{make.sh}
+with the same parameters as @file{make.sh} was called, with the
+exception that @code{--check-host-lisp} is always provided. (Making
+the explicit parameter in @file{make} redundant.
 
 @sp
 @noindent
-This creates the @file{output/} directory that ordinarily contains the
-following files (and a few additional ones for Android):
+@file{make-config.sh} creates the @file{output/} directory. Under an
+ordinary build it the following files (under an Android build it
+contains a few additional files like like, @file{output/ndk-config}):
 
 @table @file
 @item build-config
@@ -203,20 +203,16 @@ lisp, i.e., in @file{src/compiler/generic/parms.lisp}
 @item prefix.def
 This is contains the prefix to which SBCL will be install using the
 @file{install.sh} command, e.g. @code{SBCL_PREFIX='/usr/local'}
-
-
 @end table
 
-
+@sp
+@noindent
 Further in the build process additional files will also be added to
-this directory. If you're performing an android cross-compile build,
-additional files like, @file{output/ndk-config} will also be added
-during @file{make-config.sh}.
-
-In addition to @file{output/}, @file{make-config.sh} also create
-@file{local-target-features.lisp-expr}, the basic lisp parameters for
-the build. It is primarily used by @file{shared.lisp}. It looks
-something like the following lambda expression:
+this directory. In addition to @file{output/}, @file{make-config.sh}
+also create @file{local-target-features.lisp-expr}, the basic lisp
+parameters for the build. It is primarily used by
+@file{shared.lisp}. It looks something like the following lambda
+expression:
 
 @example
 ;;;; This is a machine-generated file.
@@ -265,13 +261,14 @@ case "$sbcl_os" in
         @dots{}
 @end example
 @noindent
-where @code{$ltf} is the @file{local-target-features.lisp-expr} file.
+The conditionals are drived by the parameters provided and testing the
+environment a sort of poor man's autconfig. @code{$ltf} is the
+file @file{local-target-features.lisp-expr}.
 
 @sp
 @noindent
 @file{make-config.sh} is also rsync aware. So, if you've specified the
 @code{--host-location} flag, it will try and rsync to the specified host.
-
 
 @example
 if [ -n "$SBCL_HOST_LOCATION" ]; then
@@ -282,19 +279,11 @@ if [ -n "$SBCL_HOST_LOCATION" ]; then
 fi
 @end example
 
-
-
-If you're cross-compiling, @file{make-config.sh} should "do the right
-thing" when run on the target machine, with the minor caveat that any
-@file{--xc-host} parameter should be suitable for the host machine
-instead of the target.
-
-
 @node make-host-1.sh
-@section @file {make-host-1.sh}
+@section @file{make-host-1.sh}
 @cindex make-host-1.sh
 
-@file{make-host-1.sh} Is called by @file{make.sh} with no parameters,
+@file{make-host-1.sh} is called by @file{make.sh} with no parameters,
 getting its configuration from @file{local-target-features.lisp-expr}
 read by @file{shared.lisp}. The file is a thin wrapper to
 @file{make-host-1.lisp}. It compiles and loads the cross-compiler. The
@@ -302,19 +291,16 @@ cross compiler is not actually run until @file{make-host-2.sh} But
 needs to be loaded because each file has potential dependancies on
 previous files.
 
-
 The lisp file, @file{make-host-1.lisp}, is mostly loaded for its side
 effects. The following exposition outlines it's behavior.
 
 @node Setup SB-XC:*FEATURES*
-@subsection @file {Setup SB-XC:*FEATURES*}
+@subsection @file{Setup SB-XC:*FEATURES*}
 @cindex sb-xc:*features*
-
 
 Loading @file{src/cold/shared.lisp} sets @code{sb-xc:*features*} at
 the top level. It's also resonsible for creating the @code{sb-cold}
 package.
-
 
 @node Load @code{set-up-cold-packages.lisp}
 @subsection Load @file{set-up-cold-packages.lisp}
@@ -363,7 +349,7 @@ that that we will use to perform the actual compile in
 @section @file{make-host-2.sh}
 @cindex make-host-2.sh
 
-@file {make-host-2.sh} is primarily responsible for two tasks:
+@file{make-host-2.sh} is primarily responsible for two tasks:
 
 @enumerate
 @item Run @file{make-host-2.lisp} under lisp.

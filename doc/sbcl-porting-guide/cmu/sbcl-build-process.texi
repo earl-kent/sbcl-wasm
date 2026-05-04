@@ -2,7 +2,8 @@
 @node SBCL Build Process
 @chapter SBCL Build Process
 
-@deffn Shell make.sh @option{-h} @option{--help} @option{--prefix=@var{path}} @option{--dynamic-space-size=@var{size}} @option{--with-@var{feature}} @option{--without-@var{feature}} @option{--fancy} @option{--arch=@var{string}} @option{--xc-host=@var{string}} @option{--host-location=@var{string}}
+@deffn Shell make.sh @option{-h} @option{--help} @option{--prefix=@var{path}}
+@option{--dynamic-space-size=@var{size}} @option{--with-@var{feature}} @option{--without-@var{feature}} @option{--fancy} @option{--arch=@var{string}} @option{--xc-host=@var{string}} @option{--host-location=@var{string}}
 @end deffn
 
 

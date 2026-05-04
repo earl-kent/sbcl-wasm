@@ -2,9 +2,7 @@
 @node SBCL Build Process
 @chapter SBCL Build Process
 
-
-@deffn shell make.sh [
-Move point forward @var{nchars} characters.
+@deffn Shell make.sh @option{-h} @option{--help} @option{--prefix=@var{path}} @option{--dynamic-space-size=@var{size}} @option{--with-@var{feature}} @option{--without-@var{feature}} @option{--fancy} @option{--arch=@var{string}} @option{--xc-host=@var{string}} @option{--host-location=@var{string}}
 @end deffn
 
 
@@ -20,15 +18,6 @@ Direct the output to @var{file} instead of the default standard output.
 @item -r
 Perform the operation recursively on directories.
 @end table
-
-
-
-Usage: $0 [OPTION]...
-
-  Important: make.sh does not currently control the entirety of the
-  build: configuration file customize-target-features.lisp and certain
-  environment variables play a role as well. see file INSTALL for
-  details.
 
 Options:
   -h, --help           Display this help and exit.
@@ -104,11 +93,21 @@ Options:
 
       Examples:
 
-       user@host-machine:/home/user/sbcl
+       user@@host-machine:/home/user/sbcl
                   Transfer the files to/from directory /home/user/sbcl
                   on host-machine.
 
 EOF
+
+
+Usage: $0 [OPTION]...
+
+  Important: make.sh does not currently control the entirety of the
+  build: configuration file customize-target-features.lisp and certain
+  environment variables play a role as well. see file INSTALL for
+  details.
+
+
 
 
 perform_host_lisp_check=no
@@ -241,7 +240,7 @@ echo '(load "loader.lisp") (load-sbcl-file "make-host-1.lisp")' | \
 @section @file {make-config.sh}
 @cindex make-config.sh
 
-texinfo@deffn Shell make-config.sh --check-host-lisp
+@deffn Shell make-config.sh --check-host-lisp
 Move point forward @var{nchars} characters.
 @end deffn
 

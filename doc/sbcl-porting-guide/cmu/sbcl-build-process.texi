@@ -15,11 +15,15 @@
        @option{--host-location=@var{string}}
 @end deffn
 
+@sp
+@noindent
 Important: make.sh does not currently control the entirety of the
 build: configuration file customize-target-features.lisp and certain
 environment variables play a role as well. see file INSTALL for
 details.
 
+@sp
+@noindent
 Options:
 
 @table @code
@@ -27,20 +31,20 @@ Options:
 @itemx --help
 Display this help and exit.
 
-@item  --prefix=@var{path}
+@itemx  --prefix=@var{path}
 Specify the install location.
-
+@sp
 Script install.sh installs SBCL under the specified prefix path:
 runtime as @file{prefix/bin/sbcl}, additional files under @file{prefix/lib/sbcl},
 and documentation under prefix/share.
-
+@sp
 This option also affects the binaries: built-in default for
-SBCL_HOME is: @file{prefix/lib/sbcl/}
-
+@code{SBCL_HOME} is: @file{prefix/lib/sbcl/}
+@sp
 Default prefix is: @file{/usr/local}
 
 @item --dynamic-space-size=@var{size}
-Default dynamic-space size for target.
+Default @code{dynamic-space} size for target.
 
 This specifies the default dynamic-space size for the SBCL being
 built. If you need to control the dynamic-space size of the host SBCL,
@@ -50,10 +54,10 @@ If not provided, the default is platform-specific. @var{size} is taken
 to be megabytes unless explicitly suffixed with Gb in order to specify
 the size in gigabytes.
 
-@item --with-@var{feature}
+@item --with-@var{<feature>}
 Build with specified feature.
 
-@item --withou-@var{feature}
+@item --without-@var{<feature>}
 Build wihout the specfied feature.
 
 

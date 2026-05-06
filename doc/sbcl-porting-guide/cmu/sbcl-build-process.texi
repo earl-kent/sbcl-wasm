@@ -159,6 +159,38 @@ echo '(load "loader.lisp") (load-sbcl-file "make-host-1.lisp")' | \
     $SBCL_XC_HOST
 @end example
 
+@sp
+@noindent
+The final steps of the buildprocess is for @file{make.sh} to run a
+test scripts on the completed SBCL build. The first test is run in the
+following way:
+
+@example
+src/runtime/sbcl --core output/sbcl.core --lose-on-corruption --noinform \
+  --no-sysinit --no-userinit --disable-debugger \
+  --eval '(when (find-package "SB-INTERPRETER") \
+         (assert (eq *evaluator-mode* :interpret)))' \
+  --quit
+@end example
+
+@sp
+@noindent
+The second is only run on a development build:
+@example
+./src/runtime/sbcl --core output/sbcl.core \
+  --lose-on-corruption --noinform $SBCL_MAKE_TARGET_2_OPTIONS --no-sysinit
+  --no-userinit --eval '
+    (progn
+      #-sb-devel
+      (restart-case
+        @dots{}
+        ))' --quit
+@end example
+
+@sp
+@noindent
+The final step is the write out finish message.
+
 
 @node make-config.sh
 @section @file{make-config.sh}
@@ -466,6 +498,8 @@ with numbers, types and compilation. Examples: @code{floatp},
 @code{array-total-size-limit} @code{char-code} @code{code-char}
 @code{compile-file} @code{compile-file-pathname}
 @code{*compile-file-pathname*}
+
+
 
 
 

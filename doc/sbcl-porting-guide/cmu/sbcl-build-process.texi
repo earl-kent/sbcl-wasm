@@ -128,9 +128,10 @@ Transfer the files to/from directory @file{/home/user/sbcl} on host-machine.
 
 
 
-
 @table @file
-@item make-config.sh 
+@item make-config.sh
+@item output/prefix.def
+@item output/build-config
 @item make-host-1.sh
 @item make-target-1.sh
 @item make-host-2.sh
@@ -311,6 +312,18 @@ if [ -n "$SBCL_HOST_LOCATION" ]; then
         "$SBCL_HOST_LOCATION/"
 fi
 @end example
+
+
+
+@node output/prefix.def and output/build-config
+@section @file{output/prefix.def} and @file{output/build-config}
+@cindex output/prefix.def
+@cindex output/build-config
+
+@file{output/prefix.def} and @file{output/build-config} are created by
+@file{make-config.sh}. 
+
+
 
 @node make-host-1.sh
 @section @file{make-host-1.sh}

@@ -189,7 +189,8 @@ The second is only run on a development build:
 
 @sp
 @noindent
-The final step is the write out finish message.
+The final step is to write out a message that the compilation
+succeeded and to print some high level statistics.
 
 
 @node make-config.sh

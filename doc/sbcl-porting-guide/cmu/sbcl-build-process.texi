@@ -321,7 +321,25 @@ fi
 @cindex output/build-config
 
 @file{output/prefix.def} and @file{output/build-config} are created by
-@file{make-config.sh}. 
+@file{make-config.sh}. There are responsible for seting the following
+shell variables in the currently executing shell script:
+
+@itemize
+@item SBCL_PREFIX
+@item GNUMAKE
+@item SBCL_XC_HOST
+@item android
+@item SBCL_CONTRIB_BLOCKLIST
+@end itemize
+
+They are called in the following way to ensure the envirement variable
+is set in the currently executing script process, i.e. @code{make.sh}.
+
+@example
+. output/prefix.def
+. output/build-config
+@end example
+
 
 
 

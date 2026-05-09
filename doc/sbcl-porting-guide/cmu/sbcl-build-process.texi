@@ -340,6 +340,12 @@ is set in the currently executing script process, i.e. @code{make.sh}.
 . output/build-config
 @end example
 
+@node tools-for-build
+@section @file{tools-for-build}
+@cindex tools-for-build
+
+The directory @file{tools-for-build} contains a variety of tools which
+must be
 
 
 

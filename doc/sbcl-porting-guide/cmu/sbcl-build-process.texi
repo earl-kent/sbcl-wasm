@@ -344,8 +344,14 @@ is set in the currently executing script process, i.e. @code{make.sh}.
 @section @file{tools-for-build}
 @cindex tools-for-build
 
-The directory @file{tools-for-build} contains a variety of tools which
-must be
+The directory @file{tools-for-build} contains miscellaneous files
+needed for building SBCL. @file{make.sh} in specific executes
+@file{tools-for-build/Makefile} which builds the following executables
+from simple C files with corresponding names
+(e.g. @code{grovel-headers.c} @arrow{} @code{grovel-headers}):
+@code{grovel-headers}, @code{determine-endianness},
+@code{where-is-mcontext}, @code{mmap-rwx}, @code{avx2},
+@code{perfecthash}.
 
 
 

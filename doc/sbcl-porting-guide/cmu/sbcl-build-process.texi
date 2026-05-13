@@ -354,38 +354,54 @@ from simple C files with corresponding names
 @code{perfecthash}.
 
 
+@node make-host-1.sh and make-host-1.lisp
+@section @file{make-host-1.sh} and @file{make-host-1.lisp}
+@cindex make-host-1.sh and make-host-1.lisp
 
-@node make-host-1.sh
-@section @file{make-host-1.sh}
-@cindex make-host-1.sh
+@file{make-host-1.sh} is called by @file{make.sh} with no parameters.
+The file is a thin wrapper to @file{make-host-1.lisp}. It compiles the
+cross-compiler, explicitly creating fasl files compatable with the
+host lisp, which might be something other than SBCL. The cross
+compiler is not actually run until @file{make-host-2.sh}, but needs to
+be loaded because each file has potential dependancies on previous
+files. Under SCBL the compilation happens in parallel, in non-SBCL
+lisps the compilation hapens sequentially. @file{make-host-1.lisp}
+recieves its configuration by loading
+@file{local-target-features.lisp-expr}, this is read and processed by
+loading the lisp file @file{shared.lisp}.
 
-@file{make-host-1.sh} is called by @file{make.sh} with no parameters,
-getting its configuration from @file{local-target-features.lisp-expr}
-read by @file{shared.lisp}. The file is a thin wrapper to
-@file{make-host-1.lisp}. It compiles and loads the cross-compiler. The
-cross compiler is not actually run until @file{make-host-2.sh} But
-needs to be loaded because each file has potential dependancies on
-previous files.
-
-The lisp file, @file{make-host-1.lisp}, is mostly loaded for its side
-effects. The following exposition outlines it's behavior.
+@file{make-host-1.lisp}, is mostly loaded for its side effects. The
+following sections outline its behavior in more detail.
 
 @node Setup SB-XC:*FEATURES*
 @subsection @file{Setup SB-XC:*FEATURES*}
 @cindex sb-xc:*features*
 
 Loading @file{src/cold/shared.lisp} sets @code{sb-xc:*features*} at
-the top level. It's also resonsible for creating the @code{sb-cold}
-package.
+the top level. It's also responsible for creating the empty
+@code{sb-cold} package.
 
 @node Load @code{set-up-cold-packages.lisp}
 @subsection Load @file{set-up-cold-packages.lisp}
 @cindex set-up-cold-packages.lisp
 
 The file @file{src/cold/set-up-cold-packages.lisp} is responsible for
-setting up the package @code{sb-cold}. Quite a bit of machinery is for
-SBCL which must carefully important and expor symbols from
-@code{sb-ext}
+setting up the @code{sb-cold} package. The cross copmiler is,
+unsurprisingly, a specially configured version tho SBCL compiler. It
+needs to sit side by side with the SBCL compiler which requires quite
+a bit of machinery to carefully import and export symbols from
+@code{sb-ext}. @file{src/cold/set-up-cold-packages.lisp} is
+responsible for that machinery and like most of the rest of the build
+code, that is accomplished as a sideeffect of loading the file.
+
+
+
+
+
+
+
+
+
 
 @node Load @code{defun-load-or-cload-xcompiler.lisp}
 @subsection Load @file{defun-load-or-cload-xcompiler.lisp}

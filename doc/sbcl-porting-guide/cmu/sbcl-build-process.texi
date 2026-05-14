@@ -395,6 +395,19 @@ responsible for that machinery and like most of the rest of the build
 code, that is accomplished as a sideeffect of loading the file.
 
 
+@defun hide-host-packages
+When building the cross-compiler on SBCL
+@code{unhide-host-format-funs} renames all host packages except for:
+@code{keyword}, @code{common-lisp}, @code{common-lisp-user},
+@code{xc-strict-cl}, @code{sb-cold}, @code{sb-xc}. The renamed package
+is prefixed with ``host-'', e.g. @code{sb-ext} @arrow{}
+@code{host-sb-ext}
+@end defun
+
+@defun unhide-host-format-funs
+Perform a frobnication on @var{object}.  If @var{mode} is supplied,
+it controls the frobnication strategy.
+@end defun
 
 
 

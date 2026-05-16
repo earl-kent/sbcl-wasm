@@ -401,18 +401,31 @@ When building the cross-compiler on SBCL
 @code{keyword}, @code{common-lisp}, @code{common-lisp-user},
 @code{xc-strict-cl}, @code{sb-cold}, @code{sb-xc}. The renamed package
 is prefixed with ``host-'', e.g. @code{sb-ext} @arrow{}
-@code{host-sb-ext}
+@code{host-sb-ext}; this allows the cross compiler to use the same
+package names as the ordinary SBCL compiler.
 @end defun
 
 @defun unhide-host-format-funs
-Perform a frobnication on @var{object}.  If @var{mode} is supplied,
-it controls the frobnication strategy.
+Under SBCL this reintroduces several format functions into the sb-ext
+and sb-impl packages. This allows for backward compatibility for
+previous SBCL versions where functions are required to exist.
 @end defun
 
+@defun unhide-host-format-funs
+Under SBCL this reintroduces several format functions into the sb-ext
+and sb-impl packages. This allows for backward compatibility for
+previous SBCL versions where functions are required to exist.
+@end defun
 
-
-
-
+@defmacro preserving-host-function name
+Macro invoked from @path{src/code/early-extensions} to avoid
+clobbering host functions that are potentially called from format
+strings. The three function definitions that it's used on within the
+context of @code{sb-xc-host} in an SBCL host are:
+@code{print-symbol-with-prefix}, @code{print-type-specifier} and
+@code{print-type}. @code{restore-host-function} is a helping function
+for it.
+@end defun
 
 
 
